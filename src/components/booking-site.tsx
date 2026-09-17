@@ -1,435 +1,156 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { categories, type FilterCategory, type Service } from "@/data/services";
-import { sendBookingEmail, emailConfig, type BookingPayload } from "@/lib/email";
-import Link from "next/link";
+import React, { useState } from "react";
+import { AppProvider, useApp } from "@/lib/app-context";
+import { Header } from "@/components/header";
+import { GuestView } from "@/components/guest-view";
+import { CustomerView } from "@/components/customer-view";
+import { StaffView } from "@/components/staff-view";
+import { AdminView } from "@/components/admin-view";
+import { CustomerAuthPage, ManagementAuthPage } from "@/components/auth-pages";
+import { Sparkles, Heart, ShieldCheck, Mail, Phone, MapPin, Lock, LogOut } from "lucide-react";
 
-const money = (value: number | null) =>
-  value == null ? "Liên hệ để báo giá" : `${value.toLocaleString("vi-VN")} ₫`;
+function MainAppContent() {
+  const { currentUser, logout } = useApp();
+  const [activeTab, setActiveTab] = useState<"catalog" | "projects" | "workspace" | "auth_customer" | "auth_management">("catalog");
+  const [preselectedBookingServiceId, setPreselectedBookingServiceId] = useState<string | undefined>(undefined);
 
-const days = (value: number | null) =>
-  value == null ? "Liên hệ để biết chi tiết" : `${value} ngày`;
-
-const categoryClass = (category: Service["category"]) =>
-  category === "IT" ? "cat-IT" : category === "Design" ? "cat-Design" : "cat-mixed";
-
-const phonePattern = /^(0|\+84)\d{9,10}$/;
-
-type BookingForm = {
-  serviceName: string;
-  name: string;
-  email: string;
-  phone: string;
-  requirement: string;
-  deadline: string;
-};
-
-type BookingSiteProps = {
-  services: Service[];
-};
-
-export function BookingSite({ services }: BookingSiteProps) {
-  const [activeCategory, setActiveCategory] = useState<FilterCategory>("all");
-  const [activeServiceId, setActiveServiceId] = useState<string | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [bookingOpen, setBookingOpen] = useState(false);
-  const [successOpen, setSuccessOpen] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successText, setSuccessText] = useState("");
-  const [form, setForm] = useState<BookingForm>(() => ({
-    serviceName: services[0]?.id ?? "",
-    name: "",
-    email: "",
-    phone: "",
-    requirement: "",
-    deadline: "",
-  }));
-
-  const activeService = services.find((service) => service.id === activeServiceId) ?? null;
-  const selectedService =
-    services.find((service) => service.id === form.serviceName) ?? services[0] ?? null;
-  const filteredServices = useMemo(
-    () =>
-      activeCategory === "all"
-        ? services
-        : services.filter((service) => service.category === activeCategory),
-    [activeCategory, services],
-  );
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (bookingOpen) setBookingOpen(false);
-      else if (detailOpen) setDetailOpen(false);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [bookingOpen, detailOpen]);
-
-  useEffect(() => {
-    const modalOpen = detailOpen || bookingOpen;
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [detailOpen, bookingOpen]);
-
-  function openDetail(serviceId: string) {
-    setActiveServiceId(serviceId);
-    setDetailOpen(true);
-  }
-
-  function openBooking(preselectedId?: string | null) {
-    const serviceExists =
-      typeof preselectedId === "string" && services.some((service) => service.id === preselectedId);
-    setDetailOpen(false);
-    setBookingOpen(true);
-    setSuccessOpen(false);
-    setFormError("");
-    setIsSubmitting(false);
-    setForm({
-      serviceName: serviceExists ? preselectedId : services[0]?.id ?? "",
-      name: "",
-      email: "",
-      phone: "",
-      requirement: "",
-      deadline: "",
-    });
-  }
-
-  function updateForm(field: keyof BookingForm, value: string) {
-    setForm((current) => ({ ...current, [field]: value }));
-  }
-
-  function showError(message: string) {
-    setFormError(message);
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFormError("");
-
-    const service = selectedService;
-    const name = form.name.trim();
-    const email = form.email.trim();
-    const phone = form.phone.trim();
-    const requirement = form.requirement.trim();
-    const deadline = form.deadline;
-
-    if (!service || !name || !email || !phone) {
-      showError("Vui lòng điền đầy đủ họ tên, email và số điện thoại.");
-      return;
+  const handleSelectServiceToBook = (serviceId: string) => {
+    setPreselectedBookingServiceId(serviceId);
+    if (currentUser.role === "guest") {
+      setActiveTab("auth_customer");
+    } else {
+      setActiveTab("workspace");
     }
-    if (!phonePattern.test(phone.replace(/\s/g, ""))) {
-      showError("Số điện thoại chưa đúng định dạng (ví dụ: 0912345678).");
-      return;
-    }
+  };
 
-    setIsSubmitting(true);
-    const payload: BookingPayload = {
-      service_name: service.name,
-      customer_name: name,
-      customer_email: email,
-      customer_phone: phone,
-      requirement: requirement || "(không có)",
-      deadline: deadline || "(không yêu cầu)",
-      to_email: emailConfig.adminEmail,
-    };
-
-    try {
-      await sendBookingEmail(payload);
-      setSuccessText(
-        `Cảm ơn ${name}! Chúng tôi đã ghi nhận yêu cầu cho dịch vụ "${service.name}" và sẽ liên hệ qua ${email} hoặc ${phone} sớm nhất.`,
-      );
-      setSuccessOpen(true);
-    } catch (error) {
-      console.error(error);
-      showError("Không thể gửi yêu cầu tự động. Vui lòng thử lại hoặc liên hệ trực tiếp.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const handleOpenAuth = (portal: "customer" | "management") => {
+    if (portal === "customer") setActiveTab("auth_customer");
+    else setActiveTab("auth_management");
+  };
 
   return (
-    <>
-      <header className="site-header">
-        <div className="wrap header-inner">
-          <a className="logo" href="#top">
-            4YouTech
-          </a>
-          <button className="btn btn-accent" type="button" onClick={() => openBooking(activeServiceId)}>
-            Đặt dịch vụ
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col bg-slate-50 selection:bg-indigo-500 selection:text-white">
+      {/* Header Navigation */}
+      <Header
+        activeTab={activeTab === "catalog" || activeTab === "projects" || activeTab === "workspace" ? activeTab : "catalog"}
+        setActiveTab={(t) => setActiveTab(t)}
+        onOpenAuth={handleOpenAuth}
+      />
 
-      <main id="top">
-        <section className="hero">
-          <div className="wrap hero-grid">
-            <div className="hero-copy">
-              <p className="hero-kicker">Studio IT &amp; Design cho sinh viên</p>
-              <h1>Ý tưởng của bạn, chúng tôi dựng thành sản phẩm thật.</h1>
-              <p className="hero-sub">
-                Portfolio cá nhân, giao diện ứng dụng, hồ sơ hệ thống hay bộ nhận diện
-                thương hiệu — chọn dịch vụ, gửi yêu cầu, chúng tôi liên hệ lại trong
-                thời gian sớm nhất.
-              </p>
-              <div className="hero-actions">
-                <a href="#catalog" className="btn btn-ink">
-                  Xem danh mục dịch vụ
-                </a>
-                <Link href="/du-an-mau" className="btn btn-ink">
-                  Tham khảo các dự án mẫu
-                </Link>
-              </div>
-            </div>
-            <div className="hero-panel" aria-hidden="true">
-              <div className="panel-row">
-                <span className="dot dot-it" /> IT
-              </div>
-              <div className="panel-row">
-                <span className="dot dot-design" /> Design
-              </div>
-              <div className="panel-row">
-                <span className="dot dot-mixed" /> IT / Design
-              </div>
-              <div className="panel-count">
-                <span>{services.length}</span> dịch vụ đang nhận yêu cầu
-              </div>
-            </div>
-          </div>
-        </section>
+      {/* Main Content Router */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        
+        {/* Customer Auth Page */}
+        {activeTab === "auth_customer" && (
+          <CustomerAuthPage
+            onAuthSuccess={() => setActiveTab("workspace")}
+            onSwitchToManagement={() => setActiveTab("auth_management")}
+          />
+        )}
 
-        <section className="catalog" id="catalog">
-          <div className="wrap">
-            <div className="catalog-head">
-              <h2>Danh mục dịch vụ</h2>
-              <div className="filters" role="tablist" aria-label="Lọc theo nhóm dịch vụ">
-                {categories.map((category) => (
-                  <button
-                    className={`filter-btn${activeCategory === category ? " is-active" : ""}`}
-                    data-category={category}
-                    key={category}
-                    type="button"
-                    onClick={() => setActiveCategory(category)}
-                  >
-                    {category === "all" ? "Tất cả" : category}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="grid">
-              {filteredServices.map((service) => {
-                const thumb = service.demoImages[0] ? (
-                  <img src={service.demoImages[0]} alt={service.name} loading="lazy" />
-                ) : (
-                  <span className="thumb-placeholder">Chưa có ảnh demo</span>
-                );
+        {/* Management Auth Portal (Admin & Staff) */}
+        {activeTab === "auth_management" && (
+          <ManagementAuthPage
+            onAuthSuccess={() => setActiveTab("workspace")}
+            onSwitchToCustomer={() => setActiveTab("auth_customer")}
+          />
+        )}
 
-                return (
-                  <article
-                    className="card"
-                    data-id={service.id}
-                    key={service.id}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Xem chi tiết ${service.name}`}
-                    onClick={() => openDetail(service.id)}
-                    onKeyDown={(event) => {
-                      if (event.key !== "Enter" && event.key !== " ") return;
-                      event.preventDefault();
-                      openDetail(service.id);
-                    }}
-                  >
-                    <span className={`card-tab ${categoryClass(service.category)}`}>
-                      {service.category}
-                    </span>
-                    <div className="card-thumb">{thumb}</div>
-                    <div className="card-body">
-                      <h3>{service.name}</h3>
-                      <p>{service.description}</p>
-                      <div className="card-meta">
-                        <span>{days(service.estimatedDays)}</span>
-                        <span>{money(service.estimatedPrice)}</span>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+        {/* Catalog Dịch vụ */}
+        {activeTab === "catalog" && (
+          <GuestView
+            onSelectServiceToBook={handleSelectServiceToBook}
+            onSwitchToWorkspace={() => setActiveTab("workspace")}
+          />
+        )}
+
+        {/* Public Projects Showcase */}
+        {activeTab === "projects" && (
+          <GuestView
+            onSelectServiceToBook={handleSelectServiceToBook}
+            onSwitchToWorkspace={() => setActiveTab("workspace")}
+          />
+        )}
+
+        {/* Workspace according strictly to active User Role */}
+        {activeTab === "workspace" && (
+          <>
+            {currentUser.role === "guest" && (
+              <CustomerAuthPage
+                onAuthSuccess={() => setActiveTab("workspace")}
+                onSwitchToManagement={() => setActiveTab("auth_management")}
+              />
+            )}
+
+            {currentUser.role === "customer" && (
+              <CustomerView preselectedServiceId={preselectedBookingServiceId} />
+            )}
+
+            {currentUser.role === "staff" && <StaffView />}
+
+            {currentUser.role === "admin" && <AdminView />}
+          </>
+        )}
+
       </main>
 
-      <footer className="site-footer">
-        <div className="wrap">4YouTech — dịch vụ IT &amp; Design theo yêu cầu.</div>
-      </footer>
-
-      <div
-        className="modal-overlay"
-        id="detail-overlay"
-        hidden={!detailOpen}
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) setDetailOpen(false);
-        }}
-      >
-        {activeService && (
-          <div className="modal modal-detail" role="dialog" aria-modal="true" aria-labelledby="detail-title">
-            <button
-              className="modal-close"
-              type="button"
-              aria-label="Đóng"
-              onClick={() => setDetailOpen(false)}
-            >
-              &times;
-            </button>
-            <div className="detail-body">
-              <span className={`badge ${categoryClass(activeService.category)}`}>
-                {activeService.category}
-              </span>
-              <h3 id="detail-title">{activeService.name}</h3>
-              <p>{activeService.description}</p>
-              <div className="detail-stats">
-                <div>
-                  <span className="stat-label">Thời gian dự kiến</span>
-                  <span className="stat-value">{days(activeService.estimatedDays)}</span>
-                </div>
-                <div>
-                  <span className="stat-label">Giá tham khảo</span>
-                  <span className="stat-value">{money(activeService.estimatedPrice)}</span>
-                </div>
-              </div>
-              <div className="gallery" id="detail-gallery">
-                {activeService.demoImages.length ? (
-                  activeService.demoImages.map((image) => (
-                    <img key={image} src={image} alt={`${activeService.name} — ảnh demo`} loading="lazy" />
-                  ))
-                ) : (
-                  <span className="gallery-empty">Chưa có ảnh demo cho dịch vụ này.</span>
-                )}
-              </div>
-              <button className="btn btn-accent btn-full" type="button" onClick={() => openBooking(activeService.id)}>
-                Đặt dịch vụ này
-              </button>
+      {/* Footer */}
+      <footer className="border-t border-slate-200 bg-white mt-16 py-12 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="space-y-3">
+            <div className="font-extrabold text-slate-900 text-base flex items-center gap-1.5">
+              4YouTech Platform
+              <Sparkles className="w-4 h-4 text-indigo-500 fill-indigo-500" />
             </div>
+            <p className="leading-relaxed">
+              Hệ thống cung cấp dịch vụ IT, lập trình web portfolio, phân tích hệ thống, CSDL ERD và thiết kế nhận diện thương hiệu dành riêng cho Sinh viên & CLB.
+            </p>
           </div>
-        )}
-      </div>
 
-      <div
-        className="modal-overlay"
-        id="booking-overlay"
-        hidden={!bookingOpen}
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) setBookingOpen(false);
-        }}
-      >
-        <div className="modal modal-booking" role="dialog" aria-modal="true" aria-labelledby="booking-title">
-          <button
-            className="modal-close"
-            type="button"
-            aria-label="Đóng"
-            onClick={() => setBookingOpen(false)}
-          >
-            &times;
-          </button>
-          <div id="booking-form-view" hidden={successOpen}>
-            <h3 id="booking-title">Đặt dịch vụ</h3>
-            <form id="booking-form" noValidate onSubmit={handleSubmit}>
-              <label className="field">
-                <span>Dịch vụ</span>
-                <select
-                  id="field-service"
-                  required
-                  value={form.serviceName}
-                  onChange={(event) => updateForm("serviceName", event.target.value)}
-                >
-                  {services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>Họ và tên</span>
-                <input
-                  type="text"
-                  id="field-name"
-                  required
-                  autoComplete="name"
-                  value={form.name}
-                  onChange={(event) => updateForm("name", event.target.value)}
-                />
-              </label>
-              <label className="field">
-                <span>Email</span>
-                <input
-                  type="email"
-                  id="field-email"
-                  required
-                  autoComplete="email"
-                  value={form.email}
-                  onChange={(event) => updateForm("email", event.target.value)}
-                />
-              </label>
-              <label className="field">
-                <span>Số điện thoại</span>
-                <input
-                  type="tel"
-                  id="field-phone"
-                  required
-                  autoComplete="tel"
-                  placeholder="0xxxxxxxxx"
-                  value={form.phone}
-                  onChange={(event) => updateForm("phone", event.target.value)}
-                />
-              </label>
-              <label className="field">
-                <span>Yêu cầu chi tiết</span>
-                <textarea
-                  id="field-requirement"
-                  rows={4}
-                  placeholder="Mô tả ngắn gọn nội dung bạn cần hỗ trợ..."
-                  value={form.requirement}
-                  onChange={(event) => updateForm("requirement", event.target.value)}
-                />
-              </label>
-              <label className="field">
-                <span>Thời hạn mong muốn (không bắt buộc)</span>
-                <input
-                  type="date"
-                  id="field-deadline"
-                  value={form.deadline}
-                  onChange={(event) => updateForm("deadline", event.target.value)}
-                />
-              </label>
-              <p className="form-error" id="form-error" hidden={!formError}>
-                {formError}
-              </p>
-              <button
-                type="submit"
-                className="btn btn-accent btn-full"
-                id="submit-btn"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Đang gửi..." : "Gửi yêu cầu"}
-              </button>
-            </form>
+          <div>
+            <div className="font-bold text-slate-900 mb-3 uppercase tracking-wider">Hỗ Trợ Dịch Vụ</div>
+            <ul className="space-y-2">
+              <li className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-indigo-500" /> Hotline: 0999.888.777</li>
+              <li className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-indigo-500" /> Email: support@4youtech.com</li>
+              <li className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-indigo-500" /> Khu Công Nghệ Cao, TP. HCM</li>
+            </ul>
           </div>
-          <div id="booking-success-view" hidden={!successOpen}>
-            <p className="success-mark">✓</p>
-            <h3>Đã gửi yêu cầu!</h3>
-            <p id="success-text">{successText}</p>
-            <button className="btn btn-ink btn-full" type="button" onClick={() => setBookingOpen(false)}>
-              Đóng
-            </button>
+
+          <div>
+            <div className="font-bold text-slate-900 mb-3 uppercase tracking-wider">Cổng Đăng Nhập Hệ Thống</div>
+            <ul className="space-y-2">
+              <li>
+                <button onClick={() => setActiveTab("auth_customer")} className="hover:text-indigo-600 underline">
+                  Cổng Đăng nhập Khách hàng
+                </button>
+              </li>
+              <li>
+                <button onClick={() => setActiveTab("auth_management")} className="hover:text-indigo-600 underline">
+                  Cổng Đăng nhập Nội bộ (Admin & Staff)
+                </button>
+              </li>
+              <li>✓ Bàn giao đúng hẹn 100%</li>
+              <li>✓ Bảo mật tuyệt đối thông tin khách hàng</li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="font-bold text-slate-900 mb-3 uppercase tracking-wider">Bản Quyền</div>
+            <p className="leading-relaxed">
+              © 2026 4YouTech. Đã đăng ký bản quyền. Phát triển bởi Đội ngũ IT & Design 4YouTech.
+            </p>
           </div>
         </div>
-      </div>
-    </>
+      </footer>
+    </div>
+  );
+}
+
+export function BookingSite({ services }: { services?: any }) {
+  return (
+    <AppProvider>
+      <MainAppContent />
+    </AppProvider>
   );
 }
