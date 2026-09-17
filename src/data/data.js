@@ -72,3 +72,49 @@ export const SERVICES = [
     demoImages: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaRjjrKKecxrJJG-rArfygfBHWx5qkJdeXtRh0ijR1kzXJ4XBgth_xlYa1&s=10"],
   },
 ];
+
+export const PROJECT_REFERENCES = [
+  {
+    id: "portfolio-ca-nhan",
+    name: "Portfolio cá nhân",
+    category: "IT",
+    image:
+      "https://cdn-media.sforum.vn/storage/app/media/thanhhuyen/m%E1%BA%ABu%20Portfolio/mau-portfolio-thumb.jpg",
+  },
+  {
+    id: "portfolio-thiet-ke-moi",
+    name: "Portfolio thiết kế mới",
+    category: "IT",
+    image:
+      "https://careers.hbr.edu.vn/storage/images/2025/07/29/mau-portfolio-2.webp",
+  },
+  {
+    id: "giao-dien-ung-dung",
+    name: "Giao diện ứng dụng",
+    category: "IT/Design",
+    image:
+      "https://cdn.dribbble.com/userupload/47885259/file/8fdd38e5380156785cc4f427fcfd4d7c.png",
+  },
+  {
+    id: "co-so-du-lieu",
+    name: "Thiết kế cơ sở dữ liệu",
+    category: "IT",
+    image:
+      "https://substackcdn.com/image/fetch/$s_!DTF5!,w_1200,h_675,c_fill,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fd7e87813-2921-4379-a1c9-c101092fda5d_1241x1600.png",
+  },
+  {
+    id: "phan-tich-he-thong",
+    name: "Phân tích hệ thống",
+    category: "IT",
+    image:
+      "https://cdn.prod.website-files.com/6529762860f5d2796d4eb495/66cc5478f7467215966986ec_65e85cd00d3fa3f98a476ba9_System%2520analysis%2520and%2520design-system%2520development%2520lifecycle-grorapidlabs.png",
+  },
+  {
+    id: "nhan-dien-thuong-hieu",
+    name: "Nhận diện thương hiệu",
+    category: "Design",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaRjjrKKecxrJJG-rArfygfBHWx5qkJdeXtRh0ijR1kzXJ4XBgth_xlYa1&s=10",
+  },
+];
+

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { categories, type FilterCategory, type Service } from "@/data/services";
 import { sendBookingEmail, emailConfig, type BookingPayload } from "@/lib/email";
+import Link from "next/link";
 
 const money = (value: number | null) =>
   value == null ? "Liên hệ để báo giá" : `${value.toLocaleString("vi-VN")} ₫`;
@@ -176,9 +177,14 @@ export function BookingSite({ services }: BookingSiteProps) {
                 thương hiệu — chọn dịch vụ, gửi yêu cầu, chúng tôi liên hệ lại trong
                 thời gian sớm nhất.
               </p>
-              <a href="#catalog" className="btn btn-ink">
-                Xem danh mục dịch vụ
-              </a>
+              <div className="hero-actions">
+                <a href="#catalog" className="btn btn-ink">
+                  Xem danh mục dịch vụ
+                </a>
+                <Link href="/du-an-mau" className="btn btn-ink">
+                  Tham khảo các dự án mẫu
+                </Link>
+              </div>
             </div>
             <div className="hero-panel" aria-hidden="true">
               <div className="panel-row">
