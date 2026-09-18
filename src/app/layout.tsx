@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Inter, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} ${jetBrainsMono.variable}`}>
       <body>{children}</body>
+      <Analytics />
     </html>
   );
 }
