@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useApp } from "@/lib/app-context";
-import { ServiceOrder } from "@/lib/store";
+import { ServiceOrder, hashPassword } from "@/lib/store";
 import { PaymentCheckoutModal } from "@/components/payment-checkout-modal";
 import {
   PlusCircle,
@@ -25,7 +25,11 @@ import {
   DollarSign,
   ShieldCheck,
   Eye,
-  QrCode
+  QrCode,
+  Lock,
+  Pencil,
+  KeyRound,
+  Sparkles
 } from "lucide-react";
 
 export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: string }) {
@@ -77,12 +81,73 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
   const [ticketForm, setTicketForm] = useState({ subject: "", content: "", type: "support" as "support" | "complaint" });
 
   const [chatInput, setChatInput] = useState("");
+  
+  // Profile edit mode state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: currentUser.name,
     phone: currentUser.phone || "",
     avatar: currentUser.avatar || ""
   });
-  const [profileMsg, setProfileMsg] = useState("");
+  const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Change Password state
+  const [passForm, setPassForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [passMsg, setPassMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileForm.name.trim()) {
+      setProfileMsg({ type: "error", text: "Vui lòng không để trống họ và tên." });
+      return;
+    }
+    updateUserProfile(currentUser.id, profileForm);
+    setProfileMsg({ type: "success", text: "Đã lưu thay đổi thông tin cá nhân thành công!" });
+    setIsEditingProfile(false);
+  };
+
+  const handleCancelProfileEdit = () => {
+    setProfileForm({
+      name: currentUser.name,
+      phone: currentUser.phone || "",
+      avatar: currentUser.avatar || ""
+    });
+    setProfileMsg(null);
+    setIsEditingProfile(false);
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPassMsg(null);
+    if (!passForm.currentPassword || !passForm.newPassword || !passForm.confirmPassword) {
+      setPassMsg({ type: "error", text: "Vui lòng nhập đầy đủ các trường mật khẩu." });
+      return;
+    }
+
+    if (currentUser.password && hashPassword(passForm.currentPassword) !== currentUser.password) {
+      setPassMsg({ type: "error", text: "Mật khẩu hiện tại không chính xác!" });
+      return;
+    }
+
+    if (passForm.newPassword.length < 6) {
+      setPassMsg({ type: "error", text: "Mật khẩu mới phải có tối thiểu 6 ký tự." });
+      return;
+    }
+
+    if (passForm.newPassword !== passForm.confirmPassword) {
+      setPassMsg({ type: "error", text: "Xác nhận mật khẩu mới không trùng khớp!" });
+      return;
+    }
+
+    const hashed = hashPassword(passForm.newPassword);
+    updateUserProfile(currentUser.id, { password: hashed });
+    setPassMsg({ type: "success", text: "Đổi mật khẩu thành công!" });
+    setPassForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  };
 
   const selectedOrder = orders.find((o) => o.id === selectedOrderId) || myOrders[0];
 
@@ -119,7 +184,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
       under_review: { title: "Đang đánh giá", color: "status-under_review" },
       info_requested: { title: "Cần bổ sung thông tin", color: "status-info_requested" },
       quoted: { title: "Đã có báo giá", color: "status-quoted" },
-      deposit_pending: { title: "Chờ đặt cọc", color: "status-deposit_pending" },
+      deposit_pending: { title: "Đã chuyển cọc (Chờ duyệt)", color: "status-deposit_pending" },
       in_progress: { title: "Đang thực hiện", color: "status-in_progress" },
       deliverable_sent: { title: "Đã gửi sản phẩm thử", color: "status-deliverable_sent" },
       revision_requested: { title: "Khách yêu cầu sửa", color: "status-revision_requested" },
@@ -172,53 +237,203 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
         </div>
       </div>
 
-      {/* Profile Tab */}
+      {/* Profile & Change Password Tab */}
       {activeTab === "profile" && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-xl mx-auto space-y-6">
-          <h2 className="text-xl font-black text-slate-900">Cập nhật Hồ Sơ Khách Hàng</h2>
-          {profileMsg && <div className="p-3 bg-emerald-50 text-emerald-800 text-xs rounded-xl font-medium">{profileMsg}</div>}
+        <div className="max-w-2xl mx-auto space-y-8">
           
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Họ và tên</label>
-              <input
-                type="text"
-                value={profileForm.name}
-                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
-              />
+          {/* Section 1: Update Profile */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Cập nhật Hồ Sơ Khách Hàng</h2>
+                <p className="text-xs text-slate-500 mt-1">Quản lý họ tên, số điện thoại và ảnh đại diện</p>
+              </div>
+
+              {!isEditingProfile ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingProfile(true)}
+                  className="px-4 py-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold text-xs transition flex items-center gap-1.5 border border-indigo-100"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Chỉnh Sửa Thông Tin
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleCancelProfileEdit}
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-semibold text-xs transition"
+                >
+                  Hủy Chỉnh Sửa
+                </button>
+              )}
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Số điện thoại</label>
-              <input
-                type="text"
-                value={profileForm.phone}
-                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
-              />
-            </div>
+            {profileMsg && (
+              <div
+                className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                  profileMsg.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                    : "bg-rose-50 text-rose-800 border border-rose-200"
+                }`}
+              >
+                {profileMsg.type === "success" ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                )}
+                {profileMsg.text}
+              </div>
+            )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Avatar Link</label>
-              <input
-                type="text"
-                value={profileForm.avatar}
-                onChange={(e) => setProfileForm({ ...profileForm, avatar: e.target.value })}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
-              />
-            </div>
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email Đăng Nhập</label>
+                <input
+                  type="email"
+                  disabled
+                  value={currentUser.email}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-500 cursor-not-allowed"
+                />
+              </div>
 
-            <button
-              onClick={() => {
-                updateUserProfile(currentUser.id, profileForm);
-                setProfileMsg("Đã lưu thay đổi hồ sơ thành công!");
-              }}
-              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs shadow-md"
-            >
-              Lưu Thông Tin Hồ Sơ
-            </button>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Họ và tên</label>
+                <input
+                  type="text"
+                  disabled={!isEditingProfile}
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none transition ${
+                    isEditingProfile
+                      ? "bg-white border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
+                      : "bg-slate-50 border-slate-200 text-slate-700 cursor-not-allowed"
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Số điện thoại</label>
+                <input
+                  type="text"
+                  disabled={!isEditingProfile}
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none transition ${
+                    isEditingProfile
+                      ? "bg-white border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
+                      : "bg-slate-50 border-slate-200 text-slate-700 cursor-not-allowed"
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Avatar Link</label>
+                <input
+                  type="text"
+                  disabled={!isEditingProfile}
+                  value={profileForm.avatar}
+                  onChange={(e) => setProfileForm({ ...profileForm, avatar: e.target.value })}
+                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none transition ${
+                    isEditingProfile
+                      ? "bg-white border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
+                      : "bg-slate-50 border-slate-200 text-slate-700 cursor-not-allowed"
+                  }`}
+                />
+              </div>
+
+              {isEditingProfile && (
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 rounded-xl gradient-btn font-bold text-xs shadow-md"
+                  >
+                    Lưu Thông Tin Hồ Sơ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelProfileEdit}
+                    className="px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              )}
+            </form>
           </div>
+
+          {/* Section 2: Change Password */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
+              <KeyRound className="w-5 h-5 text-indigo-600" />
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Đổi Mật Khẩu</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Cập nhật mật khẩu đăng nhập bảo mật tài khoản</p>
+              </div>
+            </div>
+
+            {passMsg && (
+              <div
+                className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                  passMsg.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                    : "bg-rose-50 text-rose-800 border border-rose-200"
+                }`}
+              >
+                {passMsg.type === "success" ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                )}
+                {passMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mật khẩu hiện tại *</label>
+                <input
+                  type="password"
+                  required
+                  value={passForm.currentPassword}
+                  onChange={(e) => setPassForm({ ...passForm, currentPassword: e.target.value })}
+                  placeholder="Nhập mật khẩu hiện tại..."
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mật khẩu mới *</label>
+                <input
+                  type="password"
+                  required
+                  value={passForm.newPassword}
+                  onChange={(e) => setPassForm({ ...passForm, newPassword: e.target.value })}
+                  placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Xác nhận mật khẩu mới *</label>
+                <input
+                  type="password"
+                  required
+                  value={passForm.confirmPassword}
+                  onChange={(e) => setPassForm({ ...passForm, confirmPassword: e.target.value })}
+                  placeholder="Nhập lại mật khẩu mới..."
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition"
+              >
+                Cập Nhật Mật Khẩu
+              </button>
+            </form>
+          </div>
+
         </div>
       )}
 
@@ -238,7 +453,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 onChange={(e) => setNewForm({ ...newForm, serviceId: e.target.value })}
                 className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                {services.map((srv) => (
+                {services.filter((srv) => !srv.hidden).map((srv) => (
                   <option key={srv.id} value={srv.id}>
                     [{srv.category}] {srv.name}
                   </option>
@@ -352,9 +567,17 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
                     <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
                       <span>{ord.createdAt}</span>
-                      {canPay ? (
+                      {ord.isBeingEdited || ord.status === "under_review" ? (
+                        <span className="font-bold text-rose-600 flex items-center gap-1">
+                          <Lock className="w-3 h-3" /> Admin đang edit
+                        </span>
+                      ) : ord.status === "quoted" ? (
                         <span className="font-bold text-amber-600 flex items-center gap-1">
                           <QrCode className="w-3 h-3" /> Cần đặt cọc
+                        </span>
+                      ) : ord.status === "deposit_pending" ? (
+                        <span className="font-bold text-amber-700 flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> Chờ duyệt cọc
                         </span>
                       ) : (
                         <span className="font-semibold text-indigo-600">{ord.progressPercent}% hoàn thành</span>
@@ -368,7 +591,13 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
           {/* Right Column: Selected Order Hub */}
           <div className="lg:col-span-8">
-            {selectedOrder ? (
+            {selectedOrder ? (() => {
+              const selectedQuotedAmount = selectedOrder.quotation?.amount || 0;
+              const selectedAmountPaid = selectedOrder.paymentInfo?.amountPaid || 0;
+              const selectedRemaining = Math.max(0, selectedQuotedAmount - selectedAmountPaid);
+              const isPendingFinalPayment = selectedOrder.status === "accepted" && selectedRemaining > 0;
+
+              return (
               <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-8 animate-fade-in">
                 
                 {/* Header Summary */}
@@ -377,7 +606,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-400">{selectedOrder.id}</span>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${statusLabel(selectedOrder.status).color}`}>
-                        {statusLabel(selectedOrder.status).title}
+                        {isPendingFinalPayment ? "Đã Nghiệm Thu (Chờ Thu 50% Còn Lại)" : statusLabel(selectedOrder.status).title}
                       </span>
                     </div>
                     <h2 className="text-xl font-black text-slate-900 mt-1">{selectedOrder.serviceName}</h2>
@@ -391,6 +620,15 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                         className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md"
                       >
                         <QrCode className="w-4 h-4" /> Quét Mã VietQR Thanh Toán
+                      </button>
+                    )}
+
+                    {isPendingFinalPayment && (
+                      <button
+                        onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                        className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 animate-bounce"
+                      >
+                        <QrCode className="w-4 h-4" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
                       </button>
                     )}
 
@@ -416,7 +654,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                       </div>
                     )}
 
-                    {selectedOrder.status === "accepted" && (
+                    {["accepted", "completed"].includes(selectedOrder.status) && (
                       <button
                         onClick={() => setShowReviewModal(true)}
                         className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5"
@@ -496,15 +734,62 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                         Đã thanh toán: <span className="font-bold">{selectedOrder.paymentInfo?.amountPaid ? `${selectedOrder.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫` : "0 ₫"}</span>
                       </div>
                       
-                      {["quoted", "deposit_pending"].includes(selectedOrder.status) && (
+                      {selectedOrder.isBeingEdited || selectedOrder.status === "under_review" ? (
+                        <div className="px-3.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-rose-500" /> Admin đang chỉnh sửa giá/dịch vụ (Tạm khóa thanh toán)
+                        </div>
+                      ) : isPendingFinalPayment ? (
+                        <button
+                          onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5"
+                        >
+                          <QrCode className="w-3.5 h-3.5" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
+                        </button>
+                      ) : selectedOrder.status === "quoted" ? (
                         <button
                           onClick={() => setActiveCheckoutOrder(selectedOrder)}
                           className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md"
                         >
-                          <QrCode className="w-3.5 h-3.5" /> Thanh Toán VietQR Tự Động
+                          <QrCode className="w-3.5 h-3.5" /> Thanh Toán VietQR / VNPay
                         </button>
-                      )}
+                      ) : selectedOrder.status === "deposit_pending" ? (
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-amber-700" /> Đã gửi cọc (Chờ Admin duyệt)
+                          </span>
+                          <button
+                            onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                            className="px-2.5 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-800 font-semibold text-[11px] hover:bg-amber-50"
+                          >
+                            Xem biên lai / Chuyển thêm
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
+                  </div>
+                )}
+
+                {/* 50% Remaining Balance Payment Banner */}
+                {isPendingFinalPayment && (
+                  <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-3 shadow-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="font-extrabold text-sm flex items-center gap-2 text-amber-900">
+                        <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                        🎉 Sản Phẩm Đã Nghiệm Thu — Yêu Cầu Thanh Toán 50% Số Tiền Còn Lại
+                      </div>
+                      <span className="font-black text-amber-700 text-base">
+                        {selectedRemaining.toLocaleString("vi-VN")} ₫
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      Bạn đã nghiệm thu kết quả bàn giao công việc thành công! Vui lòng thanh toán nốt 50% số tiền còn lại để đơn hàng chuyển sang trạng thái <strong>Hoàn thành 100%</strong> và nhận đầy đủ file mã nguồn chính thức.
+                    </p>
+                    <button
+                      onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                      className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md flex items-center gap-2 transition"
+                    >
+                      <QrCode className="w-4 h-4" /> Thanh Toán 50% Còn Lại Ngay ({selectedRemaining.toLocaleString("vi-VN")} ₫)
+                    </button>
                   </div>
                 )}
 
@@ -544,6 +829,11 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                             >
                               <Download className="w-3.5 h-3.5" /> Tải về / Xem Link
                             </a>
+                            {isPendingFinalPayment && (
+                              <span className="text-[11px] font-semibold text-amber-700">
+                                ⚠️ Cần thanh toán nốt 50% để nhận bàn giao chính thức
+                              </span>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -561,19 +851,21 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                     {selectedOrder.messages.length === 0 ? (
                       <div className="text-center text-xs text-slate-400 py-4">Chưa có tin nhắn nào</div>
                     ) : (
-                      selectedOrder.messages.map((m) => {
-                        const isMe = m.senderId === currentUser.id;
+                      selectedOrder.messages.map((msg) => {
+                        const isMe = msg.senderId === currentUser.id;
                         return (
-                          <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                          <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                             <div className="text-[10px] text-slate-400 mb-0.5">
-                              {m.senderName} ({m.senderRole}) • {m.createdAt}
+                              {msg.senderName} ({msg.senderRole}) • {msg.createdAt}
                             </div>
                             <div
-                              className={`p-3 rounded-2xl text-xs max-w-md ${
-                                isMe ? "bg-indigo-600 text-white font-medium" : "bg-white text-slate-800 border border-slate-200"
+                              className={`p-3 rounded-2xl max-w-md text-xs ${
+                                isMe
+                                  ? "bg-indigo-600 text-white rounded-tr-none shadow-xs"
+                                  : "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
                               }`}
                             >
-                              {m.text}
+                              {msg.text}
                             </div>
                           </div>
                         );
@@ -596,7 +888,8 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 </div>
 
               </div>
-            ) : null}
+              );
+            })() : null}
           </div>
 
         </div>

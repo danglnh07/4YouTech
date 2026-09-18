@@ -128,6 +128,18 @@ export function Header({
               <RotateCcw className="w-4 h-4" />
             </button>
 
+            {/* Realtime Status Indicator Badge */}
+            <div
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold cursor-help"
+              title="Hệ thống đang hoạt động ở chế độ Real-time (Đồng bộ tức thì). Bất kỳ thay đổi nào từ Admin/Staff sẽ hiển thị ngay lập tức mà không cần F5/load trang!"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              Realtime Sync Active
+            </div>
+
             {/* Notification Bell */}
             {isAuthenticated && (
               <div className="relative">

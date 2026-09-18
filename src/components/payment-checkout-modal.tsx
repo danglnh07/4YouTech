@@ -30,10 +30,16 @@ export function PaymentCheckoutModal({
   const { submitPaymentTransaction, submitVNPaySandboxPayment } = useApp();
 
   const totalQuotedAmount = order.quotation?.amount || 1000000;
+  const amountAlreadyPaid = order.paymentInfo?.amountPaid || 0;
+  const remainingBalance = Math.max(0, totalQuotedAmount - amountAlreadyPaid);
   const deposit50 = Math.round(totalQuotedAmount * 0.5);
 
+  const isSecondPayment = amountAlreadyPaid > 0 && remainingBalance > 0;
+
   const [method, setMethod] = useState<"vnpay" | "vietqr">("vnpay");
-  const [paymentType, setPaymentType] = useState<"deposit" | "full">("deposit");
+  const [paymentType, setPaymentType] = useState<"deposit" | "full" | "remaining">(
+    isSecondPayment ? "remaining" : "deposit"
+  );
 
   // VNPay Sandbox Form State
   const [vnpBank, setVnpBank] = useState<string>("NCB");
@@ -53,7 +59,12 @@ export function PaymentCheckoutModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const payAmount = paymentType === "deposit" ? deposit50 : totalQuotedAmount;
+  const payAmount =
+    paymentType === "remaining"
+      ? remainingBalance
+      : paymentType === "deposit"
+      ? deposit50
+      : totalQuotedAmount;
   const transferMemo = `4YOUTECH ${order.id}`;
 
   // VietQR Link
@@ -72,34 +83,52 @@ export function PaymentCheckoutModal({
     }
   };
 
+  const isEditingLocked = order.isBeingEdited || ["submitted", "under_review"].includes(order.status);
+
   const handleVNPaySubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isEditingLocked) {
+      alert("⚠️ Đơn hàng đang được Admin chỉnh sửa báo giá / dịch vụ! Tạm thời không thể thanh toán.");
+      return;
+    }
     setIsSubmitting(true);
     setTimeout(() => {
-      submitVNPaySandboxPayment(order.id, payAmount, paymentType, vnpBank);
-      setIsSubmitting(false);
-      alert(
-        `💳 [VNPay Sandbox Success] Thanh toán ${payAmount.toLocaleString(
-          "vi-VN"
-        )} ₫ thành công qua ngân hàng ${vnpBank}! Mã phản hồi 00. Đơn hàng đã tự động chuyển sang trạng thái Đang thực hiện.`
-      );
-      onClose();
+      try {
+        submitVNPaySandboxPayment(order.id, payAmount, paymentType, vnpBank);
+        setIsSubmitting(false);
+        alert(
+          `💳 [VNPay Sandbox Success] Thanh toán ${payAmount.toLocaleString(
+            "vi-VN"
+          )} ₫ thành công qua ngân hàng ${vnpBank}! Mã phản hồi 00. Đơn hàng đã tự động chuyển sang trạng thái Đang thực hiện.`
+        );
+        onClose();
+      } catch (err: any) {
+        setIsSubmitting(false);
+      }
     }, 1200);
   };
 
   const handleSubmitVietQr = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isEditingLocked) {
+      alert("⚠️ Đơn hàng đang được Admin chỉnh sửa báo giá / dịch vụ! Tạm thời không thể thanh toán.");
+      return;
+    }
     if (!receiptImage) {
       alert("Vui lòng tải hoặc cung cấp link ảnh biên lai thanh toán.");
       return;
     }
     setIsSubmitting(true);
-    submitPaymentTransaction(order.id, payAmount, paymentType, receiptImage, noteText);
-    setTimeout(() => {
+    try {
+      submitPaymentTransaction(order.id, payAmount, paymentType, receiptImage, noteText);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        alert(`Gửi biên lai giao dịch ${payAmount.toLocaleString("vi-VN")} ₫ thành công! Admin sẽ xác minh sớm.`);
+        onClose();
+      }, 600);
+    } catch (err: any) {
       setIsSubmitting(false);
-      alert(`Gửi biên lai giao dịch ${payAmount.toLocaleString("vi-VN")} ₫ thành công! Admin sẽ xác minh sớm.`);
-      onClose();
-    }, 600);
+    }
   };
 
   return (
@@ -111,6 +140,16 @@ export function PaymentCheckoutModal({
         >
           <X className="w-5 h-5" />
         </button>
+
+        {isEditingLocked && (
+          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-3">
+            <Lock className="w-5 h-5 text-rose-600 shrink-0" />
+            <div>
+              <div className="font-bold text-rose-900">Đơn hàng / Báo giá đang được Admin chỉnh sửa!</div>
+              <p className="mt-0.5 text-rose-700">Tạm thời hệ thống khóa tính năng thanh toán để đảm bảo tính nhất quán dữ liệu. Vui lòng thử lại sau.</p>
+            </div>
+          </div>
+        )}
 
         {/* Modal Header */}
         <div className="space-y-1 border-b border-slate-100 pb-4">
@@ -124,33 +163,45 @@ export function PaymentCheckoutModal({
         </div>
 
         {/* Payment Amount Type Toggle */}
-        <div className="grid grid-cols-2 gap-3 bg-slate-100 p-1.5 rounded-2xl">
-          <button
-            type="button"
-            onClick={() => setPaymentType("deposit")}
-            className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center ${
-              paymentType === "deposit"
-                ? "bg-white text-indigo-600 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <span>Đặt Cọc 50%</span>
-            <span className="text-sm font-black mt-0.5">{deposit50.toLocaleString("vi-VN")} ₫</span>
-          </button>
+        {isSecondPayment ? (
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-xs space-y-1">
+            <div className="font-bold text-amber-900 flex items-center justify-between">
+              <span>Thanh Toán 50% Số Tiền Còn Lại (Sau Nghiệm Thu)</span>
+              <span className="text-base font-black text-amber-700">{remainingBalance.toLocaleString("vi-VN")} ₫</span>
+            </div>
+            <p className="text-amber-800 text-[11px] leading-relaxed">
+              Đơn hàng đã đặt cọc 50% trước đó ({amountAlreadyPaid.toLocaleString("vi-VN")} ₫). Bạn đang thực hiện thanh toán 50% số tiền còn lại sau khi đã nghiệm thu sản phẩm để hoàn tất 100%.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 bg-slate-100 p-1.5 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => setPaymentType("deposit")}
+              className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center ${
+                paymentType === "deposit"
+                  ? "bg-white text-indigo-600 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>Đặt Cọc 50%</span>
+              <span className="text-sm font-black mt-0.5">{deposit50.toLocaleString("vi-VN")} ₫</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setPaymentType("full")}
-            className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center ${
-              paymentType === "full"
-                ? "bg-white text-indigo-600 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <span>Thanh Toán Full 100%</span>
-            <span className="text-sm font-black mt-0.5">{totalQuotedAmount.toLocaleString("vi-VN")} ₫</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setPaymentType("full")}
+              className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center ${
+                paymentType === "full"
+                  ? "bg-white text-indigo-600 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>Thanh Toán Full 100%</span>
+              <span className="text-sm font-black mt-0.5">{totalQuotedAmount.toLocaleString("vi-VN")} ₫</span>
+            </button>
+          </div>
+        )}
 
         {/* Payment Method Selector Tabs */}
         <div className="flex border-b border-slate-200">

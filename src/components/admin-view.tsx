@@ -35,7 +35,14 @@ import {
   Check,
   CreditCard,
   QrCode,
-  FileCheck
+  FileCheck,
+  Filter,
+  Calendar,
+  Clock,
+  ExternalLink,
+  ChevronRight,
+  FileText,
+  Lock
 } from "lucide-react";
 
 export function AdminView() {
@@ -52,7 +59,9 @@ export function AdminView() {
     toggleServiceHidden,
     addProject,
     updateProject,
+    deleteProject,
     issueQuotation,
+    setOrderEditingState,
     assignStaff,
     approvePaymentTransaction,
     rejectPaymentTransaction,
@@ -66,8 +75,14 @@ export function AdminView() {
     "overview" | "requests" | "payments" | "users" | "services" | "projects" | "reviews"
   >("overview");
 
+  // Selected Order for Detail Inspection Modal or Split View
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(orders[0]?.id || null);
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState<boolean>(false);
   const selectedOrder = orders.find((o) => o.id === selectedOrderId) || orders[0];
+
+  // Search & Filter state for Orders
+  const [orderSearchQuery, setOrderSearchQuery] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
 
   // Quotation Issuer Modal state
   const [showQuoteModal, setShowQuoteModal] = useState(false);
@@ -94,6 +109,7 @@ export function AdminView() {
 
   // Add/Edit Project Modal state
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [projectForm, setProjectForm] = useState<Omit<SampleProject, "id">>({
     name: "",
     category: "IT",
@@ -103,6 +119,11 @@ export function AdminView() {
     featured: true
   });
 
+  // View Detail Modals
+  const [viewingServiceDetail, setViewingServiceDetail] = useState<ServiceItem | null>(null);
+  const [viewingUserDetail, setViewingUserDetail] = useState<User | null>(null);
+  const [viewingProjectDetail, setViewingProjectDetail] = useState<SampleProject | null>(null);
+
   // Edit Staff Skills modal state
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
   const [skillsInput, setSkillsInput] = useState("");
@@ -111,17 +132,108 @@ export function AdminView() {
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [refundAmount, setRefundAmount] = useState(0);
 
-  // Compute Metrics
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.paymentInfo?.amountPaid || 0), 0);
+  // ----------------------------------------------------
+  // ACCURATE METRICS CALCULATIONS
+  // ----------------------------------------------------
+  // 1) Total Verified Revenue (Real Money Collected)
+  const totalVerifiedRevenue = transactions
+    .filter((t) => t.status === "verified")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  // Fallback: If transactions list is empty or partially updated, include orders with amountPaid
+  const orderAmountPaidSum = orders.reduce((sum, o) => {
+    // If order has transactions linked, avoid double counting
+    const hasTxn = transactions.some((t) => t.orderId === o.id && t.status === "verified");
+    if (hasTxn) return sum;
+    return sum + (o.paymentInfo?.paymentStatus === "verified" ? o.paymentInfo.amountPaid : 0);
+  }, 0);
+
+  const finalTotalRevenue = totalVerifiedRevenue + orderAmountPaidSum;
+
+  // 2) Quoted / Expected Total Contract Value
+  const totalQuotedContractValue = orders.reduce(
+    (sum, o) => sum + (o.quotation?.amount || 0),
+    0
+  );
+
+  // 3) User & Order Status Counts
   const staffList = users.filter((u) => u.role === "staff");
-  const pendingRequests = orders.filter((o) => ["submitted", "under_review", "info_requested"].includes(o.status));
-  const activeOrders = orders.filter((o) => ["in_progress", "deliverable_sent", "revision_requested"].includes(o.status));
+  const customerList = users.filter((u) => u.role === "customer");
+  const activeCustomersCount = new Set(orders.map((o) => o.customerEmail || o.customerId)).size;
+  const pendingQuoteOrders = orders.filter((o) =>
+    ["submitted", "under_review", "info_requested"].includes(o.status)
+  );
+  const quotedOrders = orders.filter((o) => o.status === "quoted");
+  const inProgressOrders = orders.filter((o) =>
+    ["deposit_pending", "in_progress", "revision_requested"].includes(o.status)
+  );
+  const deliverableOrders = orders.filter((o) => o.status === "deliverable_sent");
+  const completedOrders = orders.filter((o) =>
+    ["accepted", "completed"].includes(o.status)
+  );
+  const cancelledOrders = orders.filter((o) =>
+    ["cancelled", "cancel_requested"].includes(o.status)
+  );
+
   const pendingTxns = transactions.filter((t) => t.status === "pending");
+
+  // Filtered Orders List
+  const filteredOrders = orders.filter((o) => {
+    const matchesSearch =
+      o.id.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+      o.customerName.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+      o.serviceName.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+      o.customerEmail.toLowerCase().includes(orderSearchQuery.toLowerCase());
+
+    const matchesStatus =
+      orderStatusFilter === "all" ||
+      (orderStatusFilter === "pending_quote" && ["submitted", "under_review", "info_requested"].includes(o.status)) ||
+      (orderStatusFilter === "in_progress" && ["deposit_pending", "in_progress", "revision_requested"].includes(o.status)) ||
+      (orderStatusFilter === "deliverable_sent" && o.status === "deliverable_sent") ||
+      (orderStatusFilter === "completed" && ["accepted", "completed"].includes(o.status)) ||
+      (orderStatusFilter === "cancelled" && ["cancelled", "cancel_requested"].includes(o.status));
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusBadge = (status: ServiceOrder["status"]) => {
+    switch (status) {
+      case "submitted":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Mới Gửi</span>;
+      case "under_review":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Đang Khảo Sát</span>;
+      case "quoted":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">Đã Báo Giá</span>;
+      case "deposit_pending":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800">Chờ Duyệt Tiền</span>;
+      case "in_progress":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">Đang Thực Hiện</span>;
+      case "deliverable_sent":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100 text-cyan-800">Đã Bàn Giao (v1)</span>;
+      case "revision_requested":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 text-pink-800">Yêu Cầu Chỉnh Sửa</span>;
+      case "accepted":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Đã Nghiệm Thu (Chờ Thu 50%)</span>;
+      case "completed":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Hoàn Thành (100%)</span>;
+      case "cancel_requested":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Chờ Duyệt Hủy</span>;
+      case "cancelled":
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Đã Hủy</span>;
+      default:
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800">{status}</span>;
+    }
+  };
+
+  const openOrderDetail = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setShowOrderDetailModal(true);
+  };
 
   return (
     <div className="space-y-8 pb-16">
       
-      {/* Admin Control Bar */}
+      {/* Admin Control Header Bar */}
       <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
@@ -156,40 +268,146 @@ export function AdminView() {
         </div>
       </div>
 
-      {/* OVERVIEW & METRICS TAB */}
+      {/* TAB 1: OVERVIEW & METRICS */}
       {activeAdminTab === "overview" && (
         <div className="space-y-8 animate-fade-in">
           
-          {/* Top KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Doanh Thu Thực Thu</div>
-              <div className="text-2xl font-black text-emerald-600">{totalRevenue.toLocaleString("vi-VN")} ₫</div>
-              <div className="text-[11px] text-slate-400">Từ tiền cọc & thanh toán đủ của khách</div>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Giao Dịch Chờ Xác Minh</div>
-              <div className="text-2xl font-black text-amber-500">{pendingTxns.length} giao dịch</div>
-              <div className="text-[11px] text-slate-400">Cần duyệt chuyển khoản VietQR</div>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đơn Hàng Đang Chạy</div>
-              <div className="text-2xl font-black text-purple-600">{activeOrders.length} đơn</div>
-              <div className="text-[11px] text-slate-400">Đã phân công Staff thực hiện</div>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tỷ Lệ Hài Lòng (Rating)</div>
-              <div className="text-2xl font-black text-amber-500 flex items-center gap-1">
-                5.0 <Star className="w-5 h-5 fill-amber-400" />
+          {/* Top KPI Cards - Real Accurate Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Doanh Thu Thực Thu</div>
+                <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
+                  <DollarSign className="w-5 h-5" />
+                </div>
               </div>
-              <div className="text-[11px] text-slate-400">{reviews.length} lượt đánh giá công khai</div>
+              <div className="text-2xl font-black text-emerald-600">{finalTotalRevenue.toLocaleString("vi-VN")} ₫</div>
+              <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                Đã xác minh qua VNPay & VietQR
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Giá Trị Đã Báo Giá</div>
+                <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-indigo-600">{totalQuotedContractValue.toLocaleString("vi-VN")} ₫</div>
+              <div className="text-[11px] text-slate-400">Tổng hợp đồng & báo giá chính thức</div>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Customer</div>
+                <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                  <Users className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900">{customerList.length} Khách Hàng</div>
+              <div className="text-[11px] text-slate-400">
+                <span className="text-blue-600 font-bold">{activeCustomersCount} khách</span> phát sinh đơn hàng
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Đơn Hàng</div>
+                <div className="p-2 bg-purple-50 rounded-xl text-purple-600">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900">{orders.length} Đơn Hàng</div>
+              <div className="text-[11px] text-slate-400">
+                <span className="text-purple-600 font-bold">{inProgressOrders.length} đang chạy</span> •{" "}
+                <span className="text-emerald-600 font-bold">{completedOrders.length} xong</span>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cần Xử Lý Ngay</div>
+                <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-amber-500">
+                {pendingQuoteOrders.length + pendingTxns.length} Mục
+              </div>
+              <div className="text-[11px] text-slate-400">
+                {pendingQuoteOrders.length} chưa báo giá • {pendingTxns.length} chờ duyệt tiền
+              </div>
             </div>
           </div>
 
-          {/* Service Statistics Table */}
+          {/* Quick Orders Overview Table with 1-click Modal View */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-black text-slate-900 text-lg">Danh Sách Đơn Hàng Gần Đây</h3>
+                <p className="text-xs text-slate-500">Bấm vào đơn hàng bất kỳ để xem toàn bộ chi tiết & quản trị.</p>
+              </div>
+
+              <button
+                onClick={() => setActiveAdminTab("requests")}
+                className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
+              >
+                <span>Xem tất cả {orders.length} đơn</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider">
+                    <th className="py-3 px-4">Mã Đơn</th>
+                    <th className="py-3 px-4">Khách Hàng</th>
+                    <th className="py-3 px-4">Dịch Vụ</th>
+                    <th className="py-3 px-4">Giá Trị Báo Giá</th>
+                    <th className="py-3 px-4">Đã Thu Thực Tế</th>
+                    <th className="py-3 px-4">Trạng Thái</th>
+                    <th className="py-3 px-4 text-right">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {orders.slice(0, 5).map((ord) => (
+                    <tr
+                      key={ord.id}
+                      className="hover:bg-slate-50/80 transition cursor-pointer"
+                      onClick={() => openOrderDetail(ord.id)}
+                    >
+                      <td className="py-3 px-4 font-bold text-slate-900">{ord.id}</td>
+                      <td className="py-3 px-4 text-slate-700 font-semibold">{ord.customerName}</td>
+                      <td className="py-3 px-4 text-slate-800">{ord.serviceName}</td>
+                      <td className="py-3 px-4 font-bold text-indigo-600">
+                        {ord.quotation ? `${ord.quotation.amount.toLocaleString("vi-VN")} ₫` : "Chờ báo giá"}
+                      </td>
+                      <td className="py-3 px-4 font-bold text-emerald-600">
+                        {ord.paymentInfo ? `${ord.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫` : "0 ₫"}
+                      </td>
+                      <td className="py-3 px-4">{getStatusBadge(ord.status)}</td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openOrderDetail(ord.id);
+                          }}
+                          className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg"
+                        >
+                          Xem Chi Tiết
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Service Popularity Table */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4">
             <h3 className="font-black text-slate-900 text-lg">Báo Cáo Thống Kê Gói Dịch Vụ Được Đặt Nhiều</h3>
             <div className="overflow-x-auto">
@@ -199,7 +417,7 @@ export function AdminView() {
                     <th className="py-3 px-4">Tên Dịch Vụ</th>
                     <th className="py-3 px-4">Phân Loại</th>
                     <th className="py-3 px-4">Số Đơn Đã Đặt</th>
-                    <th className="py-3 px-4">Giá Tham Khảo</th>
+                    <th className="py-3 px-4">Giá Tham Khảo Catalog</th>
                     <th className="py-3 px-4">Trạng Thái Catalog</th>
                   </tr>
                 </thead>
@@ -230,168 +448,162 @@ export function AdminView() {
               </table>
             </div>
           </div>
+
         </div>
       )}
 
-      {/* PAYMENT TRANSACTIONS APPROVAL DESK TAB */}
-      {activeAdminTab === "payments" && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-black text-slate-900">Bàn Duyệt Giao Dịch Thanh Toán VietQR</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Xác minh tiền về tài khoản MBBank & kích hoạt đơn hàng vào sản xuất.</p>
-            </div>
-            <span className="text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-full font-bold">
-              {pendingTxns.length} Giao dịch chờ xác minh
-            </span>
-          </div>
-
-          {transactions.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-400">Chưa có giao dịch thanh toán nào trong hệ thống.</div>
-          ) : (
-            <div className="space-y-4">
-              {transactions.map((txn) => (
-                <div
-                  key={txn.id}
-                  className={`p-5 rounded-2xl border transition space-y-3 ${
-                    txn.status === "pending"
-                      ? "bg-amber-50/50 border-amber-300"
-                      : txn.status === "verified"
-                      ? "bg-emerald-50/30 border-emerald-200"
-                      : "bg-slate-50 border-slate-200"
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-slate-900 text-sm">{txn.id}</span>
-                      <span className="text-xs font-semibold text-slate-500">({txn.orderId})</span>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        txn.status === "verified"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : txn.status === "pending"
-                          ? "bg-amber-100 text-amber-900"
-                          : "bg-rose-100 text-rose-800"
-                      }`}>
-                        {txn.status === "verified" ? "Đã Xác Minh" : txn.status === "pending" ? "Chờ Duyệt Tiền" : "Từ Chối"}
-                      </span>
-                    </div>
-
-                    <div className="text-sm font-black text-indigo-600">
-                      {txn.amount.toLocaleString("vi-VN")} ₫ ({txn.paymentType === "deposit" ? "Đặt cọc 50%" : "Full 100%"})
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center text-xs">
-                    <div className="sm:col-span-8 space-y-1">
-                      <div><span className="font-bold text-slate-700">Khách hàng:</span> {txn.customerName}</div>
-                      <div><span className="font-bold text-slate-700">Thời gian:</span> {txn.createdAt}</div>
-                      <div><span className="font-bold text-slate-700">Ghi chú:</span> {txn.note}</div>
-                    </div>
-
-                    {txn.receiptImage && (
-                      <div className="sm:col-span-4 flex items-center justify-end gap-2">
-                        <a href={txn.receiptImage} target="_blank" rel="noreferrer">
-                          <img src={txn.receiptImage} alt="Receipt" className="w-16 h-16 object-cover rounded-xl border border-slate-300" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {txn.status === "pending" && (
-                    <div className="flex items-center gap-2 pt-2 border-t border-slate-200/60">
-                      <button
-                        onClick={() => {
-                          approvePaymentTransaction(txn.id);
-                          alert(`Đã duyệt giao dịch ${txn.id}! Đơn ${txn.orderId} đã chuyển sang trạng thái "Đang thực hiện".`);
-                        }}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1"
-                      >
-                        <Check className="w-4 h-4" /> Duyệt Thanh Toán & Kích Hoạt Đơn
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          rejectPaymentTransaction(txn.id);
-                          alert(`Đã từ chối giao dịch ${txn.id}`);
-                        }}
-                        className="px-4 py-2 bg-slate-200 hover:bg-rose-100 hover:text-rose-800 text-slate-700 font-bold text-xs rounded-xl"
-                      >
-                        Từ Chối
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* REQUESTS & ORDERS DESK TAB */}
+      {/* TAB 2: REQUESTS & ORDERS MANAGEMENT DESK */}
       {activeAdminTab === "requests" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in">
           
-          {/* Left Column: All Orders List */}
-          <div className="lg:col-span-5 space-y-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Toàn bộ Đơn hàng / Yêu cầu ({orders.length})</span>
-            <div className="space-y-2 max-h-[75vh] overflow-y-auto pr-1">
-              {orders.map((ord) => {
-                const isSelected = selectedOrder?.id === ord.id;
-                return (
-                  <div
-                    key={ord.id}
-                    onClick={() => setSelectedOrderId(ord.id)}
-                    className={`p-4 rounded-2xl border transition cursor-pointer space-y-2 ${
-                      isSelected
-                        ? "bg-amber-50/80 border-amber-500 shadow-sm"
-                        : "bg-white border-slate-200 hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-slate-900">{ord.id}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                        {ord.status}
-                      </span>
-                    </div>
+          {/* Search & Filter Controls */}
+          <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <input
+                type="text"
+                placeholder="Tìm mã đơn, tên khách, email, dịch vụ..."
+                value={orderSearchQuery}
+                onChange={(e) => setOrderSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
 
-                    <div className="text-xs font-bold text-slate-800 line-clamp-1">{ord.serviceName}</div>
-
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Khách: {ord.customerName}</span>
-                      <span>Staff: {ord.assignedStaffName || "Chưa phân công"}</span>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+              <select
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                className="w-full sm:w-auto px-3 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 outline-none"
+              >
+                <option value="all">Tất cả trạng thái ({orders.length})</option>
+                <option value="pending_quote">Chờ báo giá ({pendingQuoteOrders.length})</option>
+                <option value="in_progress">Đang thực hiện ({inProgressOrders.length})</option>
+                <option value="deliverable_sent">Đã bàn giao v1 ({deliverableOrders.length})</option>
+                <option value="completed">Đã hoàn thành ({completedOrders.length})</option>
+                <option value="cancelled">Yêu cầu hủy / Đã hủy ({cancelledOrders.length})</option>
+              </select>
             </div>
           </div>
 
-          {/* Right Column: Admin Inspection & Actions Desk */}
-          <div className="lg:col-span-7">
-            {selectedOrder ? (
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
-                
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <div>
-                    <div className="text-xs font-bold text-slate-400">{selectedOrder.id} • {selectedOrder.createdAt}</div>
-                    <h2 className="text-xl font-black text-slate-900 mt-1">{selectedOrder.serviceName}</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left Column: All Orders List */}
+            <div className="lg:col-span-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Đơn Hàng Theo Bộ Lọc ({filteredOrders.length})
+                </span>
+              </div>
+
+              <div className="space-y-2.5 max-h-[75vh] overflow-y-auto pr-1">
+                {filteredOrders.length === 0 ? (
+                  <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center text-xs text-slate-400">
+                    Không tìm thấy đơn hàng nào phù hợp với điều kiện lọc.
+                  </div>
+                ) : (
+                  filteredOrders.map((ord) => {
+                    const isSelected = selectedOrder?.id === ord.id;
+                    return (
+                      <div
+                        key={ord.id}
+                        onClick={() => setSelectedOrderId(ord.id)}
+                        className={`p-4 rounded-2xl border transition cursor-pointer space-y-2 relative. ${
+                          isSelected
+                            ? "bg-amber-50/80 border-amber-500 shadow-sm"
+                            : "bg-white border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-extrabold text-slate-900">{ord.id}</span>
+                          {getStatusBadge(ord.status)}
+                        </div>
+
+                        <div className="text-xs font-bold text-slate-800 line-clamp-1">{ord.serviceName}</div>
+
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100 pt-2 mt-1">
+                          <span>Khách: <strong className="text-slate-700">{ord.customerName}</strong></span>
+                          <span>Staff: <strong className="text-indigo-600">{ord.assignedStaffName || "Chưa phân công"}</strong></span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Admin Inspection & Actions Desk */}
+            <div className="lg:col-span-7">
+              {selectedOrder ? (
+                <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400">{selectedOrder.id} • {selectedOrder.createdAt}</span>
+                        {getStatusBadge(selectedOrder.status)}
+                      </div>
+                      <h2 className="text-xl font-black text-slate-900 mt-1">{selectedOrder.serviceName}</h2>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => openOrderDetail(selectedOrder.id)}
+                        className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1"
+                      >
+                        <Eye className="w-4 h-4" /> Modal Chi Tiết Toàn Bộ
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setQuoteForm({
-                          amount: selectedOrder.workEstimate?.proposedPrice || selectedOrder.quotation?.amount || 1500000,
-                          deadline: selectedOrder.desiredDeadline,
-                          maxRevisions: 3,
-                          scopeDetails: selectedOrder.workEstimate?.note || "Phạm vi thiết kế & code hoàn thiện theo yêu cầu"
-                        });
-                        setShowQuoteModal(true);
-                      }}
-                      className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-xs"
-                    >
-                      Lập / Cập nhật Báo Giá
-                    </button>
+                  {/* Customer Request Details */}
+                  <div className="space-y-2 bg-slate-50 p-4 rounded-2xl text-xs">
+                    <div className="font-bold text-slate-700">Thông tin Khách hàng & Yêu cầu:</div>
+                    <div className="text-slate-800">
+                      <span className="font-semibold">{selectedOrder.customerName}</span> ({selectedOrder.customerEmail} - {selectedOrder.customerPhone})
+                    </div>
+                    <div className="text-slate-600 leading-relaxed bg-white p-3 rounded-xl border border-slate-200 mt-1">
+                      {selectedOrder.requirements}
+                    </div>
+                  </div>
+
+                  {/* Quick Action Buttons for Admin */}
+                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 pt-2">
+                    {(() => {
+                      const isPaymentLocked =
+                        selectedOrder.paymentInfo?.paymentStatus === "pending_approval" ||
+                        selectedOrder.paymentInfo?.paymentStatus === "verified" ||
+                        ["deposit_pending", "in_progress", "deliverable_sent", "accepted", "completed"].includes(selectedOrder.status);
+                      return (
+                        <button
+                          disabled={isPaymentLocked}
+                          onClick={() => {
+                            if (isPaymentLocked) return;
+                            setQuoteForm({
+                              amount: selectedOrder.workEstimate?.proposedPrice || selectedOrder.quotation?.amount || 1500000,
+                              deadline: selectedOrder.desiredDeadline,
+                              maxRevisions: 3,
+                              scopeDetails: selectedOrder.workEstimate?.note || "Phạm vi thiết kế & code hoàn thiện theo yêu cầu"
+                            });
+                            setOrderEditingState(selectedOrder.id, true);
+                            setShowQuoteModal(true);
+                          }}
+                          className={`py-2.5 px-3 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-1.5 transition ${
+                            isPaymentLocked
+                              ? "bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300"
+                              : "bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs"
+                          }`}
+                        >
+                          {isPaymentLocked ? (
+                            <>
+                              <Lock className="w-3.5 h-3.5 text-slate-500" /> Báo Giá Đã Khóa (Đã/Đang TT)
+                            </>
+                          ) : (
+                            "Lập / Sửa Báo Giá"
+                          )}
+                        </button>
+                      );
+                    })()}
 
                     <button
                       onClick={() => {
@@ -401,92 +613,81 @@ export function AdminView() {
                         });
                         setShowAssignModal(true);
                       }}
-                      className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs"
+                      className="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs text-center"
                     >
                       Phân Công Staff
                     </button>
                   </div>
+
+                  {/* Staff Work Estimate if proposed */}
+                  {selectedOrder.workEstimate && (
+                    <div className="p-4 bg-purple-50/60 border border-purple-200 rounded-2xl text-xs space-y-1">
+                      <div className="font-bold text-purple-900">
+                        Đề xuất từ Staff ({selectedOrder.workEstimate.proposedByStaffName}):
+                      </div>
+                      <div className="text-purple-950">
+                        Thời gian: {selectedOrder.workEstimate.proposedDays} ngày | Giá đề xuất: {selectedOrder.workEstimate.proposedPrice.toLocaleString("vi-VN")} ₫
+                      </div>
+                      <div className="text-purple-800 italic">"{selectedOrder.workEstimate.note}"</div>
+                    </div>
+                  )}
+
+                  {/* Payment Status & Verify Action */}
+                  {selectedOrder.paymentInfo && (
+                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs space-y-2">
+                      <div className="flex items-center justify-between font-bold text-emerald-900">
+                        <span>Thông tin Thanh toán Khách gửi</span>
+                        <span className="uppercase text-[10px] bg-emerald-100 px-2 py-0.5 rounded font-bold">
+                          {selectedOrder.paymentInfo.paymentStatus}
+                        </span>
+                      </div>
+                      <div>Đã chuyển: <strong className="text-emerald-700 font-extrabold">{selectedOrder.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫</strong></div>
+                      {selectedOrder.paymentInfo.paymentStatus !== "verified" && (
+                        <button
+                          onClick={() => {
+                            verifyPayment(selectedOrder.id);
+                            alert("Đã xác minh thanh toán thành công!");
+                          }}
+                          className="px-3.5 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-xs"
+                        >
+                          Xác Minh Đã Thu Tiền Thực Tế
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Cancellation Requests & Refund Handling */}
+                  {selectedOrder.cancellation && (
+                    <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs space-y-2">
+                      <div className="font-bold text-rose-900">Yêu cầu hủy từ khách: "{selectedOrder.cancellation.reason}"</div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setRefundAmount(selectedOrder.paymentInfo?.amountPaid || 0);
+                            setShowRefundModal(true);
+                          }}
+                          className="px-3.5 py-1.5 bg-rose-600 text-white font-bold rounded-xl"
+                        >
+                          Chấp Nhận Hủy & Hoàn Tiền
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleCancellation(selectedOrder.id, "rejected");
+                            alert("Đã từ chối đề nghị hủy!");
+                          }}
+                          className="px-3.5 py-1.5 bg-slate-200 text-slate-800 font-bold rounded-xl"
+                        >
+                          Từ Chối Hủy
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
+              ) : null}
+            </div>
 
-                {/* Customer Request Details */}
-                <div className="space-y-2 bg-slate-50 p-4 rounded-2xl text-xs">
-                  <div className="font-bold text-slate-700">Thông tin Khách hàng & Yêu cầu:</div>
-                  <div className="text-slate-800">
-                    <span className="font-semibold">{selectedOrder.customerName}</span> ({selectedOrder.customerEmail} - {selectedOrder.customerPhone})
-                  </div>
-                  <div className="text-slate-600 leading-relaxed bg-white p-3 rounded-xl border border-slate-200 mt-1">
-                    {selectedOrder.requirements}
-                  </div>
-                </div>
-
-                {/* Staff Work Estimate if proposed */}
-                {selectedOrder.workEstimate && (
-                  <div className="p-4 bg-purple-50/60 border border-purple-200 rounded-2xl text-xs space-y-1">
-                    <div className="font-bold text-purple-900">
-                      Đề xuất từ Staff ({selectedOrder.workEstimate.proposedByStaffName}):
-                    </div>
-                    <div className="text-purple-950">
-                      Thời gian: {selectedOrder.workEstimate.proposedDays} ngày | Giá đề xuất: {selectedOrder.workEstimate.proposedPrice.toLocaleString("vi-VN")} ₫
-                    </div>
-                    <div className="text-purple-800 italic">"{selectedOrder.workEstimate.note}"</div>
-                  </div>
-                )}
-
-                {/* Payment Status & Verify Action */}
-                {selectedOrder.paymentInfo && (
-                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs space-y-2">
-                    <div className="flex items-center justify-between font-bold text-emerald-900">
-                      <span>Thông tin Thanh toán Khách gửi</span>
-                      <span className="uppercase text-[10px] bg-emerald-100 px-2 py-0.5 rounded">
-                        {selectedOrder.paymentInfo.paymentStatus}
-                      </span>
-                    </div>
-                    <div>Đã chuyển: {selectedOrder.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫</div>
-                    {selectedOrder.paymentInfo.paymentStatus !== "verified" && (
-                      <button
-                        onClick={() => {
-                          verifyPayment(selectedOrder.id);
-                          alert("Đã xác minh thanh toán thành công!");
-                        }}
-                        className="px-3.5 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-xs"
-                      >
-                        Xác Minh Đã Thu Tiền Thực Tế
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Cancellation Requests & Refund Handling */}
-                {selectedOrder.cancellation && (
-                  <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs space-y-2">
-                    <div className="font-bold text-rose-900">Yêu cầu hủy từ khách: "{selectedOrder.cancellation.reason}"</div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          setRefundAmount(selectedOrder.paymentInfo?.amountPaid || 0);
-                          setShowRefundModal(true);
-                        }}
-                        className="px-3.5 py-1.5 bg-rose-600 text-white font-bold rounded-xl"
-                      >
-                        Chấp Nhận Hủy & Hoàn Tiền
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleCancellation(selectedOrder.id, "rejected");
-                          alert("Đã từ chối đề nghị hủy!");
-                        }}
-                        className="px-3.5 py-1.5 bg-slate-200 text-slate-800 font-bold rounded-xl"
-                      >
-                        Từ Chối Hủy
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            ) : null}
           </div>
-
         </div>
       )}
 
@@ -552,17 +753,25 @@ export function AdminView() {
                       )}
                     </td>
                     <td className="py-3 px-4">
-                      <button
-                        onClick={() => {
-                          const nextStatus = usr.status === "active" ? "locked" : "active";
-                          updateUserProfile(usr.id, { status: nextStatus });
-                        }}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                          usr.status === "active" ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
-                        }`}
-                      >
-                        {usr.status === "active" ? "Khóa TK" : "Kích hoạt"}
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setViewingUserDetail(usr)}
+                          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-1 transition"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Chi tiết
+                        </button>
+                        <button
+                          onClick={() => {
+                            const nextStatus = usr.status === "active" ? "locked" : "active";
+                            updateUserProfile(usr.id, { status: nextStatus });
+                          }}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                            usr.status === "active" ? "bg-rose-50 text-rose-700 hover:bg-rose-100" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          }`}
+                        >
+                          {usr.status === "active" ? "Khóa TK" : "Kích hoạt"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -599,26 +808,92 @@ export function AdminView() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {services.map((srv) => (
-              <div key={srv.id} className="p-4 rounded-2xl border border-slate-200 space-y-3 bg-slate-50/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded bg-slate-200 text-slate-800">{srv.category}</span>
-                  <button
-                    onClick={() => toggleServiceHidden(srv.id)}
-                    className={`text-xs font-bold px-2 py-0.5 rounded ${srv.hidden ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}
-                  >
-                    {srv.hidden ? "Ẩn" : "Hiện"}
-                  </button>
-                </div>
-                <div className="font-bold text-slate-900 text-sm">{srv.name}</div>
-                <div className="text-xs text-slate-500 line-clamp-2">{srv.description}</div>
-                <div className="flex items-center justify-between text-xs font-bold text-indigo-600 border-t pt-2">
-                  <span>{srv.estimatedPrice ? `${srv.estimatedPrice.toLocaleString("vi-VN")} ₫` : "Báo giá linh hoạt"}</span>
-                  <span>{srv.estimatedDays} ngày</span>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50">
+                  <th className="py-3.5 px-4 font-bold">Tên Dịch Vụ</th>
+                  <th className="py-3.5 px-4 font-bold">Phân Loại</th>
+                  <th className="py-3.5 px-4 font-bold">Giá Tham Khảo</th>
+                  <th className="py-3.5 px-4 font-bold">Thời Gian & Hình Thức</th>
+                  <th className="py-3.5 px-4 font-bold">Trạng Thái</th>
+                  <th className="py-3.5 px-4 font-bold text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {services.map((srv) => (
+                  <tr key={srv.id} className={`hover:bg-slate-50 transition ${srv.hidden ? "bg-slate-50/70 opacity-80" : ""}`}>
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        {srv.name}
+                        {srv.hidden && (
+                          <span className="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-extrabold">
+                            ĐÃ ẨN
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-slate-500 line-clamp-1 max-w-xs text-[11px] mt-0.5">{srv.description}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                        {srv.category}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-bold text-emerald-600 text-sm">
+                      {srv.estimatedPrice ? `${srv.estimatedPrice.toLocaleString("vi-VN")} ₫` : "Báo giá linh hoạt"}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-slate-800">{srv.estimatedDays ? `${srv.estimatedDays} ngày` : "Thỏa thuận"}</div>
+                      <div className="text-[10px] text-slate-400">{srv.supportType || "Online"}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${srv.hidden ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>
+                        {srv.hidden ? "Ẩn với Khách & Staff" : "Đang Hiện Public"}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setViewingServiceDetail(srv)}
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1 transition"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Chi tiết
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingServiceId(srv.id);
+                            setServiceForm({
+                              name: srv.name,
+                              description: srv.description,
+                              category: srv.category,
+                              estimatedDays: srv.estimatedDays,
+                              estimatedPrice: srv.estimatedPrice,
+                              maxRevisions: srv.maxRevisions || 3,
+                              scopeOutput: srv.scopeOutput || "",
+                              supportType: srv.supportType || "Online",
+                              demoImages: srv.demoImages && srv.demoImages.length > 0 ? srv.demoImages : ["https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"]
+                            });
+                            setShowServiceModal(true);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs flex items-center gap-1 transition"
+                        >
+                          <Edit className="w-3.5 h-3.5" /> Sửa
+                        </button>
+                        <button
+                          onClick={() => toggleServiceHidden(srv.id)}
+                          className={`px-2.5 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 ${
+                            srv.hidden ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                          }`}
+                        >
+                          {srv.hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          {srv.hidden ? "Hiện" : "Ẩn"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -646,17 +921,79 @@ export function AdminView() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {projects.map((proj) => (
-              <div key={proj.id} className="p-4 rounded-2xl border border-slate-200 flex gap-4 bg-slate-50/50">
-                <img src={proj.image} alt={proj.name} className="w-24 h-24 rounded-xl object-cover" />
-                <div className="space-y-1 text-xs flex-1">
-                  <div className="font-bold text-slate-900 text-sm">{proj.name}</div>
-                  <div className="text-slate-500">{proj.description}</div>
-                  <div className="text-indigo-600 font-bold">{proj.link}</div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50">
+                  <th className="py-3.5 px-4 font-bold">Hình Ảnh</th>
+                  <th className="py-3.5 px-4 font-bold">Tên Dự Án Mẫu</th>
+                  <th className="py-3.5 px-4 font-bold">Phân Loại</th>
+                  <th className="py-3.5 px-4 font-bold">Mô Tả Sản Phẩm</th>
+                  <th className="py-3.5 px-4 font-bold text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {projects.map((proj) => (
+                  <tr key={proj.id} className="hover:bg-slate-50 transition">
+                    <td className="py-3 px-4">
+                      <img src={proj.image} alt={proj.name} className="w-16 h-12 rounded-xl object-cover border border-slate-200" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-slate-900 text-sm">{proj.name}</div>
+                      {proj.link && (
+                        <a href={proj.link} target="_blank" rel="noreferrer" className="text-indigo-600 text-[11px] hover:underline inline-flex items-center gap-1 font-semibold mt-0.5">
+                          {proj.link} <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                        {proj.category}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-slate-600 line-clamp-2 max-w-xs">{proj.description}</td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setViewingProjectDetail(proj)}
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1 transition"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Chi tiết
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingProjectId(proj.id);
+                            setProjectForm({
+                              name: proj.name,
+                              category: proj.category,
+                              description: proj.description,
+                              image: proj.image,
+                              link: proj.link || "",
+                              featured: proj.featured || false
+                            });
+                            setShowProjectModal(true);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs flex items-center gap-1 transition"
+                        >
+                          <Edit className="w-3.5 h-3.5" /> Sửa
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Bạn có chắc chắn muốn xóa dự án mẫu "${proj.name}"?`)) {
+                              deleteProject(proj.id);
+                              alert("Đã xóa dự án mẫu!");
+                            }
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs flex items-center gap-1 transition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Xóa
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -695,7 +1032,13 @@ export function AdminView() {
       {showQuoteModal && selectedOrder && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative animate-fade-in">
-            <button onClick={() => setShowQuoteModal(false)} className="absolute top-4 right-4 text-slate-400">
+            <button
+              onClick={() => {
+                setOrderEditingState(selectedOrder.id, false);
+                setShowQuoteModal(false);
+              }}
+              className="absolute top-4 right-4 text-slate-400"
+            >
               <X className="w-5 h-5" />
             </button>
             <h3 className="font-black text-slate-900 text-lg">Lập Báo Giá Cho Khách Hàng</h3>
@@ -750,6 +1093,7 @@ export function AdminView() {
                   maxRevisions: quoteForm.maxRevisions,
                   scopeDetails: quoteForm.scopeDetails
                 });
+                setOrderEditingState(selectedOrder.id, false);
                 setShowQuoteModal(false);
                 alert("Đã phát hành báo giá chính thức cho khách!");
               }}
@@ -823,11 +1167,19 @@ export function AdminView() {
       {/* Add / Edit Service Modal */}
       {showServiceModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative animate-fade-in">
-            <button onClick={() => setShowServiceModal(false)} className="absolute top-4 right-4 text-slate-400">
+          <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 relative animate-fade-in">
+            <button
+              onClick={() => {
+                setShowServiceModal(false);
+                setEditingServiceId(null);
+              }}
+              className="absolute top-4 right-4 text-slate-400"
+            >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="font-black text-slate-900 text-lg">Tạo / Sửa Gói Dịch Vụ</h3>
+            <h3 className="font-black text-slate-900 text-lg">
+              {editingServiceId ? "Chỉnh Sửa Gói Dịch Vụ" : "Tạo Gói Dịch Vụ Mới"}
+            </h3>
 
             <div className="space-y-3 text-xs">
               <div>
@@ -836,6 +1188,7 @@ export function AdminView() {
                   type="text"
                   value={serviceForm.name}
                   onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
+                  placeholder="Ví dụ: Thiết kế & Lập trình Web Portfolio"
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
                 />
               </div>
@@ -853,18 +1206,53 @@ export function AdminView() {
                 </select>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Giá tham khảo (₫)</label>
-                <input
-                  type="number"
-                  value={serviceForm.estimatedPrice || 0}
-                  onChange={(e) => setServiceForm({ ...serviceForm, estimatedPrice: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Giá tham khảo (₫)</label>
+                  <input
+                    type="number"
+                    value={serviceForm.estimatedPrice || 0}
+                    onChange={(e) => setServiceForm({ ...serviceForm, estimatedPrice: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold text-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Thời gian (Ngày)</label>
+                  <input
+                    type="number"
+                    value={serviceForm.estimatedDays || 0}
+                    onChange={(e) => setServiceForm({ ...serviceForm, estimatedDays: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Hình thức hỗ trợ</label>
+                  <select
+                    value={serviceForm.supportType}
+                    onChange={(e) => setServiceForm({ ...serviceForm, supportType: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  >
+                    <option value="Online">Online</option>
+                    <option value="Direct">Trực tiếp</option>
+                    <option value="Hybrid">Hybrid (Kết hợp)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Số lần sửa free</label>
+                  <input
+                    type="number"
+                    value={serviceForm.maxRevisions}
+                    onChange={(e) => setServiceForm({ ...serviceForm, maxRevisions: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Mô tả ngắn</label>
+                <label className="block font-bold text-slate-700 mb-1">Mô tả ngắn dịch vụ</label>
                 <textarea
                   rows={2}
                   value={serviceForm.description}
@@ -879,6 +1267,7 @@ export function AdminView() {
                   type="text"
                   value={serviceForm.scopeOutput}
                   onChange={(e) => setServiceForm({ ...serviceForm, scopeOutput: e.target.value })}
+                  placeholder="Ví dụ: Link Source Code Github, Link Figma, Đĩa demo"
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
                 />
               </div>
@@ -886,14 +1275,23 @@ export function AdminView() {
 
             <button
               onClick={() => {
-                if (!serviceForm.name) return;
-                addService(serviceForm);
+                if (!serviceForm.name.trim()) {
+                  alert("Vui lòng nhập tên dịch vụ!");
+                  return;
+                }
+                if (editingServiceId) {
+                  updateService(editingServiceId, serviceForm);
+                  alert("Đã cập nhật dịch vụ thành công!");
+                } else {
+                  addService(serviceForm);
+                  alert("Đã lưu gói dịch vụ mới vào Catalog!");
+                }
                 setShowServiceModal(false);
-                alert("Đã lưu dịch vụ vào Catalog!");
+                setEditingServiceId(null);
               }}
-              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs"
+              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs shadow-md"
             >
-              Lưu Gói Dịch Vụ
+              {editingServiceId ? "Cập Nhật Dịch Vụ" : "Lưu Gói Dịch Vụ Mới"}
             </button>
           </div>
         </div>
@@ -952,14 +1350,174 @@ export function AdminView() {
 
             <button
               onClick={() => {
-                if (!projectForm.name) return;
-                addProject(projectForm);
+                if (!projectForm.name.trim()) {
+                  alert("Vui lòng nhập tên dự án!");
+                  return;
+                }
+                if (editingProjectId) {
+                  updateProject(editingProjectId, projectForm);
+                  alert("Đã cập nhật dự án mẫu thành công!");
+                } else {
+                  addProject(projectForm);
+                  alert("Đã thêm dự án mẫu mới!");
+                }
                 setShowProjectModal(false);
-                alert("Đã thêm dự án mẫu thành công!");
+                setEditingProjectId(null);
               }}
-              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs"
+              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs shadow-md"
             >
-              Lưu Dự Án Mẫu
+              {editingProjectId ? "Cập Nhật Dự Án Mẫu" : "Lưu Dự Án Mẫu"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SERVICE DETAIL INSPECTION MODAL */}
+      {viewingServiceDetail && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 relative animate-fade-in">
+            <button onClick={() => setViewingServiceDetail(null)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-700">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-md text-xs font-bold bg-indigo-100 text-indigo-800">
+                {viewingServiceDetail.category}
+              </span>
+              <span className={`px-3 py-1 rounded-md text-xs font-bold ${viewingServiceDetail.hidden ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>
+                {viewingServiceDetail.hidden ? "Đã ẩn khỏi Catalog" : "Đang công khai"}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-slate-900">{viewingServiceDetail.name}</h3>
+              <p className="text-slate-600 text-xs mt-1.5 leading-relaxed">{viewingServiceDetail.description}</p>
+            </div>
+            <div className="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl text-center text-xs">
+              <div>
+                <span className="text-slate-400 block text-[10px]">Giá Tham Khảo</span>
+                <span className="font-bold text-emerald-600 text-sm mt-0.5 block">
+                  {viewingServiceDetail.estimatedPrice ? `${viewingServiceDetail.estimatedPrice.toLocaleString("vi-VN")} ₫` : "Linh hoạt"}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px]">Thời Gian</span>
+                <span className="font-bold text-indigo-600 text-sm mt-0.5 block">
+                  {viewingServiceDetail.estimatedDays ? `${viewingServiceDetail.estimatedDays} ngày` : "Thỏa thuận"}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px]">Sửa Free</span>
+                <span className="font-bold text-purple-600 text-sm mt-0.5 block">
+                  Tối đa {viewingServiceDetail.maxRevisions || 3} lần
+                </span>
+              </div>
+            </div>
+            <div className="space-y-2 text-xs">
+              <div className="font-bold text-slate-800">Sản phẩm & Phạm vi bàn giao:</div>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700">
+                {viewingServiceDetail.scopeOutput || "Source code, tài liệu hướng dẫn và hỗ trợ demo"}
+              </div>
+            </div>
+            {viewingServiceDetail.demoImages && viewingServiceDetail.demoImages.length > 0 && (
+              <div className="space-y-2">
+                <div className="font-bold text-slate-800 text-xs">Hình ảnh minh họa:</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {viewingServiceDetail.demoImages.map((img, idx) => (
+                    <img key={idx} src={img} alt="demo" className="w-full h-28 object-cover rounded-xl border border-slate-200" />
+                  ))}
+                </div>
+              </div>
+            )}
+            <button onClick={() => setViewingServiceDetail(null)} className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-xs">
+              Đóng Xem Chi Tiết
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* USER DETAIL INSPECTION MODAL */}
+      {viewingUserDetail && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 relative animate-fade-in">
+            <button onClick={() => setViewingUserDetail(null)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-700">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-4">
+              <img src={viewingUserDetail.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"} alt="avatar" className="w-16 h-16 rounded-full object-cover border-2 border-indigo-200" />
+              <div>
+                <h3 className="text-lg font-black text-slate-900">{viewingUserDetail.name}</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 uppercase">
+                  {viewingUserDetail.role}
+                </span>
+                <span className={`ml-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${viewingUserDetail.status === "active" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
+                  {viewingUserDetail.status === "active" ? "Hoạt động" : "Đã khóa"}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <div className="flex justify-between">
+                <span className="text-slate-400">ID Người dùng:</span>
+                <span className="font-bold text-slate-800">{viewingUserDetail.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Email:</span>
+                <span className="font-bold text-slate-800">{viewingUserDetail.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Số điện thoại:</span>
+                <span className="font-bold text-slate-800">{viewingUserDetail.phone || "Chưa cập nhật"}</span>
+              </div>
+              {viewingUserDetail.role === "staff" && (
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-slate-400 block mb-1">Chuyên môn kỹ thuật:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {viewingUserDetail.skills?.map((sk, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 text-[10px] font-bold">
+                        {sk}
+                      </span>
+                    )) || <span className="text-slate-400">Chưa khai báo</span>}
+                  </div>
+                </div>
+              )}
+              {viewingUserDetail.role === "customer" && (
+                <div className="flex justify-between pt-2 border-t border-slate-200">
+                  <span className="text-slate-400">Số đơn hàng đã khởi tạo:</span>
+                  <span className="font-bold text-indigo-600">
+                    {orders.filter((o) => o.customerId === viewingUserDetail.id || o.customerEmail === viewingUserDetail.email).length} đơn
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <button onClick={() => setViewingUserDetail(null)} className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-xs">
+              Đóng Xem Chi Tiết
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* PROJECT DETAIL INSPECTION MODAL */}
+      {viewingProjectDetail && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 relative animate-fade-in">
+            <button onClick={() => setViewingProjectDetail(null)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-700">
+              <X className="w-5 h-5" />
+            </button>
+            <img src={viewingProjectDetail.image} alt={viewingProjectDetail.name} className="w-full h-52 object-cover rounded-2xl border border-slate-200" />
+            <div className="space-y-2">
+              <span className="px-3 py-1 rounded-md text-xs font-bold bg-indigo-100 text-indigo-800">
+                {viewingProjectDetail.category}
+              </span>
+              <h3 className="text-xl font-black text-slate-900">{viewingProjectDetail.name}</h3>
+              <p className="text-slate-600 text-xs leading-relaxed">{viewingProjectDetail.description}</p>
+            </div>
+            {viewingProjectDetail.link && (
+              <div className="p-3 bg-indigo-50 rounded-xl text-xs font-semibold text-indigo-800">
+                Link sản phẩm demo: <a href={viewingProjectDetail.link} target="_blank" rel="noreferrer" className="underline font-bold text-indigo-600 ml-1">{viewingProjectDetail.link}</a>
+              </div>
+            )}
+            <button onClick={() => setViewingProjectDetail(null)} className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-xs">
+              Đóng Xem Chi Tiết
             </button>
           </div>
         </div>
@@ -1032,6 +1590,254 @@ export function AdminView() {
             >
               Xác Nhận Hủy Đơn & Hoàn Tiền
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* FULL ORDER DETAIL MODAL */}
+      {showOrderDetailModal && selectedOrder && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative animate-fade-in space-y-6">
+            
+            {/* Modal Header */}
+            <button
+              onClick={() => setShowOrderDetailModal(false)}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-2 border-b border-slate-100 pb-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-black text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md font-mono">
+                  {selectedOrder.id}
+                </span>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  selectedOrder.category === "IT" ? "badge-it" : selectedOrder.category === "Design" ? "badge-design" : "badge-mixed"
+                }`}>
+                  Dịch vụ {selectedOrder.category}
+                </span>
+                {getStatusBadge(selectedOrder.status)}
+              </div>
+              <h2 className="text-xl font-black text-slate-900">{selectedOrder.serviceName}</h2>
+              <div className="text-xs text-slate-400">
+                Ngày gửi: {selectedOrder.createdAt} • Cập nhật gần nhất: {selectedOrder.updatedAt}
+              </div>
+            </div>
+
+            {/* Grid Section 1: Customer Details & Requirements */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/70 space-y-2">
+                <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-indigo-600" /> Thông Tin Khách Hàng
+                </div>
+                <div><strong className="text-slate-700">Họ tên:</strong> {selectedOrder.customerName}</div>
+                <div><strong className="text-slate-700">Email:</strong> {selectedOrder.customerEmail}</div>
+                <div><strong className="text-slate-700">Số điện thoại:</strong> {selectedOrder.customerPhone}</div>
+                <div><strong className="text-slate-700">Hạn chót mong muốn:</strong> {selectedOrder.desiredDeadline}</div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/70 space-y-2">
+                <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-indigo-600" /> Yêu Cầu & Mô Tả Chi Tiết
+                </div>
+                <div className="text-slate-700 bg-white p-3 rounded-xl border border-slate-200/80 leading-relaxed max-h-32 overflow-y-auto">
+                  {selectedOrder.requirements}
+                </div>
+                {selectedOrder.attachments && selectedOrder.attachments.length > 0 && (
+                  <div className="pt-1">
+                    <span className="font-bold text-slate-600">File đính kèm ({selectedOrder.attachments.length}):</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {selectedOrder.attachments.map((file, idx) => (
+                        <a
+                          key={idx}
+                          href={file}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" /> File #{idx + 1}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Grid Section 2: Quotation & Progress Control */}
+            <div className="bg-indigo-50/50 p-5 rounded-3xl border border-indigo-100 space-y-4 text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+                <div>
+                  <div className="font-bold text-indigo-900 text-sm">Báo Giá & Phân Công Nhân Viên</div>
+                  <div className="text-slate-500">Thông tin tài chính & nhân sự phụ trách đơn hàng</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] text-slate-400">Tổng giá trị hợp đồng:</div>
+                  <div className="text-lg font-black text-indigo-600">
+                    {selectedOrder.quotation ? `${selectedOrder.quotation.amount.toLocaleString("vi-VN")} ₫` : "Chưa lập báo giá"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="bg-white p-3 rounded-2xl border border-indigo-100/80">
+                  <div className="text-slate-400 font-semibold">Staff Phụ Trách:</div>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">{selectedOrder.assignedStaffName || "Chưa phân công"}</div>
+                  {selectedOrder.collaborators && selectedOrder.collaborators.length > 0 && (
+                    <div className="text-[10px] text-slate-500 mt-1">Cùng: {selectedOrder.collaborators.join(", ")}</div>
+                  )}
+                </div>
+
+                <div className="bg-white p-3 rounded-2xl border border-indigo-100/80">
+                  <div className="text-slate-400 font-semibold">Hạn Giao Báo Giá:</div>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">{selectedOrder.quotation?.finalDeadline || selectedOrder.desiredDeadline}</div>
+                  <div className="text-[10px] text-slate-500 mt-1">Số lần sửa free: {selectedOrder.quotation?.maxRevisions || 3} lần</div>
+                </div>
+
+                <div className="bg-white p-3 rounded-2xl border border-indigo-100/80">
+                  <div className="text-slate-400 font-semibold">Tiến Độ Sản Xuất:</div>
+                  <div className="font-black text-purple-600 text-sm mt-0.5">{selectedOrder.progressPercent}%</div>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-1.5">
+                    <div className="bg-purple-600 h-full transition-all" style={{ width: `${selectedOrder.progressPercent}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Admin View-Only Progress Info */}
+              <div className="bg-purple-50/70 p-2.5 rounded-2xl border border-purple-100 flex items-center justify-between text-[11px] text-purple-900">
+                <span className="font-bold flex items-center gap-1">👁️ Chế độ Admin: Chỉ xem tiến độ</span>
+                <span className="text-[10px] text-purple-700">Staff cập nhật max 90% • 100% tự động khi Khách nghiệm thu</span>
+              </div>
+            </div>
+
+            {/* Grid Section 3: Payment Transactions History */}
+            <div className="bg-slate-50 p-5 rounded-3xl border border-slate-200 space-y-3 text-xs">
+              <div className="flex items-center justify-between">
+                <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-emerald-600" /> Lịch Sử Giao Dịch & Tiền Đã Thu
+                </div>
+                <div className="font-black text-emerald-600 text-sm">
+                  Đã Thu: {selectedOrder.paymentInfo ? `${selectedOrder.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫` : "0 ₫"}
+                </div>
+              </div>
+
+              {transactions.filter((t) => t.orderId === selectedOrder.id).length === 0 ? (
+                <div className="text-slate-400 text-center py-3 italic bg-white rounded-2xl border border-slate-200/60">
+                  Chưa có lịch sử giao dịch chuyển khoản / VNPay trực tiếp nào được ghi nhận cho đơn hàng này.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {transactions
+                    .filter((t) => t.orderId === selectedOrder.id)
+                    .map((t) => (
+                      <div key={t.id} className="p-3 bg-white rounded-2xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-slate-900">{t.id} • {t.paymentMethod}</div>
+                          <div className="text-[11px] text-slate-500">{t.createdAt} - {t.note}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-emerald-600">{t.amount.toLocaleString("vi-VN")} ₫</div>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                            t.status === "verified" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
+                          }`}>
+                            {t.status === "verified" ? "Đã duyệt" : "Chờ duyệt"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Grid Section 4: Deliverables & Revision Feedback History */}
+            {selectedOrder.deliverables && selectedOrder.deliverables.length > 0 && (
+              <div className="bg-slate-50 p-5 rounded-3xl border border-slate-200 space-y-3 text-xs">
+                <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-cyan-600" /> Phiên Bản Sản Phẩm Bàn Giao ({selectedOrder.deliverables.length})
+                </div>
+                <div className="space-y-2">
+                  {selectedOrder.deliverables.map((del) => (
+                    <div key={del.id} className="p-3 bg-white rounded-2xl border border-slate-200 flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-slate-900">Phiên bản v{del.version}: {del.title}</div>
+                        <div className="text-slate-500 text-[11px]">{del.notes} • {del.timestamp}</div>
+                      </div>
+                      <a
+                        href={del.fileLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1 bg-cyan-50 text-cyan-800 font-bold rounded-lg hover:underline flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3" /> Xem Bàn Giao
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Footer Action Buttons */}
+            <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <button
+                onClick={() => setShowOrderDetailModal(false)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
+              >
+                Đóng Window
+              </button>
+
+              {(() => {
+                const isPaymentLocked =
+                  selectedOrder.paymentInfo?.paymentStatus === "pending_approval" ||
+                  selectedOrder.paymentInfo?.paymentStatus === "verified" ||
+                  ["deposit_pending", "in_progress", "deliverable_sent", "accepted", "completed"].includes(selectedOrder.status);
+                return (
+                  <button
+                    disabled={isPaymentLocked}
+                    onClick={() => {
+                      if (isPaymentLocked) return;
+                      setShowOrderDetailModal(false);
+                      setQuoteForm({
+                        amount: selectedOrder.workEstimate?.proposedPrice || selectedOrder.quotation?.amount || 1500000,
+                        deadline: selectedOrder.desiredDeadline,
+                        maxRevisions: 3,
+                        scopeDetails: selectedOrder.workEstimate?.note || "Phạm vi thiết kế & code hoàn thiện theo yêu cầu"
+                      });
+                      setOrderEditingState(selectedOrder.id, true);
+                      setShowQuoteModal(true);
+                    }}
+                    className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition ${
+                      isPaymentLocked
+                        ? "bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300"
+                        : "bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-sm"
+                    }`}
+                  >
+                    {isPaymentLocked ? (
+                      <>
+                        <Lock className="w-3.5 h-3.5 text-slate-500" /> Báo Giá Đã Khóa
+                      </>
+                    ) : (
+                      "Lập / Cập nhật Báo Giá"
+                    )}
+                  </button>
+                );
+              })()}
+
+              <button
+                onClick={() => {
+                  setShowOrderDetailModal(false);
+                  setAssignForm({
+                    staffId: selectedOrder.assignedStaffId || staffList[0]?.id || "",
+                    collaborators: selectedOrder.collaborators?.join(", ") || ""
+                  });
+                  setShowAssignModal(true);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm"
+              >
+                Phân Công Staff
+              </button>
+            </div>
+
           </div>
         </div>
       )}

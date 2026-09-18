@@ -249,19 +249,46 @@ export function StaffView() {
 
               {/* Milestones & Progress Percentage Tracker */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-slate-900 text-sm">Cập Nhật Mốc Công Việc & Tiến Độ</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm">Cập Nhật Mốc Công Việc & Tiến Độ (Staff)</h3>
+                    <p className="text-[11px] text-slate-500">Staff được cập nhật tối đa 90%. Tiến độ tự động đạt 100% khi Khách nghiệm thu.</p>
+                  </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500 font-semibold">% Hoàn thành:</span>
+                    <span className="text-xs text-slate-600 font-semibold">% Hoàn thành (Max 90%):</span>
                     <input
                       type="number"
                       min={0}
-                      max={100}
+                      max={90}
                       value={selectedOrder.progressPercent}
-                      onChange={(e) => updateProgressPercent(selectedOrder.id, Number(e.target.value))}
-                      className="w-16 px-2 py-1 border border-slate-200 rounded-lg text-xs font-bold text-center"
+                      onChange={(e) => {
+                        const val = Math.min(90, Math.max(0, Number(e.target.value)));
+                        updateProgressPercent(selectedOrder.id, val);
+                      }}
+                      className="w-16 px-2 py-1 border border-purple-200 rounded-lg text-xs font-bold text-center text-purple-700 bg-purple-50 focus:bg-white outline-none"
                     />
                   </div>
+                </div>
+
+                {/* Quick Staff Progress Buttons */}
+                <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                  <span className="font-bold text-slate-600 text-[11px]">Chọn nhanh %:</span>
+                  {[25, 50, 75, 90].map((pct) => (
+                    <button
+                      key={pct}
+                      onClick={() => updateProgressPercent(selectedOrder.id, pct)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                        selectedOrder.progressPercent === pct
+                          ? "bg-purple-600 text-white shadow-sm"
+                          : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
+                  <span className="text-[10px] text-purple-600 font-medium ml-auto">
+                    (100% tự động khi nghiệm thu)
+                  </span>
                 </div>
 
                 {/* Milestones List */}

@@ -57,6 +57,7 @@ interface AppContextType {
   // Sample Projects
   addProject: (project: Omit<SampleProject, "id">) => void;
   updateProject: (id: string, project: Partial<SampleProject>) => void;
+  deleteProject: (id: string) => void;
   
   // Orders & Requests
   createServiceRequest: (data: {
@@ -72,20 +73,21 @@ interface AppContextType {
   updateOrderRequirements: (orderId: string, requirements: string, attachments?: string[]) => void;
   proposeWorkEstimate: (orderId: string, estimate: Omit<WorkEstimate, "proposedByStaffId" | "proposedByStaffName">) => void;
   issueQuotation: (orderId: string, quote: Omit<QuotationDetails, "issuedAt">) => void;
+  setOrderEditingState: (orderId: string, isEditing: boolean, editingNote?: string) => void;
   assignStaff: (orderId: string, staffId: string, staffName: string, collaborators?: string[]) => void;
   
   // Payments (VietQR + VNPay Sandbox)
   submitPaymentTransaction: (
     orderId: string,
     amount: number,
-    paymentType: "deposit" | "full",
+    paymentType: "deposit" | "full" | "remaining",
     receiptImage: string,
     note?: string
   ) => PaymentTransaction;
   submitVNPaySandboxPayment: (
     orderId: string,
     amount: number,
-    paymentType: "deposit" | "full",
+    paymentType: "deposit" | "full" | "remaining",
     bankCode: string
   ) => PaymentTransaction;
   approvePaymentTransaction: (transactionId: string) => void;
@@ -168,7 +170,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  // Save changes to localStorage
+  // Realtime Cross-Tab / Cross-Window Sync Effect
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const syncStateFromStorage = () => {
+      try {
+        const savedUsers = localStorage.getItem(STORAGE_KEYS.USERS);
+        const savedServices = localStorage.getItem(STORAGE_KEYS.SERVICES);
+        const savedProjects = localStorage.getItem(STORAGE_KEYS.PROJECTS);
+        const savedOrders = localStorage.getItem(STORAGE_KEYS.ORDERS);
+        const savedReviews = localStorage.getItem(STORAGE_KEYS.REVIEWS);
+        const savedTxns = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+
+        if (savedUsers) setUsers(JSON.parse(savedUsers));
+        if (savedServices) setServices(JSON.parse(savedServices));
+        if (savedProjects) setProjects(JSON.parse(savedProjects));
+        if (savedOrders) setOrders(JSON.parse(savedOrders));
+        if (savedReviews) setReviews(JSON.parse(savedReviews));
+        if (savedTxns) setTransactions(JSON.parse(savedTxns));
+      } catch (e) {
+        console.error("Realtime sync load failed", e);
+      }
+    };
+
+    let channel: BroadcastChannel | null = null;
+    if ("BroadcastChannel" in window) {
+      channel = new BroadcastChannel("4youtech_realtime_channel");
+      channel.onmessage = (event) => {
+        if (event.data?.type === "4YOUTECH_REALTIME_SYNC") {
+          syncStateFromStorage();
+        }
+      };
+    }
+
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key && Object.values(STORAGE_KEYS).includes(e.key)) {
+        syncStateFromStorage();
+      }
+    };
+    window.addEventListener("storage", handleStorageEvent);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener("storage", handleStorageEvent);
+    };
+  }, []);
+
+  // Save changes to localStorage & broadcast realtime update
   useEffect(() => {
     if (!isLoaded) return;
     try {
@@ -180,6 +229,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
       if (activeOtpSession) localStorage.setItem(STORAGE_KEYS.OTP_SESSION, JSON.stringify(activeOtpSession));
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
+
+      if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+        const channel = new BroadcastChannel("4youtech_realtime_channel");
+        channel.postMessage({ type: "4YOUTECH_REALTIME_SYNC", timestamp: Date.now() });
+        channel.close();
+      }
     } catch (e) {
       console.error("Failed to save state to localStorage", e);
     }
@@ -339,6 +394,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...projectData } : p)));
   };
 
+  const deleteProject = (id: string) => {
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+  };
+
   const createServiceRequest = (data: {
     serviceId: string;
     requirements: string;
@@ -426,7 +485,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const setOrderEditingState = (orderId: string, isEditing: boolean, editingNote?: string) => {
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id !== orderId) return o;
+        return {
+          ...o,
+          isBeingEdited: isEditing,
+          editingNote: isEditing ? editingNote || "Admin đang chỉnh sửa báo giá / dịch vụ" : undefined,
+          updatedAt: new Date().toISOString().replace("T", " ").substring(0, 16)
+        };
+      })
+    );
+  };
+
   const issueQuotation = (orderId: string, quote: Omit<QuotationDetails, "issuedAt">) => {
+    const target = orders.find((o) => o.id === orderId);
+    if (target) {
+      const isPaymentLocked =
+        target.paymentInfo?.paymentStatus === "pending_approval" ||
+        target.paymentInfo?.paymentStatus === "verified" ||
+        ["deposit_pending", "in_progress", "deliverable_sent", "accepted", "completed"].includes(target.status);
+      if (isPaymentLocked) {
+        alert("⚠️ [KHÓA THAO TÁC] Đơn hàng đang/đã thanh toán! Admin không thể chỉnh sửa giá hoặc dịch vụ.");
+        return;
+      }
+    }
+
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
     setOrders((prev) =>
       prev.map((o) => {
@@ -438,6 +523,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             issuedAt: now
           },
           status: "quoted",
+          isBeingEdited: false,
+          editingNote: undefined,
           updatedAt: now,
           messages: [
             ...o.messages,
@@ -474,12 +561,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const submitPaymentTransaction = (
     orderId: string,
     amount: number,
-    paymentType: "deposit" | "full",
+    paymentType: "deposit" | "full" | "remaining",
     receiptImage: string,
     note?: string
   ): PaymentTransaction => {
+    const target = orders.find((o) => o.id === orderId);
+    if (target) {
+      if (target.isBeingEdited || ["submitted", "under_review"].includes(target.status)) {
+        alert("⚠️ [KHÓA THÁO TÁC] Đơn hàng đang được Admin chỉnh sửa giá / dịch vụ! Tạm thời chưa thể thanh toán.");
+        throw new Error("Order is currently being edited by admin");
+      }
+    }
+
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    
+    const defaultNote =
+      paymentType === "remaining"
+        ? "Thanh toán 50% số tiền còn lại sau khi nghiệm thu sản phẩm qua VietQR"
+        : `Thanh toán ${paymentType === "deposit" ? "đặt cọc 50%" : "full 100%"} qua VietQR`;
+
     const newTxn: PaymentTransaction = {
       id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
       orderId,
@@ -489,7 +588,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       paymentType,
       paymentMethod: "VietQR",
       receiptImage,
-      note: note || `Thanh toán ${paymentType === "deposit" ? "đặt cọc 50%" : "full 100%"} qua VietQR`,
+      note: note || defaultNote,
       status: "pending",
       createdAt: now
     };
@@ -532,11 +631,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const submitVNPaySandboxPayment = (
     orderId: string,
     amount: number,
-    paymentType: "deposit" | "full",
+    paymentType: "deposit" | "full" | "remaining",
     bankCode: string
   ): PaymentTransaction => {
+    const target = orders.find((o) => o.id === orderId);
+    if (target) {
+      if (target.isBeingEdited || ["submitted", "under_review"].includes(target.status)) {
+        alert("⚠️ [KHÓA THÁO TÁC] Đơn hàng đang được Admin chỉnh sửa giá / dịch vụ! Tạm thời chưa thể thanh toán.");
+        throw new Error("Order is currently being edited by admin");
+      }
+    }
+
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
     const txnRef = `VNP${Date.now().toString().substring(5)}`;
+    const noteText =
+      paymentType === "remaining"
+        ? `Thanh toán 50% còn lại (${amount.toLocaleString("vi-VN")} ₫) sau khi nghiệm thu qua Cổng VNPay Sandbox (${bankCode})`
+        : `Thanh toán trực tuyến ${paymentType === "deposit" ? "đặt cọc 50%" : "full 100%"} qua Cổng VNPay Sandbox (${bankCode})`;
 
     const newTxn: PaymentTransaction = {
       id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -550,7 +661,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       vnpBankCode: bankCode,
       vnpResponseCode: "00",
       receiptImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
-      note: `Thanh toán trực tuyến ${paymentType === "deposit" ? "đặt cọc 50%" : "full 100%"} qua Cổng VNPay Sandbox (${bankCode})`,
+      note: noteText,
       status: "verified",
       createdAt: now
     };
@@ -561,10 +672,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       prev.map((o) => {
         if (o.id !== orderId) return o;
         const newTotalPaid = (o.paymentInfo?.amountPaid || 0) + amount;
+        const quotedTotal = o.quotation?.amount || 0;
+        const isFullySettled = (quotedTotal > 0 && newTotalPaid >= quotedTotal) || o.status === "accepted";
+        const nextStatus = isFullySettled ? "completed" : "in_progress";
+
         return {
           ...o,
-          status: "in_progress",
-          progressPercent: Math.max(o.progressPercent, 25),
+          status: nextStatus,
+          progressPercent: isFullySettled ? 100 : Math.max(o.progressPercent, 25),
           paymentInfo: {
             amountPaid: newTotalPaid,
             paymentMethod: "VNPay",
@@ -581,7 +696,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderId: currentUser.id,
               senderName: currentUser.name,
               senderRole: "customer",
-              text: `💳 [VNPAY GATEWAY SUCCESS]: Thanh toán trực tuyến VNPay Sandbox ${amount.toLocaleString("vi-VN")} ₫ thành công! (Ngân hàng: ${bankCode}, Ref: ${txnRef}, Status: 00). Đơn hàng tự động khởi chạy!`,
+              text: isFullySettled
+                ? `💳 [VNPAY SUCCESS]: Thanh toán 50% còn lại (${amount.toLocaleString("vi-VN")} ₫) qua VNPay thành công! Đơn hàng chính thức HOÀN THÀNH 100%.`
+                : `💳 [VNPAY GATEWAY SUCCESS]: Thanh toán trực tuyến VNPay Sandbox ${amount.toLocaleString("vi-VN")} ₫ thành công! (Ngân hàng: ${bankCode}, Ref: ${txnRef}, Status: 00). Đơn hàng tự động khởi chạy!`,
               createdAt: now
             }
           ]
@@ -604,12 +721,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== txn.orderId) return o;
+        const previousPaid = o.paymentInfo?.amountPaid || 0;
+        const newTotalPaid = o.paymentInfo?.paymentStatus === "verified" ? previousPaid : previousPaid + txn.amount;
+        const quotedTotal = o.quotation?.amount || 0;
+        const isFullySettled = (quotedTotal > 0 && newTotalPaid >= quotedTotal) || o.status === "accepted";
+        const nextStatus = isFullySettled ? "completed" : "in_progress";
+
         return {
           ...o,
-          status: "in_progress",
-          progressPercent: Math.max(o.progressPercent, 25),
+          status: nextStatus,
+          progressPercent: isFullySettled ? 100 : Math.max(o.progressPercent, 25),
           paymentInfo: o.paymentInfo
-            ? { ...o.paymentInfo, paymentStatus: "verified", updatedAt: now }
+            ? { ...o.paymentInfo, amountPaid: newTotalPaid, paymentStatus: "verified", updatedAt: now }
             : { amountPaid: txn.amount, paymentStatus: "verified", updatedAt: now },
           updatedAt: now,
           messages: [
@@ -619,7 +742,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderId: currentUser.id,
               senderName: currentUser.name,
               senderRole: "admin",
-              text: `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Đơn hàng chính thức đi vào sản xuất!`,
+              text: isFullySettled
+                ? `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Đơn hàng đã hoàn tất thanh toán 100% và chuyển sang Hoàn Thành!`
+                : `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Đơn hàng chính thức đi vào sản xuất!`,
               createdAt: now
             }
           ]
@@ -668,9 +793,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProgressPercent = (orderId: string, percent: number) => {
+    // Only Staff can manually update progress, max 90%. 100% occurs automatically on customer acceptance (Nghiệm thu).
+    const clampedPercent = Math.min(90, Math.max(0, percent));
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, progressPercent: percent, updatedAt: now } : o))
+      prev.map((o) => (o.id === orderId ? { ...o, progressPercent: clampedPercent, updatedAt: now } : o))
     );
   };
 
@@ -754,9 +881,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== orderId) return o;
+        const quotedTotal = o.quotation?.amount || 0;
+        const amountPaid = o.paymentInfo?.amountPaid || 0;
+        const remaining = Math.max(0, quotedTotal - amountPaid);
+        const isFullyPaid = quotedTotal > 0 && remaining <= 0;
+        const nextStatus = isFullyPaid ? "completed" : "accepted";
+
         return {
           ...o,
-          status: "accepted",
+          status: nextStatus,
           progressPercent: 100,
           deliverables: o.deliverables.map((d) =>
             d.id === deliverableId ? { ...d, status: "accepted" } : d
@@ -769,7 +902,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderId: currentUser.id,
               senderName: currentUser.name,
               senderRole: currentUser.role,
-              text: "🎉 Khách hàng đã chấp nhận kết quả bàn giao và nghiệm thu đơn hàng!",
+              text: isFullyPaid
+                ? "🎉 Khách hàng đã chấp nhận kết quả bàn giao và hoàn tất nghiệm thu đơn hàng (Đã thanh toán 100%)!"
+                : `🎉 Khách hàng đã nghiệm thu sản phẩm bàn giao thành công! Vui lòng thanh toán 50% số tiền còn lại (${remaining.toLocaleString("vi-VN")} ₫) để hoàn tất bàn giao chính thức.`,
               createdAt: now
             }
           ]
@@ -968,10 +1103,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleServiceHidden,
         addProject,
         updateProject,
+        deleteProject,
         createServiceRequest,
         updateOrderRequirements,
         proposeWorkEstimate,
         issueQuotation,
+        setOrderEditingState,
         assignStaff,
         submitPaymentTransaction,
         submitVNPaySandboxPayment,

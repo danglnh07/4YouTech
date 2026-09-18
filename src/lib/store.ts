@@ -142,7 +142,7 @@ export interface PaymentTransaction {
   customerId: string;
   customerName: string;
   amount: number;
-  paymentType: "deposit" | "full";
+  paymentType: "deposit" | "full" | "remaining";
   paymentMethod: PaymentMethod;
   receiptImage?: string;
   vnpTxnRef?: string;
@@ -208,6 +208,9 @@ export interface ServiceOrder {
   review?: ServiceReview | null;
   cancellation?: CancellationRequest | null;
   supportTickets: SupportTicket[];
+
+  isBeingEdited?: boolean;
+  editingNote?: string;
 
   createdAt: string;
   updatedAt: string;
