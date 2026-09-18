@@ -23,6 +23,7 @@ import {
   SupportTicket,
   QuotationDetails,
   WorkEstimate,
+  CartItem,
   hashPassword
 } from "./store";
 
@@ -36,6 +37,19 @@ interface AppContextType {
   reviews: ServiceReview[];
   transactions: PaymentTransaction[];
   activeOtpSession: OtpSession | null;
+  cart: CartItem[];
+  
+  // Cart Management
+  addToCart: (service: ServiceItem, requirements?: string, desiredDeadline?: string) => void;
+  removeFromCart: (cartItemId: string) => void;
+  clearCart: () => void;
+  submitCartBooking: (customerInfo: {
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    desiredDeadline: string;
+    requirements?: string;
+  }) => ServiceOrder[];
   
   // Auth & OTP Session Methods
   login: (email: string, pass: string, roleFilter?: Role) => { success: boolean; message: string; user?: User };
@@ -125,7 +139,8 @@ const STORAGE_KEYS = {
   REVIEWS: "4youtech_reviews_v4",
   TRANSACTIONS: "4youtech_transactions_v4",
   OTP_SESSION: "4youtech_otp_session_v4",
-  CURRENT_USER_ID: "4youtech_current_user_v4"
+  CURRENT_USER_ID: "4youtech_current_user_v4",
+  CART: "4youtech_cart_v4"
 };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -137,6 +152,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState<PaymentTransaction[]>(SEED_TRANSACTIONS);
   const [activeOtpSession, setActiveOtpSession] = useState<OtpSession | null>(null);
   const [currentUser, setCurrentUser] = useState<User>(SEED_USERS[0]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from localStorage on client side
@@ -150,6 +166,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const savedTxns = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
       const savedOtp = localStorage.getItem(STORAGE_KEYS.OTP_SESSION);
       const savedCurUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
+      const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
 
       if (savedUsers) setUsers(JSON.parse(savedUsers));
       if (savedServices) setServices(JSON.parse(savedServices));
@@ -158,6 +175,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (savedReviews) setReviews(JSON.parse(savedReviews));
       if (savedTxns) setTransactions(JSON.parse(savedTxns));
       if (savedOtp) setActiveOtpSession(JSON.parse(savedOtp));
+      if (savedCart) setCart(JSON.parse(savedCart));
       
       const allUsers = savedUsers ? JSON.parse(savedUsers) : SEED_USERS;
       if (savedCurUserId) {
@@ -189,6 +207,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (savedOrders) setOrders(JSON.parse(savedOrders));
         if (savedReviews) setReviews(JSON.parse(savedReviews));
         if (savedTxns) setTransactions(JSON.parse(savedTxns));
+        const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
+        if (savedCart) setCart(JSON.parse(savedCart));
       } catch (e) {
         console.error("Realtime sync load failed", e);
       }
@@ -229,6 +249,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
       if (activeOtpSession) localStorage.setItem(STORAGE_KEYS.OTP_SESSION, JSON.stringify(activeOtpSession));
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
+      localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
 
       if (typeof window !== "undefined" && "BroadcastChannel" in window) {
         const channel = new BroadcastChannel("4youtech_realtime_channel");
@@ -238,7 +259,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("Failed to save state to localStorage", e);
     }
-  }, [users, services, projects, orders, reviews, transactions, activeOtpSession, currentUser, isLoaded]);
+  }, [users, services, projects, orders, reviews, transactions, activeOtpSession, currentUser, cart, isLoaded]);
 
   const login = (email: string, pass: string, roleFilter?: Role) => {
     const cleanEmail = email.trim().toLowerCase();
@@ -1097,6 +1118,72 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         activateAccountWithOtp,
         resetPasswordWithOtp,
         switchRole,
+        addToCart: (service, requirements, desiredDeadline) => {
+          const newItem: CartItem = {
+            id: `cart-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            serviceId: service.id,
+            serviceName: service.name,
+            category: service.category,
+            estimatedPrice: service.estimatedPrice,
+            estimatedDays: service.estimatedDays,
+            requirements: requirements || "",
+            desiredDeadline: desiredDeadline || "",
+            addedAt: new Date().toISOString().replace("T", " ").substring(0, 16)
+          };
+          setCart((prev) => [...prev, newItem]);
+        },
+        removeFromCart: (cartItemId) => {
+          setCart((prev) => prev.filter((item) => item.id !== cartItemId));
+        },
+        clearCart: () => {
+          setCart([]);
+        },
+        submitCartBooking: (customerInfo) => {
+          if (cart.length === 0) return [];
+          const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+          const createdOrders: ServiceOrder[] = cart.map((item, index) => {
+            const orderReq = item.requirements?.trim() || customerInfo.requirements?.trim() || "Yêu cầu dịch vụ từ Giỏ hàng";
+            const deadline = item.desiredDeadline || customerInfo.desiredDeadline;
+
+            return {
+              id: `REQ-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900 + index)}`,
+              serviceId: item.serviceId,
+              serviceName: item.serviceName,
+              category: item.category,
+              customerId: currentUser.role === "customer" ? currentUser.id : `usr-cust-${Date.now()}`,
+              customerName: customerInfo.customerName || currentUser.name,
+              customerEmail: customerInfo.customerEmail || currentUser.email,
+              customerPhone: customerInfo.customerPhone || currentUser.phone || "0912345678",
+              requirements: orderReq,
+              attachments: [],
+              desiredDeadline: deadline,
+              status: "submitted",
+              progressPercent: 5,
+              milestones: [],
+              deliverables: [],
+              revisions: [],
+              messages: [
+                {
+                  id: `msg-${Date.now()}-${index}`,
+                  senderId: currentUser.id,
+                  senderName: customerInfo.customerName || currentUser.name,
+                  senderRole: "customer",
+                  text: `Yêu cầu dịch vụ mới từ Giỏ hàng: ${orderReq}`,
+                  createdAt: now
+                }
+              ],
+              review: null,
+              supportTickets: [],
+              createdAt: now,
+              updatedAt: now
+            };
+          });
+
+          setOrders((prev) => [...createdOrders, ...prev]);
+          setCart([]);
+          return createdOrders;
+        },
+        cart,
         updateUserProfile,
         addService,
         updateService,

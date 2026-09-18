@@ -38,6 +38,18 @@ export interface ServiceItem {
   supportType: "Online" | "Direct" | "Hybrid";
 }
 
+export interface CartItem {
+  id: string;
+  serviceId: string;
+  serviceName: string;
+  category: ServiceCategory;
+  estimatedPrice: number | null;
+  estimatedDays: number | null;
+  requirements?: string;
+  desiredDeadline?: string;
+  addedAt: string;
+}
+
 export interface SampleProject {
   id: string;
   name: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "@/lib/app-context";
 import { ServiceOrder, hashPassword } from "@/lib/store";
 import { PaymentCheckoutModal } from "@/components/payment-checkout-modal";
@@ -49,8 +49,18 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
   const myOrders = orders.filter((o) => o.customerId === currentUser.id || o.customerEmail === currentUser.email);
 
-  const [activeTab, setActiveTab] = useState<"orders" | "new_request" | "profile">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "new_request" | "profile">(
+    preselectedServiceId ? "new_request" : "orders"
+  );
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(myOrders[0]?.id || null);
+
+  // Auto switch to new_request tab if preselectedServiceId is provided
+  useEffect(() => {
+    if (preselectedServiceId) {
+      setActiveTab("new_request");
+      setNewForm((prev) => ({ ...prev, serviceId: preselectedServiceId }));
+    }
+  }, [preselectedServiceId]);
 
   // VietQR Payment Modal Launcher
   const [activeCheckoutOrder, setActiveCheckoutOrder] = useState<ServiceOrder | null>(null);
@@ -443,6 +453,18 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
           <div>
             <h2 className="text-xl font-black text-slate-900">Tạo Yêu Cầu Dịch Vụ Mới</h2>
             <p className="text-xs text-slate-500 mt-1">Vui lòng điền thông tin chi tiết để Admin & Staff lập báo giá chính xác.</p>
+          </div>
+
+          {/* Payment policy alert */}
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-1">
+            <div className="font-extrabold flex items-center gap-1.5 text-amber-900">
+              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" /> Quy định đặt cọc & thanh toán 50% - 50%:
+            </div>
+            <p className="text-[11px] text-amber-800 leading-relaxed">
+              • Báo giá chính thức sẽ được Admin gửi sau khi đánh giá yêu cầu.<br />
+              • Bạn cần <strong>thanh toán 50% tiền đặt cọc</strong> trước khi nhân viên triển khai.<br />
+              • Sau khi nhận bản giao và <strong>nghiệm thu đạt yêu cầu</strong>, bạn thanh toán <strong>50% còn lại</strong> để nhận file gốc.
+            </p>
           </div>
 
           <form onSubmit={handleCreateRequest} className="space-y-4">

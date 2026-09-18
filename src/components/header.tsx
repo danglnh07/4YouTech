@@ -16,21 +16,26 @@ import {
   User,
   LogOut,
   LogIn,
-  Lock
+  Lock,
+  ShoppingBag
 } from "lucide-react";
+import { CartDrawerModal } from "@/components/cart-drawer-modal";
 
 export function Header({
   activeTab,
   setActiveTab,
-  onOpenAuth
+  onOpenAuth,
+  onSelectServiceToBook
 }: {
   activeTab: "catalog" | "projects" | "workspace";
   setActiveTab: (tab: "catalog" | "projects" | "workspace") => void;
   onOpenAuth?: (portal: "customer" | "management") => void;
+  onSelectServiceToBook?: (serviceId: string) => void;
 }) {
-  const { currentUser, logout, resetToDefaultSeed, orders } = useApp();
+  const { currentUser, logout, resetToDefaultSeed, orders, cart } = useApp();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
 
   const isAuthenticated = currentUser.role !== "guest";
 
@@ -126,6 +131,21 @@ export function Header({
               className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
             >
               <RotateCcw className="w-4 h-4" />
+            </button>
+
+            {/* Cart Button */}
+            <button
+              onClick={() => setShowCartModal(true)}
+              className="px-3 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1.5 transition border border-indigo-200 shadow-xs relative"
+              title="Xem Giỏ hàng dịch vụ của bạn"
+            >
+              <ShoppingBag className="w-4 h-4 text-indigo-600" />
+              <span className="hidden sm:inline">Giỏ Hàng</span>
+              {cart.length > 0 && (
+                <span className="bg-indigo-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full min-w-4 text-center shadow-xs">
+                  {cart.length}
+                </span>
+              )}
             </button>
 
             {/* Realtime Status Indicator Badge */}
@@ -309,6 +329,20 @@ export function Header({
 
         </div>
       </div>
+
+      {/* Cart Modal Drawer */}
+      {showCartModal && (
+        <CartDrawerModal
+          onClose={() => setShowCartModal(false)}
+          onOpenWorkspace={(serviceId) => {
+            if (serviceId && onSelectServiceToBook) {
+              onSelectServiceToBook(serviceId);
+            } else {
+              setActiveTab("workspace");
+            }
+          }}
+        />
+      )}
     </header>
   );
 }

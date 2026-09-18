@@ -22,7 +22,12 @@ import {
   X,
   FileCode,
   Laptop,
-  Palette
+  Palette,
+  ShoppingCart,
+  ShoppingBag,
+  Plus,
+  Check,
+  Info
 } from "lucide-react";
 
 export function GuestView({
@@ -32,12 +37,21 @@ export function GuestView({
   onSelectServiceToBook: (serviceId: string) => void;
   onSwitchToWorkspace: () => void;
 }) {
-  const { services, projects, currentUser, switchRole, registerCustomerWithOtp } = useApp();
+  const { services, projects, currentUser, switchRole, registerCustomerWithOtp, addToCart } = useApp();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSupportType, setSelectedSupportType] = useState<string>("all");
   const [activeDetailService, setActiveDetailService] = useState<ServiceItem | null>(null);
+
+  // Cart toast notification
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const handleAddToCart = (srv: ServiceItem) => {
+    addToCart(srv);
+    setToastMsg(`Đã thêm "${srv.name}" vào giỏ hàng!`);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
 
   // Auth modal states
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -83,6 +97,14 @@ export function GuestView({
   return (
     <div className="space-y-16 pb-16">
       
+      {/* Floating Toast Notification */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up border border-slate-700">
+          <ShoppingBag className="w-5 h-5 text-cyan-400 shrink-0" />
+          <span className="text-xs font-bold">{toastMsg}</span>
+        </div>
+      )}
+
       {/* Hero Banner Section */}
       <section className="relative overflow-hidden bg-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-2xl">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -151,6 +173,23 @@ export function GuestView({
           </div>
         </div>
       </section>
+
+      {/* Payment Policy Notice Banner */}
+      <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3.5 text-amber-900 shadow-xs">
+        <div className="p-2.5 bg-amber-100 rounded-xl shrink-0">
+          <Info className="w-5 h-5 text-amber-700" />
+        </div>
+        <div className="space-y-0.5 flex-1">
+          <div className="font-extrabold text-xs sm:text-sm flex items-center gap-2">
+            ⚠️ Quy Định Đặt Đơn & Thanh Toán 50% - 50% tại 4YouTech:
+          </div>
+          <p className="text-xs text-amber-800 leading-relaxed">
+            1. Quý khách có thể <strong>Đặt Dịch Vụ ngay</strong> hoặc <strong>Thêm vào Giỏ hàng</strong> để book cùng lúc nhiều dịch vụ.<br />
+            2. Sau khi Admin xem xét yêu cầu & chốt báo giá, quý khách <strong>thanh toán đặt cọc 50%</strong> trước để bắt đầu thực hiện.<br />
+            3. Khi sản phẩm hoàn thành, quý khách kiểm tra <strong>Nghiệm Thu thành công</strong> rồi thanh toán <strong>50% còn lại</strong> để nhận bàn giao chính thức.
+          </p>
+        </div>
+      </div>
 
       {/* Services Catalog Section */}
       <section id="catalog" className="space-y-6">
@@ -260,13 +299,22 @@ export function GuestView({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      onClick={() => setActiveDetailService(srv)}
-                      className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-xs text-slate-700 transition"
-                    >
-                      Xem chi tiết
-                    </button>
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setActiveDetailService(srv)}
+                        className="flex-1 py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-xs text-slate-700 transition"
+                      >
+                        Chi tiết
+                      </button>
+                      <button
+                        onClick={() => handleAddToCart(srv)}
+                        className="flex-1 py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-1 border border-slate-200"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-indigo-600" /> Giỏ hàng
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => {
                         if (currentUser.role === "guest") {
@@ -275,9 +323,9 @@ export function GuestView({
                           onSelectServiceToBook(srv.id);
                         }
                       }}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1"
+                      className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1"
                     >
-                      Đặt Dịch Vụ <ChevronRight className="w-3.5 h-3.5" />
+                      Đặt Dịch Vụ Ngay <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -406,12 +454,29 @@ export function GuestView({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            {/* Payment Policy Alert */}
+            <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed">
+                <span className="font-bold">Quy định thanh toán:</span> Đặt cọc <strong>50%</strong> sau khi chốt báo giá để thực hiện. Thanh toán <strong>50% còn lại</strong> sau khi kiểm tra & nghiệm thu hoàn tất!
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
               <button
                 onClick={() => setActiveDetailService(null)}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 font-semibold text-xs text-slate-600 hover:bg-slate-50"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 font-semibold text-xs text-slate-600 hover:bg-slate-50"
               >
                 Đóng
+              </button>
+              <button
+                onClick={() => {
+                  handleAddToCart(activeDetailService);
+                  setActiveDetailService(null);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 border border-slate-200"
+              >
+                <Plus className="w-4 h-4 text-indigo-600" /> Thêm vào Giỏ hàng
               </button>
               <button
                 onClick={() => {
@@ -420,9 +485,9 @@ export function GuestView({
                   if (currentUser.role === "guest") setAuthModalOpen(true);
                   else onSelectServiceToBook(srvId);
                 }}
-                className="px-6 py-2.5 rounded-xl gradient-btn font-bold text-xs"
+                className="px-5 py-2.5 rounded-xl gradient-btn font-bold text-xs shadow-md"
               >
-                Tiến hành Đặt dịch vụ này
+                Tiến hành Đặt ngay
               </button>
             </div>
           </div>

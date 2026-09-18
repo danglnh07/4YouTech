@@ -11,17 +11,16 @@ import { CustomerAuthPage, ManagementAuthPage } from "@/components/auth-pages";
 import { Sparkles, Heart, ShieldCheck, Mail, Phone, MapPin, Lock, LogOut } from "lucide-react";
 
 function MainAppContent() {
-  const { currentUser, logout } = useApp();
+  const { currentUser, logout, switchRole } = useApp();
   const [activeTab, setActiveTab] = useState<"catalog" | "projects" | "workspace" | "auth_customer" | "auth_management">("catalog");
   const [preselectedBookingServiceId, setPreselectedBookingServiceId] = useState<string | undefined>(undefined);
 
   const handleSelectServiceToBook = (serviceId: string) => {
     setPreselectedBookingServiceId(serviceId);
     if (currentUser.role === "guest") {
-      setActiveTab("auth_customer");
-    } else {
-      setActiveTab("workspace");
+      switchRole("customer");
     }
+    setActiveTab("workspace");
   };
 
   const handleOpenAuth = (portal: "customer" | "management") => {
@@ -36,6 +35,7 @@ function MainAppContent() {
         activeTab={activeTab === "catalog" || activeTab === "projects" || activeTab === "workspace" ? activeTab : "catalog"}
         setActiveTab={(t) => setActiveTab(t)}
         onOpenAuth={handleOpenAuth}
+        onSelectServiceToBook={handleSelectServiceToBook}
       />
 
       {/* Main Content Router */}
