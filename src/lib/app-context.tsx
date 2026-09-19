@@ -335,18 +335,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     phone: string;
     password: string;
   }): { user: User; otpCode: string } => {
-    const cleanEmail = data.email.trim().toLowerCase();
+    const cleanName = data.name ? data.name.trim() : "";
+    const cleanEmail = data.email ? data.email.trim().toLowerCase() : "";
+    const cleanPhone = data.phone ? data.phone.trim() : "";
+
+    if (!cleanName || cleanName.length < 2) {
+      throw new Error("Vui lòng nhập Họ và Tên hợp lệ (tối thiểu 2 ký tự).");
+    }
+
+    if (!cleanEmail || !/.+@.+\..+/.test(cleanEmail)) {
+      throw new Error("Vui lòng nhập địa chỉ Email hợp lệ (ví dụ: student@edu.vn).");
+    }
+
+    const phoneDigits = cleanPhone.replace(/\D/g, "");
+    if (!cleanPhone || phoneDigits.length < 9) {
+      throw new Error("Vui lòng nhập Số điện thoại hợp lệ (tối thiểu 9-10 chữ số).");
+    }
+
     const existingUser = users.find((u) => u.email.toLowerCase() === cleanEmail);
     if (existingUser && existingUser.status === "active") {
-      throw new Error(`Email "${data.email}" đã được đăng ký trên hệ thống 4YouTech. Vui lòng đăng nhập hoặc sử dụng chức năng Quên Mật Khẩu.`);
+      throw new Error(`Email "${cleanEmail}" đã được đăng ký trên hệ thống 4YouTech. Vui lòng đăng nhập hoặc sử dụng chức năng Quên Mật Khẩu.`);
     }
 
     const hashedPassword = hashPassword(data.password);
     const newUser: User = {
       id: `usr-cust-${Date.now()}`,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
       password: hashedPassword,
       role: "customer",
       avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
@@ -639,11 +655,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== orderId) return o;
+        const currentVerifiedPaid = o.paymentInfo?.paymentStatus === "verified" ? (o.paymentInfo.amountPaid || 0) : 0;
         return {
           ...o,
           status: "deposit_pending",
           paymentInfo: {
-            amountPaid: (o.paymentInfo?.amountPaid || 0) + amount,
+            amountPaid: currentVerifiedPaid,
             receiptImage,
             paymentMethod: "VietQR",
             paymentStatus: "pending_approval",
@@ -658,7 +675,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderId: currentUser.id,
               senderName: currentUser.name,
               senderRole: currentUser.role,
-              text: `[GIAO DỊCH VIETQR]: Đã gửi biên lai chuyển khoản ${amount.toLocaleString("vi-VN")} ₫. Mã GD: ${newTxn.id}`,
+              text: `[GIAO DỊCH VIETQR]: Đã gửi biên lai chuyển khoản ${amount.toLocaleString("vi-VN")} ₫ (${paymentType === "deposit" ? "Đặt cọc 50%" : paymentType === "remaining" ? "50% còn lại" : "Full 100%"}). Mã GD: ${newTxn.id}`,
               createdAt: now
             }
           ]
@@ -707,14 +724,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: now
     };
 
-    setTransactions((prev) => [newTxn, ...prev]);
+    const updatedTxns = [newTxn, ...transactions];
+    setTransactions(updatedTxns);
+
+    const totalVerifiedForOrder = updatedTxns
+      .filter((t) => t.orderId === orderId && t.status === "verified")
+      .reduce((sum, t) => sum + t.amount, 0);
 
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== orderId) return o;
-        const newTotalPaid = (o.paymentInfo?.amountPaid || 0) + amount;
         const quotedTotal = o.quotation?.amount || 0;
-        const isFullySettled = (quotedTotal > 0 && newTotalPaid >= quotedTotal) || o.status === "accepted";
+        const isFullySettled = (quotedTotal > 0 && totalVerifiedForOrder >= quotedTotal) || paymentType === "full" || (paymentType === "remaining" && o.status === "accepted");
         const nextStatus = isFullySettled ? "completed" : "in_progress";
 
         return {
@@ -722,7 +743,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           status: nextStatus,
           progressPercent: isFullySettled ? 100 : Math.max(o.progressPercent, 25),
           paymentInfo: {
-            amountPaid: newTotalPaid,
+            amountPaid: totalVerifiedForOrder,
             paymentMethod: "VNPay",
             paymentStatus: "verified",
             receiptImage: newTxn.receiptImage,
@@ -738,8 +759,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderName: currentUser.name,
               senderRole: "customer",
               text: isFullySettled
-                ? `💳 [VNPAY SUCCESS]: Thanh toán 50% còn lại (${amount.toLocaleString("vi-VN")} ₫) qua VNPay thành công! Đơn hàng chính thức HOÀN THÀNH 100%.`
-                : `💳 [VNPAY GATEWAY SUCCESS]: Thanh toán trực tuyến VNPay Sandbox ${amount.toLocaleString("vi-VN")} ₫ thành công! (Ngân hàng: ${bankCode}, Ref: ${txnRef}, Status: 00). Đơn hàng tự động khởi chạy!`,
+                ? `💳 [VNPAY SUCCESS]: Thanh toán ${amount.toLocaleString("vi-VN")} ₫ qua VNPay thành công! Đơn hàng chính thức HOÀN THÀNH 100%.`
+                : `💳 [VNPAY GATEWAY SUCCESS]: Thanh toán đặt cọc 50% (${amount.toLocaleString("vi-VN")} ₫) qua VNPay Sandbox thành công! (Ngân hàng: ${bankCode}, Ref: ${txnRef}, Status: 00). Đơn hàng tự động khởi chạy!`,
               createdAt: now
             }
           ]
@@ -755,26 +776,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const txn = transactions.find((t) => t.id === transactionId);
     if (!txn) return;
 
-    setTransactions((prev) =>
-      prev.map((t) => (t.id === transactionId ? { ...t, status: "verified" } : t))
-    );
+    const updatedTxns = transactions.map((t) => (t.id === transactionId ? { ...t, status: "verified" as const } : t));
+    setTransactions(updatedTxns);
+
+    const totalVerifiedForOrder = updatedTxns
+      .filter((t) => t.orderId === txn.orderId && t.status === "verified")
+      .reduce((sum, t) => sum + t.amount, 0);
 
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== txn.orderId) return o;
-        const previousPaid = o.paymentInfo?.amountPaid || 0;
-        const newTotalPaid = o.paymentInfo?.paymentStatus === "verified" ? previousPaid : previousPaid + txn.amount;
         const quotedTotal = o.quotation?.amount || 0;
-        const isFullySettled = (quotedTotal > 0 && newTotalPaid >= quotedTotal) || o.status === "accepted";
+        const isFullySettled = (quotedTotal > 0 && totalVerifiedForOrder >= quotedTotal) || txn.paymentType === "full" || (txn.paymentType === "remaining" && o.status === "accepted");
         const nextStatus = isFullySettled ? "completed" : "in_progress";
 
         return {
           ...o,
           status: nextStatus,
           progressPercent: isFullySettled ? 100 : Math.max(o.progressPercent, 25),
-          paymentInfo: o.paymentInfo
-            ? { ...o.paymentInfo, amountPaid: newTotalPaid, paymentStatus: "verified", updatedAt: now }
-            : { amountPaid: txn.amount, paymentStatus: "verified", updatedAt: now },
+          paymentInfo: {
+            amountPaid: totalVerifiedForOrder,
+            receiptImage: txn.receiptImage || o.paymentInfo?.receiptImage || "",
+            paymentMethod: txn.paymentMethod || "VietQR",
+            paymentStatus: "verified",
+            note: txn.note || o.paymentInfo?.note,
+            updatedAt: now
+          },
           updatedAt: now,
           messages: [
             ...o.messages,
@@ -784,8 +811,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderName: currentUser.name,
               senderRole: "admin",
               text: isFullySettled
-                ? `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Đơn hàng đã hoàn tất thanh toán 100% và chuyển sang Hoàn Thành!`
-                : `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Đơn hàng chính thức đi vào sản xuất!`,
+                ? `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Đơn hàng đã hoàn tất 100% thanh toán và chuyển sang Hoàn Thành!`
+                : `✅ Admin đã duyệt thanh toán đặt cọc 50% (${txn.amount.toLocaleString("vi-VN")} ₫, Mã GD: ${txn.id}). Đơn hàng chính thức đi vào sản xuất!`,
               createdAt: now
             }
           ]
@@ -795,20 +822,65 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const rejectPaymentTransaction = (transactionId: string) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    const txn = transactions.find((t) => t.id === transactionId);
+
     setTransactions((prev) =>
       prev.map((t) => (t.id === transactionId ? { ...t, status: "rejected" } : t))
     );
+
+    if (txn) {
+      setOrders((prev) =>
+        prev.map((o) => {
+          if (o.id !== txn.orderId) return o;
+          return {
+            ...o,
+            status: o.paymentInfo?.amountPaid ? "in_progress" : "quoted",
+            paymentInfo: o.paymentInfo ? { ...o.paymentInfo, paymentStatus: "rejected" } : undefined,
+            updatedAt: now,
+            messages: [
+              ...o.messages,
+              {
+                id: `msg-${Date.now()}`,
+                senderId: currentUser.id,
+                senderName: currentUser.name,
+                senderRole: "admin",
+                text: `❌ Admin đã từ chối biên lai giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Vui lòng kiểm tra lại thông tin chuyển khoản hoặc gửi lại biên lai chính xác.`,
+                createdAt: now
+              }
+            ]
+          };
+        })
+      );
+    }
   };
 
   const verifyPayment = (orderId: string) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    
+    // Auto-verify any pending transaction linked to this order
+    const updatedTxns = transactions.map((t) => (t.orderId === orderId && t.status === "pending" ? { ...t, status: "verified" as const } : t));
+    setTransactions(updatedTxns);
+
+    const totalVerifiedForOrder = updatedTxns
+      .filter((t) => t.orderId === orderId && t.status === "verified")
+      .reduce((sum, t) => sum + t.amount, 0);
+
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== orderId) return o;
+        const quotedTotal = o.quotation?.amount || 0;
+        const finalPaid = totalVerifiedForOrder > 0 ? totalVerifiedForOrder : (o.quotation?.amount ? Math.round(o.quotation.amount * 0.5) : 500000);
+        const isFullySettled = (quotedTotal > 0 && finalPaid >= quotedTotal) || o.status === "accepted";
+        const nextStatus = isFullySettled ? "completed" : "in_progress";
+
         return {
           ...o,
-          status: "in_progress",
-          paymentInfo: o.paymentInfo ? { ...o.paymentInfo, paymentStatus: "verified" } : undefined,
+          status: nextStatus,
+          progressPercent: isFullySettled ? 100 : Math.max(o.progressPercent, 25),
+          paymentInfo: o.paymentInfo
+            ? { ...o.paymentInfo, amountPaid: finalPaid, paymentStatus: "verified", updatedAt: now }
+            : { amountPaid: finalPaid, paymentStatus: "verified", updatedAt: now },
           updatedAt: now
         };
       })

@@ -172,7 +172,7 @@ export interface PaymentDetails {
   amountPaid: number;
   receiptImage?: string;
   paymentMethod?: PaymentMethod;
-  paymentStatus: "unpaid" | "pending_approval" | "verified" | "refunded";
+  paymentStatus: "unpaid" | "pending_approval" | "verified" | "refunded" | "rejected";
   note?: string;
   updatedAt?: string;
 }

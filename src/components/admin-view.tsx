@@ -90,6 +90,9 @@ export function AdminView() {
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
 
+  // Anti-Spam submitting state
+  const [adminSubmitting, setAdminSubmitting] = useState(false);
+
   // Quotation Issuer Modal state
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quoteForm, setQuoteForm] = useState({ amount: 1500000, deadline: "", maxRevisions: 3, scopeDetails: "" });
@@ -391,8 +394,25 @@ export function AdminView() {
                       <td className="py-3 px-4 font-bold text-indigo-600">
                         {ord.quotation ? `${ord.quotation.amount.toLocaleString("vi-VN")} ₫` : "Chờ báo giá"}
                       </td>
-                      <td className="py-3 px-4 font-bold text-emerald-600">
-                        {ord.paymentInfo ? `${ord.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫` : "0 ₫"}
+                      <td className="py-3 px-4">
+                        {ord.quotation ? (
+                          <div className="space-y-0.5">
+                            <div className="font-bold text-emerald-600">
+                              {ord.paymentInfo ? `${ord.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫` : "0 ₫"}
+                            </div>
+                            <div className="text-[10px]">
+                              {(ord.paymentInfo?.amountPaid || 0) >= ord.quotation.amount ? (
+                                <span className="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded">Đã thu 100%</span>
+                              ) : (ord.paymentInfo?.amountPaid || 0) > 0 ? (
+                                <span className="bg-amber-100 text-amber-900 font-extrabold px-1.5 py-0.2 rounded">Đã cọc 50%</span>
+                              ) : (
+                                <span className="bg-slate-100 text-slate-600 font-semibold px-1.5 py-0.2 rounded">Chưa cọc</span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 font-normal">Chờ báo giá</span>
+                        )}
                       </td>
                       <td className="py-3 px-4">{getStatusBadge(ord.status)}</td>
                       <td className="py-3 px-4 text-right">
@@ -580,6 +600,8 @@ export function AdminView() {
                         selectedOrder.paymentInfo?.paymentStatus === "pending_approval" ||
                         selectedOrder.paymentInfo?.paymentStatus === "verified" ||
                         ["deposit_pending", "in_progress", "deliverable_sent", "accepted", "completed"].includes(selectedOrder.status);
+                      const isAlreadyQuoted = selectedOrder.status === "quoted" || !!selectedOrder.quotation;
+
                       return (
                         <button
                           disabled={isPaymentLocked}
@@ -597,6 +619,8 @@ export function AdminView() {
                           className={`py-2.5 px-3 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-1.5 transition ${
                             isPaymentLocked
                               ? "bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300"
+                              : isAlreadyQuoted
+                              ? "bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200"
                               : "bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs"
                           }`}
                         >
@@ -604,25 +628,54 @@ export function AdminView() {
                             <>
                               <Lock className="w-3.5 h-3.5 text-slate-500" /> Báo Giá Đã Khóa (Đã/Đang TT)
                             </>
+                          ) : isAlreadyQuoted ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-amber-700" /> Đã Báo Giá ({selectedOrder.quotation?.amount.toLocaleString("vi-VN")} ₫) - Sửa
+                            </>
                           ) : (
-                            "Lập / Sửa Báo Giá"
+                            "Lập Báo Giá Mới"
                           )}
                         </button>
                       );
                     })()}
 
-                    <button
-                      onClick={() => {
-                        setAssignForm({
-                          staffId: selectedOrder.assignedStaffId || staffList[0]?.id || "",
-                          collaborators: selectedOrder.collaborators?.join(", ") || ""
-                        });
-                        setShowAssignModal(true);
-                      }}
-                      className="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs text-center"
-                    >
-                      Phân Công Staff
-                    </button>
+                    {(() => {
+                      const isAlreadyAssigned = !!selectedOrder.assignedStaffId;
+                      const isFinished = ["completed", "cancelled"].includes(selectedOrder.status);
+
+                      return (
+                        <button
+                          disabled={isFinished}
+                          onClick={() => {
+                            if (isFinished) return;
+                            setAssignForm({
+                              staffId: selectedOrder.assignedStaffId || staffList[0]?.id || "",
+                              collaborators: selectedOrder.collaborators?.join(", ") || ""
+                            });
+                            setShowAssignModal(true);
+                          }}
+                          className={`py-2.5 px-3 rounded-xl font-bold text-xs text-center transition flex items-center justify-center gap-1.5 ${
+                            isFinished
+                              ? "bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300"
+                              : isAlreadyAssigned
+                              ? "bg-indigo-100 text-indigo-900 border border-indigo-300 hover:bg-indigo-200"
+                              : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+                          }`}
+                        >
+                          {isFinished ? (
+                            <>
+                              <Lock className="w-3.5 h-3.5 text-slate-500" /> Đơn Đã Hoàn Thành / Hủy
+                            </>
+                          ) : isAlreadyAssigned ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-700" /> Đã Phân Công ({selectedOrder.assignedStaffName}) - Đổi
+                            </>
+                          ) : (
+                            "Phân Công Staff"
+                          )}
+                        </button>
+                      );
+                    })()}
                   </div>
 
                   {/* Staff Work Estimate if proposed */}
@@ -693,6 +746,143 @@ export function AdminView() {
               ) : null}
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* PAYMENTS & TRANSACTIONS APPROVAL TAB */}
+      {activeAdminTab === "payments" && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Quản Lý & Duyệt Giao Dịch Thanh Toán (50% / 100%)</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Admin kiểm tra biên lai VietQR hoặc lịch sử VNPay Sandbox để phê duyệt cọc 50% hoặc thanh toán 100%</p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold">
+                ⚠️ Chờ duyệt: {pendingTxns.length} giao dịch
+              </span>
+              <span className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold">
+                ✓ Doanh thu đã duyệt: {finalTotalRevenue.toLocaleString("vi-VN")} ₫
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {transactions.length === 0 ? (
+              <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-400">
+                Chưa có lịch sử giao dịch thanh toán nào được khởi tạo.
+              </div>
+            ) : (
+              <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50 font-bold">
+                      <th className="py-3.5 px-4">Mã Giao Dịch</th>
+                      <th className="py-3.5 px-4">Mã Đơn Hàng</th>
+                      <th className="py-3.5 px-4">Khách Hàng</th>
+                      <th className="py-3.5 px-4">Số Tiền</th>
+                      <th className="py-3.5 px-4">Loại Thanh Toán</th>
+                      <th className="py-3.5 px-4">Phương Thức</th>
+                      <th className="py-3.5 px-4">Biên Lai / Ghi Chú</th>
+                      <th className="py-3.5 px-4">Trạng Thái</th>
+                      <th className="py-3.5 px-4 text-right">Thao Tác Duyệt</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {transactions.map((txn) => {
+                      const isDeposit = txn.paymentType === "deposit";
+                      const isRemaining = txn.paymentType === "remaining";
+
+                      return (
+                        <tr key={txn.id} className={`hover:bg-slate-50 transition ${txn.status === "pending" ? "bg-amber-50/40" : ""}`}>
+                          <td className="py-3 px-4 font-bold text-slate-900 font-mono">{txn.id}</td>
+                          <td className="py-3 px-4 font-bold text-indigo-600 font-mono">{txn.orderId}</td>
+                          <td className="py-3 px-4 text-slate-800 font-semibold">{txn.customerName}</td>
+                          <td className="py-3 px-4 font-black text-emerald-600 text-sm">
+                            {txn.amount.toLocaleString("vi-VN")} ₫
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                              isDeposit ? "bg-amber-100 text-amber-900 border border-amber-300" : isRemaining ? "bg-blue-100 text-blue-900 border border-blue-300" : "bg-purple-100 text-purple-900 border border-purple-300"
+                            }`}>
+                              {isDeposit ? "Đặt Cọc 50%" : isRemaining ? "50% Còn Lại" : "Full 100%"}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-slate-700">
+                            {txn.paymentMethod === "VNPay" ? (
+                              <span className="text-blue-600 font-bold flex items-center gap-1">
+                                <CreditCard className="w-3.5 h-3.5" /> VNPay Sandbox
+                              </span>
+                            ) : (
+                              <span className="text-emerald-700 font-bold flex items-center gap-1">
+                                <QrCode className="w-3.5 h-3.5" /> VietQR
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            {txn.receiptImage ? (
+                              <a
+                                href={txn.receiptImage}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-indigo-600 font-bold hover:underline flex items-center gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> Xem biên lai
+                              </a>
+                            ) : (
+                              <span className="text-slate-400 text-[11px]">{txn.note || "Tự động VNPay"}</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            {txn.status === "verified" ? (
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 w-max">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Đã Duyệt (Thành công)
+                              </span>
+                            ) : txn.status === "rejected" ? (
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 flex items-center gap-1 w-max">
+                                <XCircle className="w-3.5 h-3.5 text-rose-600" /> Đã Từ Chối
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 flex items-center gap-1 w-max animate-pulse">
+                                <Clock className="w-3.5 h-3.5 text-amber-600" /> Chờ Admin Duyệt
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            {txn.status === "pending" ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    approvePaymentTransaction(txn.id);
+                                    alert(`🎉 Đã duyệt giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫)! Trạng thái đơn hàng ${txn.orderId} đã được cập nhật thanh toán.`);
+                                  }}
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1"
+                                >
+                                  <Check className="w-3.5 h-3.5" /> Duyệt GD
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    rejectPaymentTransaction(txn.id);
+                                    alert(`Đã từ chối giao dịch ${txn.id}!`);
+                                  }}
+                                  className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition flex items-center gap-1"
+                                >
+                                  <X className="w-3.5 h-3.5" /> Từ Chối
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 italic">Xử lý hoàn tất</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1155,7 +1345,10 @@ export function AdminView() {
             </div>
 
             <button
+              disabled={adminSubmitting}
               onClick={() => {
+                if (adminSubmitting) return;
+                setAdminSubmitting(true);
                 issueQuotation(selectedOrder.id, {
                   amount: quoteForm.amount,
                   finalDeadline: quoteForm.deadline || selectedOrder.desiredDeadline,
@@ -1164,11 +1357,12 @@ export function AdminView() {
                 });
                 setOrderEditingState(selectedOrder.id, false);
                 setShowQuoteModal(false);
+                setTimeout(() => setAdminSubmitting(false), 500);
                 alert("Đã phát hành báo giá chính thức cho khách!");
               }}
-              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs"
+              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs disabled:opacity-50"
             >
-              Phát Hành Báo Giá Ngay
+              {adminSubmitting ? "Đang xử lý phát hành..." : "Phát Hành Báo Giá Ngay"}
             </button>
           </div>
         </div>
@@ -1212,9 +1406,12 @@ export function AdminView() {
             </div>
 
             <button
+              disabled={adminSubmitting}
               onClick={() => {
+                if (adminSubmitting) return;
                 const targetStaff = staffList.find((s) => s.id === assignForm.staffId) || staffList[0];
                 if (targetStaff) {
+                  setAdminSubmitting(true);
                   assignStaff(
                     selectedOrder.id,
                     targetStaff.id,
@@ -1222,12 +1419,13 @@ export function AdminView() {
                     assignForm.collaborators ? assignForm.collaborators.split(",").map((s) => s.trim()) : []
                   );
                   setShowAssignModal(false);
+                  setTimeout(() => setAdminSubmitting(false), 500);
                   alert(`Đã phân công ${targetStaff.name} làm nhiệm vụ!`);
                 }
               }}
-              className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs"
+              className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs disabled:opacity-50"
             >
-              Xác Nhận Phân Công
+              {adminSubmitting ? "Đang phân công..." : "Xác Nhận Phân Công"}
             </button>
           </div>
         </div>
@@ -1772,6 +1970,58 @@ export function AdminView() {
                   </div>
                 </div>
               </div>
+
+              {/* 50% Deposit & Financial Progress Breakdown */}
+              {selectedOrder.quotation && (() => {
+                const quotedVal = selectedOrder.quotation.amount;
+                const depositNeeded = Math.round(quotedVal * 0.5);
+                const actualPaid = selectedOrder.paymentInfo?.amountPaid || 0;
+                const remainingNeeded = Math.max(0, quotedVal - actualPaid);
+                const payProgress = Math.min(100, Math.round((actualPaid / quotedVal) * 100));
+
+                return (
+                  <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/80 space-y-3 text-xs">
+                    <div className="flex items-center justify-between font-bold text-emerald-950">
+                      <span className="flex items-center gap-1.5 text-sm">
+                        <CreditCard className="w-4 h-4 text-emerald-600" />
+                        Tiến Độ Thu Tiền Đặt Cọc 50% & Nghiệm Thu
+                      </span>
+                      <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-xs font-black">
+                        {actualPaid >= quotedVal ? "Đã Thu 100%" : actualPaid > 0 ? "Đã Thu Cọc 50%" : "Chưa Thu Cọc"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+                      <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
+                        <div className="text-[10px] text-slate-400 font-semibold">Báo Giá Tổng</div>
+                        <div className="font-extrabold text-indigo-700 text-xs mt-0.5">{quotedVal.toLocaleString("vi-VN")} ₫</div>
+                      </div>
+                      <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
+                        <div className="text-[10px] text-slate-400 font-semibold">Yêu Cầu Cọc 50%</div>
+                        <div className="font-extrabold text-amber-700 text-xs mt-0.5">{depositNeeded.toLocaleString("vi-VN")} ₫</div>
+                      </div>
+                      <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
+                        <div className="text-[10px] text-slate-400 font-semibold">Thực Thu Đã Duyệt</div>
+                        <div className="font-extrabold text-emerald-600 text-xs mt-0.5">{actualPaid.toLocaleString("vi-VN")} ₫</div>
+                      </div>
+                      <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
+                        <div className="text-[10px] text-slate-400 font-semibold">Phải Thu Còn Lại</div>
+                        <div className="font-extrabold text-rose-600 text-xs mt-0.5">{remainingNeeded.toLocaleString("vi-VN")} ₫</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 pt-1">
+                      <div className="flex justify-between text-[11px] font-bold text-slate-600">
+                        <span>Tiến độ thu ngân: {payProgress}%</span>
+                        <span>Đã thu {actualPaid.toLocaleString("vi-VN")} ₫ / {quotedVal.toLocaleString("vi-VN")} ₫</span>
+                      </div>
+                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div className="bg-emerald-500 h-full transition-all duration-300" style={{ width: `${payProgress}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Admin View-Only Progress Info */}
               <div className="bg-purple-50/70 p-2.5 rounded-2xl border border-purple-100 flex items-center justify-between text-[11px] text-purple-900">

@@ -2,7 +2,7 @@ import sql from "mssql";
 
 const sqlConfig: sql.config = {
   user: process.env.MSSQL_USER || "sa",
-  password: process.env.MSSQL_PASSWORD || "",
+  password: process.env.MSSQL_PASSWORD || "090504",
   database: process.env.MSSQL_DATABASE || "4YouTechDB",
   server: process.env.MSSQL_SERVER || "localhost",
   port: parseInt(process.env.MSSQL_PORT || "1433", 10),

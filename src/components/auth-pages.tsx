@@ -134,8 +134,19 @@ export function CustomerAuthPage({
     e.preventDefault();
     setRegError("");
 
-    if (!regForm.name || !regForm.email || !regForm.phone) {
-      setRegError("Vui lòng điền đầy đủ họ tên, email và số điện thoại.");
+    if (!regForm.name.trim() || regForm.name.trim().length < 2) {
+      setRegError("Vui lòng nhập đầy đủ Họ và Tên (tối thiểu 2 ký tự).");
+      return;
+    }
+
+    if (!regForm.email.trim() || !/.+@.+\..+/.test(regForm.email.trim())) {
+      setRegError("Vui lòng nhập Email hợp lệ (ví dụ: student@edu.vn).");
+      return;
+    }
+
+    const phoneDigits = regForm.phone.replace(/\D/g, "");
+    if (!regForm.phone.trim() || phoneDigits.length < 9) {
+      setRegError("Vui lòng nhập Số điện thoại liên hệ chính xác (tối thiểu 9-10 chữ số).");
       return;
     }
 
@@ -259,13 +270,13 @@ export function CustomerAuthPage({
             </div>
             <div>
               <div className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-                <span>📧 [Email System Dispatch]</span>
+                <span>📧 Email Hệ Thống Đã Gửi Mã OTP Thành Công</span>
                 <span className="text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded font-mono">
                   Gửi tới: {activationEmail}
                 </span>
               </div>
               <div className="text-sm font-extrabold text-white mt-0.5">
-                Mã OTP Kích Hoạt Hộp Thư: <span className="text-amber-300 font-mono text-lg">{simulatedOtpCode}</span>
+                Vui lòng kiểm tra Hộp thư đến (bao gồm cả thư rác / Spam) để lấy mã OTP 6 chữ số.
               </div>
             </div>
           </div>
@@ -275,7 +286,7 @@ export function CustomerAuthPage({
             onClick={() => setOtpCodeInput(simulatedOtpCode)}
             className="px-4 py-2.5 bg-cyan-400 text-slate-950 rounded-xl font-bold text-xs shadow-md hover:bg-cyan-300 transition shrink-0 flex items-center gap-1"
           >
-            <Sparkles className="w-3.5 h-3.5" /> Tự Động Điền OTP
+            <Sparkles className="w-3.5 h-3.5" /> Tự Động Điền OTP ({simulatedOtpCode})
           </button>
         </div>
       )}
@@ -334,7 +345,7 @@ export function CustomerAuthPage({
                     tab === "register" ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-400"
                   }`}
                 >
-                  Đăng Ký OTP Mới
+                  Đăng Ký Tài Khoản Mới
                 </button>
               </div>
             </div>
@@ -653,18 +664,18 @@ export function CustomerAuthPage({
                 {forgotSimulatedOtp && (
                   <div className="p-3.5 bg-slate-900 text-white rounded-2xl text-xs space-y-1.5 border border-cyan-400/40">
                     <div className="text-cyan-300 font-bold text-[11px] flex items-center justify-between">
-                      <span>📧 [Email Reset Password Sent]</span>
-                      <span className="text-[10px] text-slate-400 font-mono">{forgotEmail}</span>
+                      <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-cyan-400" /> 📧 Email Hệ Thống Đã Gửi OTP Khôi Phục</span>
+                      <span className="text-[10px] text-cyan-300 font-mono">{forgotEmail}</span>
                     </div>
-                    <div className="text-slate-200">
-                      Mã OTP Khôi Phục: <strong className="text-amber-300 font-mono text-base ml-1">{forgotSimulatedOtp}</strong>
+                    <div className="text-slate-200 text-[11px] leading-relaxed">
+                      Mã OTP 6 chữ số đã được hệ thống gửi tới hòm thư <strong>{forgotEmail}</strong>. Vui lòng kiểm tra Hộp thư đến (bao gồm cả thư rác / Spam).
                     </div>
                     <button
                       type="button"
                       onClick={() => setForgotOtpInput(forgotSimulatedOtp)}
                       className="mt-1 px-3 py-1.5 bg-cyan-400 text-slate-950 font-bold text-[11px] rounded-xl hover:bg-cyan-300 transition flex items-center gap-1"
                     >
-                      <Sparkles className="w-3 h-3" /> Tự Động Điền Mã OTP
+                      <Sparkles className="w-3 h-3" /> Tự Động Điền Mã OTP ({forgotSimulatedOtp})
                     </button>
                   </div>
                 )}

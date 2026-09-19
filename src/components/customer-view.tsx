@@ -159,26 +159,54 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
     setPassForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
   };
 
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+
   const selectedOrder = orders.find((o) => o.id === selectedOrderId) || myOrders[0];
 
   const handleCreateRequest = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRequest) return;
+
+    if (!newForm.customerName.trim()) {
+      alert("Vui lòng nhập Họ và tên của bạn.");
+      return;
+    }
+
+    if (!newForm.customerEmail.trim() || !/.+@.+\..+/.test(newForm.customerEmail.trim())) {
+      alert("Vui lòng nhập địa chỉ Email liên hệ hợp lệ.");
+      return;
+    }
+
+    const phoneDigits = newForm.customerPhone.replace(/\D/g, "");
+    if (!newForm.customerPhone.trim() || phoneDigits.length < 9) {
+      alert("Vui lòng nhập Số điện thoại liên hệ chính xác (tối thiểu 9-10 chữ số).");
+      return;
+    }
+
     if (!newForm.requirements || !newForm.desiredDeadline) {
       alert("Vui lòng nhập đầy đủ mô tả yêu cầu và thời hạn mong muốn.");
       return;
     }
-    const created = createServiceRequest({
-      serviceId: newForm.serviceId,
-      requirements: newForm.requirements,
-      attachments: newForm.attachment ? [newForm.attachment] : [],
-      desiredDeadline: newForm.desiredDeadline,
-      customerName: newForm.customerName,
-      customerEmail: newForm.customerEmail,
-      customerPhone: newForm.customerPhone
-    });
-    alert(`Đã gửi yêu cầu thành công! Mã đơn: ${created.id}`);
-    setSelectedOrderId(created.id);
-    setActiveTab("orders");
+
+    setIsSubmittingRequest(true);
+    try {
+      const created = createServiceRequest({
+        serviceId: newForm.serviceId,
+        requirements: newForm.requirements,
+        attachments: newForm.attachment ? [newForm.attachment] : [],
+        desiredDeadline: newForm.desiredDeadline,
+        customerName: newForm.customerName.trim(),
+        customerEmail: newForm.customerEmail.trim(),
+        customerPhone: newForm.customerPhone.trim()
+      });
+      alert(`Đã gửi yêu cầu thành công! Mã đơn: ${created.id}`);
+      setSelectedOrderId(created.id);
+      setActiveTab("orders");
+      setTimeout(() => setIsSubmittingRequest(false), 500);
+    } catch (err: any) {
+      setIsSubmittingRequest(false);
+      alert(err.message || "Không thể gửi yêu cầu. Vui lòng thử lại!");
+    }
   };
 
   const handleSendChat = (e: React.FormEvent) => {
@@ -538,8 +566,12 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
               </div>
             </div>
 
-            <button type="submit" className="w-full py-3.5 rounded-xl gradient-btn font-bold text-xs shadow-md mt-4">
-              Gửi Yêu Cầu & Nhận Báo Giá
+            <button
+              type="submit"
+              disabled={isSubmittingRequest}
+              className="w-full py-3.5 rounded-xl gradient-btn font-bold text-xs shadow-md mt-4 disabled:opacity-50"
+            >
+              {isSubmittingRequest ? "Đang gửi yêu cầu..." : "Gửi Yêu Cầu & Nhận Báo Giá"}
             </button>
           </form>
         </div>
@@ -708,20 +740,56 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
                 {/* Progress Bar & Milestones Stepper */}
                 <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                    <span>Tiến độ thực hiện: {selectedOrder.progressPercent}%</span>
-                    <span>Hạn giao dự kiến: {selectedOrder.quotation?.finalDeadline || selectedOrder.desiredDeadline}</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-500 rounded-full"
-                      style={{ width: `${selectedOrder.progressPercent}%` }}
-                    ></div>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
+                        <span>Tiến độ thực hiện công việc: {selectedOrder.progressPercent}%</span>
+                        <span>Hạn giao dự kiến: {selectedOrder.quotation?.finalDeadline || selectedOrder.desiredDeadline}</span>
+                      </div>
+                      <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-500 rounded-full"
+                          style={{ width: `${selectedOrder.progressPercent}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Financial Payment Progress Bar */}
+                    {selectedQuotedAmount > 0 && (
+                      <div className="pt-2 border-t border-slate-200/60">
+                        <div className="flex items-center justify-between text-xs font-bold mb-1">
+                          <span className="flex items-center gap-1.5 text-emerald-800">
+                            <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+                            Tiến độ thanh toán: {Math.min(100, Math.round((selectedAmountPaid / selectedQuotedAmount) * 100))}% 
+                            {selectedAmountPaid >= selectedQuotedAmount ? (
+                              <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.2 rounded-full font-bold ml-1">Đã cọc/thanh toán 100%</span>
+                            ) : selectedAmountPaid > 0 ? (
+                              <span className="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.2 rounded-full font-bold ml-1">Đã cọc 50%</span>
+                            ) : (
+                              <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.2 rounded-full font-bold ml-1">Chưa cọc</span>
+                            )}
+                          </span>
+                          <span className="text-slate-600 font-extrabold">
+                            {selectedAmountPaid.toLocaleString("vi-VN")} ₫ / {selectedQuotedAmount.toLocaleString("vi-VN")} ₫
+                          </span>
+                        </div>
+                        <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
+                          <div
+                            className="h-full bg-emerald-500 transition-all duration-500 rounded-full"
+                            style={{ width: `${Math.min(100, (selectedAmountPaid / selectedQuotedAmount) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+                          <span>Đã cọc/trả: <strong className="text-emerald-700">{selectedAmountPaid.toLocaleString("vi-VN")} ₫</strong></span>
+                          <span>Còn lại (sau nghiệm thu): <strong className="text-amber-700">{selectedRemaining.toLocaleString("vi-VN")} ₫</strong></span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Milestones list */}
                   {selectedOrder.milestones.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-200/60">
                       {selectedOrder.milestones.map((m) => (
                         <div key={m.id} className="flex items-center gap-2 text-xs">
                           {m.completed ? (
@@ -742,7 +810,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 {selectedOrder.quotation && (
                   <div className="bg-indigo-50/40 p-5 rounded-2xl border border-indigo-100 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Thông tin Báo Giá từ Admin</span>
+                      <span className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Thông tin Báo Giá & Đặt Cọc 50%</span>
                       <span className="text-base font-black text-indigo-700">
                         {selectedOrder.quotation.amount.toLocaleString("vi-VN")} ₫
                       </span>
@@ -750,10 +818,28 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                     <div className="text-xs text-indigo-950 font-medium leading-relaxed">
                       {selectedOrder.quotation.scopeDetails}
                     </div>
+
+                    {/* Deposit Breakdown Info Card */}
+                    <div className="grid grid-cols-2 gap-2 bg-white/80 p-3 rounded-xl border border-indigo-100 text-xs">
+                      <div>
+                        <div className="text-[11px] text-slate-500">Số tiền đặt cọc 50%:</div>
+                        <div className="font-bold text-indigo-700 text-sm">
+                          {Math.round(selectedOrder.quotation.amount * 0.5).toLocaleString("vi-VN")} ₫
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] text-slate-500">Đã thanh toán thực tế:</div>
+                        <div className={`font-bold text-sm ${selectedAmountPaid > 0 ? "text-emerald-600" : "text-slate-400"}`}>
+                          {selectedAmountPaid.toLocaleString("vi-VN")} ₫
+                        </div>
+                      </div>
+                    </div>
                     
                     <div className="flex flex-wrap items-center justify-between text-xs pt-3 border-t border-indigo-100 gap-2">
-                      <div className="text-indigo-800 font-medium">
-                        Đã thanh toán: <span className="font-bold">{selectedOrder.paymentInfo?.amountPaid ? `${selectedOrder.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫` : "0 ₫"}</span>
+                      <div className="text-indigo-800 font-medium flex items-center gap-1.5">
+                        <span>Đã thu: <strong className="text-emerald-700">{selectedAmountPaid.toLocaleString("vi-VN")} ₫</strong></span>
+                        <span className="text-slate-400">•</span>
+                        <span>Còn nợ: <strong className="text-amber-700">{selectedRemaining.toLocaleString("vi-VN")} ₫</strong></span>
                       </div>
                       
                       {selectedOrder.isBeingEdited || selectedOrder.status === "under_review" ? (
@@ -772,12 +858,12 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                           onClick={() => setActiveCheckoutOrder(selectedOrder)}
                           className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md"
                         >
-                          <QrCode className="w-3.5 h-3.5" /> Thanh Toán VietQR / VNPay
+                          <QrCode className="w-3.5 h-3.5" /> Thanh Toán Đặt Cọc 50% ({Math.round(selectedOrder.quotation.amount * 0.5).toLocaleString("vi-VN")} ₫)
                         </button>
                       ) : selectedOrder.status === "deposit_pending" ? (
                         <div className="flex items-center gap-2">
                           <span className="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-amber-700" /> Đã gửi cọc (Chờ Admin duyệt)
+                            <Clock className="w-3.5 h-3.5 text-amber-700" /> Đã gửi cọc 50% (Chờ Admin duyệt)
                           </span>
                           <button
                             onClick={() => setActiveCheckoutOrder(selectedOrder)}

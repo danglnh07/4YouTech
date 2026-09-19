@@ -81,8 +81,11 @@ export async function sendOtpEmail(payload: OtpEmailPayload): Promise<{ success:
           template_params: {
             to_email: payload.to_email,
             customer_name: payload.customer_name || payload.to_email,
+            customer_email: payload.to_email,
+            customer_phone: "Xác thực tài khoản 4YouTech",
             service_name: title,
-            requirement: `Mã xác thực OTP 6 chữ số của bạn là: ${payload.otp_code}. Mã có hiệu lực trong 5 phút.`,
+            requirement: `Mã xác thực OTP 6 chữ số của bạn là: ${payload.otp_code}. Vui lòng nhập mã này vào hệ thống để hoàn tất kích hoạt tài khoản. Mã có hiệu lực trong 5 phút.`,
+            deadline: "5 phút",
             otp_code: payload.otp_code,
             type: payload.type
           },
