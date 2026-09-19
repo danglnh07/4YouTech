@@ -121,6 +121,9 @@ export interface ServiceReview {
   comment: string;
   createdAt: string;
   moderated: boolean;
+  replyText?: string;
+  repliedBy?: string;
+  repliedAt?: string;
 }
 
 export interface SupportTicket {
@@ -629,7 +632,10 @@ export const SEED_REVIEWS: ServiceReview[] = [
     rating: 5,
     comment: "Nhóm làm việc rất nhiệt tình, code đẹp đúng thiết kế Figma của mình, giao đúng hạn trước 1 ngày!",
     createdAt: "2026-09-10 16:00",
-    moderated: true
+    moderated: true,
+    replyText: "Cảm ơn Kim Ngân đã tin tưởng và đánh giá 5 sao cho 4YouTech! Chúc bạn có một website portfolio thật ấn tượng.",
+    repliedBy: "Quản trị viên 4YouTech",
+    repliedAt: "2026-09-11 09:30"
   },
   {
     id: "rev-2",

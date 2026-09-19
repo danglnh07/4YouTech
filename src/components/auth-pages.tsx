@@ -48,6 +48,7 @@ export function CustomerAuthPage({
 }) {
   const {
     login,
+    users,
     registerCustomerWithOtp,
     activateAccountWithOtp,
     sendOtp,
@@ -89,6 +90,17 @@ export function CustomerAuthPage({
   const [forgotSimulatedOtp, setForgotSimulatedOtp] = useState<string | null>(null);
   const [forgotError, setForgotError] = useState("");
   const [forgotTimer, setForgotTimer] = useState(60);
+
+  // SMTP Config Modal State
+  const [showSmtpModal, setShowSmtpModal] = useState(false);
+  const [smtpUserForm, setSmtpUserForm] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("4youtech_smtp_user") || "";
+    return "";
+  });
+  const [smtpPassForm, setSmtpPassForm] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("4youtech_smtp_pass") || "";
+    return "";
+  });
 
   // Countdown timer effect for OTP
   useEffect(() => {
@@ -138,17 +150,21 @@ export function CustomerAuthPage({
       return;
     }
 
-    const { otpCode } = registerCustomerWithOtp({
-      name: regForm.name,
-      email: regForm.email,
-      phone: regForm.phone,
-      password: regForm.password
-    });
+    try {
+      const { otpCode } = registerCustomerWithOtp({
+        name: regForm.name,
+        email: regForm.email,
+        phone: regForm.phone,
+        password: regForm.password
+      });
 
-    setActivationEmail(regForm.email);
-    setSimulatedOtpCode(otpCode);
-    setOtpTimer(60);
-    setOtpCodeInput("");
+      setActivationEmail(regForm.email);
+      setSimulatedOtpCode(otpCode);
+      setOtpTimer(60);
+      setOtpCodeInput("");
+    } catch (err: any) {
+      setRegError(err.message || "Đã xảy ra lỗi khi tạo tài khoản.");
+    }
   };
 
   const handleVerifyActivationOtp = (e: React.FormEvent) => {
@@ -168,18 +184,26 @@ export function CustomerAuthPage({
     const newCode = sendOtp(activationEmail, "activation");
     setSimulatedOtpCode(newCode);
     setOtpTimer(60);
-    alert(`Đã gửi lại mã OTP kích hoạt mới đến ${activationEmail}!`);
+    alert(`📧 Đã phát mã OTP kích hoạt mới đến hòm thư ${activationEmail}!`);
   };
 
   // Forgot Password Steps
   const handleForgotStep1SendOtp = (e: React.FormEvent) => {
     e.preventDefault();
     setForgotError("");
-    if (!forgotEmail.trim()) {
-      setForgotError("Vui lòng nhập Email đã đăng ký.");
+    const cleanEmail = forgotEmail.trim().toLowerCase();
+    if (!cleanEmail) {
+      setForgotError("Vui lòng nhập Email tài khoản đã đăng ký.");
       return;
     }
-    const code = sendOtp(forgotEmail.trim(), "reset_password");
+
+    const targetUser = users.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (!targetUser) {
+      setForgotError(`Không tìm thấy tài khoản với email "${forgotEmail}". Vui lòng kiểm tra lại địa chỉ email hoặc Đăng Ký Tài Khoản Mới.`);
+      return;
+    }
+
+    const code = sendOtp(cleanEmail, "reset_password");
     setForgotSimulatedOtp(code);
     setForgotTimer(60);
     setForgotStep(2);
@@ -226,19 +250,22 @@ export function CustomerAuthPage({
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 animate-fade-in">
       
-      {/* Simulation Email OTP Banner Notification */}
+      {/* Email OTP Dispatch & Simulation Banner Notification */}
       {simulatedOtpCode && (
-        <div className="mb-6 bg-slate-900 text-white p-4 sm:p-5 rounded-2xl shadow-xl border border-cyan-400/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-bounce">
+        <div className="mb-6 bg-slate-900 text-white p-4 sm:p-5 rounded-2xl shadow-xl border border-cyan-400/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-lg">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-lg shrink-0">
               <Mail className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <div className="text-xs font-bold text-cyan-300 uppercase tracking-wider">
-                [Hệ thống giả lập Email OTP 4YouTech]
+              <div className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📧 [Email System Dispatch]</span>
+                <span className="text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded font-mono">
+                  Gửi tới: {activationEmail}
+                </span>
               </div>
-              <div className="text-sm font-extrabold text-white">
-                Mã OTP Kích Hoạt Tài Khoản: <span className="text-amber-300 font-mono text-lg">{simulatedOtpCode}</span>
+              <div className="text-sm font-extrabold text-white mt-0.5">
+                Mã OTP Kích Hoạt Hộp Thư: <span className="text-amber-300 font-mono text-lg">{simulatedOtpCode}</span>
               </div>
             </div>
           </div>
@@ -246,9 +273,9 @@ export function CustomerAuthPage({
           <button
             type="button"
             onClick={() => setOtpCodeInput(simulatedOtpCode)}
-            className="px-4 py-2 bg-cyan-400 text-slate-950 rounded-xl font-bold text-xs shadow-md hover:bg-cyan-300 transition shrink-0"
+            className="px-4 py-2.5 bg-cyan-400 text-slate-950 rounded-xl font-bold text-xs shadow-md hover:bg-cyan-300 transition shrink-0 flex items-center gap-1"
           >
-            Tự Động Điền OTP 1-Click
+            <Sparkles className="w-3.5 h-3.5" /> Tự Động Điền OTP
           </button>
         </div>
       )}
@@ -545,15 +572,26 @@ export function CustomerAuthPage({
             </form>
           )}
 
-          {/* Switch to Management Portal Link */}
+          {/* Switch to Management Portal Link & SMTP Setup */}
           {!simulatedOtpCode && (
-            <div className="pt-4 border-t border-slate-100 text-center">
+            <div className="pt-4 border-t border-slate-100 space-y-2.5 text-center">
               <button
-                onClick={onSwitchToManagement}
-                className="text-xs text-slate-500 hover:text-indigo-600 font-bold inline-flex items-center gap-1"
+                type="button"
+                onClick={() => setShowSmtpModal(true)}
+                className="w-full py-2.5 px-3 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-900 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border border-indigo-200/80 transition shadow-xs"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-500" /> Cổng đăng nhập dành cho Admin & Staff IT/Design <ArrowRight className="w-3 h-3" />
+                <Mail className="w-4 h-4 text-indigo-600" />
+                ⚙️ Cấu Hình Gmail Gửi Email OTP Thực Tế Về Hòm Thư
               </button>
+
+              <div>
+                <button
+                  onClick={onSwitchToManagement}
+                  className="text-xs text-slate-500 hover:text-indigo-600 font-bold inline-flex items-center gap-1"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-500" /> Cổng đăng nhập dành cho Admin & Staff IT/Design <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           )}
 
@@ -611,17 +649,22 @@ export function CustomerAuthPage({
             {forgotStep === 2 && (
               <form onSubmit={handleForgotStep2VerifyOtp} className="space-y-4">
                 
-                {/* Simulated Notification Banner for Reset OTP */}
+                {/* Notification Banner for Reset OTP */}
                 {forgotSimulatedOtp && (
-                  <div className="p-3 bg-slate-900 text-white rounded-xl text-xs space-y-1">
-                    <div className="text-cyan-300 font-bold text-[11px]">[Mô phỏng Email Khôi phục Mật khẩu]</div>
-                    <div>Mã OTP Reset Mật Khẩu: <strong className="text-amber-300 font-mono text-base">{forgotSimulatedOtp}</strong></div>
+                  <div className="p-3.5 bg-slate-900 text-white rounded-2xl text-xs space-y-1.5 border border-cyan-400/40">
+                    <div className="text-cyan-300 font-bold text-[11px] flex items-center justify-between">
+                      <span>📧 [Email Reset Password Sent]</span>
+                      <span className="text-[10px] text-slate-400 font-mono">{forgotEmail}</span>
+                    </div>
+                    <div className="text-slate-200">
+                      Mã OTP Khôi Phục: <strong className="text-amber-300 font-mono text-base ml-1">{forgotSimulatedOtp}</strong>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setForgotOtpInput(forgotSimulatedOtp)}
-                      className="mt-1 px-3 py-1 bg-cyan-400 text-slate-950 font-bold text-[10px] rounded-lg"
+                      className="mt-1 px-3 py-1.5 bg-cyan-400 text-slate-950 font-bold text-[11px] rounded-xl hover:bg-cyan-300 transition flex items-center gap-1"
                     >
-                      Tự động điền OTP
+                      <Sparkles className="w-3 h-3" /> Tự Động Điền Mã OTP
                     </button>
                   </div>
                 )}
@@ -679,6 +722,79 @@ export function CustomerAuthPage({
               </form>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* SMTP CONFIG MODAL */}
+      {showSmtpModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-4 relative animate-fade-in">
+            <button
+              onClick={() => setShowSmtpModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+              <Mail className="w-5 h-5 text-indigo-600" /> Cấu Hình Gmail Gửi OTP Thực Tế
+            </h3>
+            
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Điền tài khoản Gmail và <strong>Mật khẩu ứng dụng (App Password 16 ký tự)</strong> của bạn để hệ thống phát thư OTP trực tiếp tới bất kỳ hòm thư thực tế nào!
+            </p>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Email Gmail phát thư (SMTP User) *</label>
+                <input
+                  type="email"
+                  value={smtpUserForm}
+                  onChange={(e) => setSmtpUserForm(e.target.value)}
+                  placeholder="your-email@gmail.com"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl outline-none font-medium focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Mật khẩu ứng dụng Gmail (16 ký tự) *</label>
+                <input
+                  type="password"
+                  value={smtpPassForm}
+                  onChange={(e) => setSmtpPassForm(e.target.value)}
+                  placeholder="xxxx xxxx xxxx xxxx"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl outline-none font-mono focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[11px] text-amber-900 space-y-1">
+                <div className="font-bold">🔑 Hướng dẫn lấy Mật khẩu ứng dụng Gmail (30s):</div>
+                <ol className="list-decimal pl-4 space-y-0.5 text-amber-800">
+                  <li>Vào <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="font-bold text-indigo-600 underline">myaccount.google.com/apppasswords</a></li>
+                  <li>Tạo Mật khẩu ứng dụng cho tên "Mail 4YouTech"</li>
+                  <li>Copy 16 ký tự vừa tạo dán vào ô trên</li>
+                </ol>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!smtpUserForm.trim() || !smtpPassForm.trim()) {
+                  alert("Vui lòng điền đầy đủ Email và Mật khẩu ứng dụng 16 ký tự!");
+                  return;
+                }
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("4youtech_smtp_user", smtpUserForm.trim());
+                  localStorage.setItem("4youtech_smtp_pass", smtpPassForm.trim());
+                }
+                setShowSmtpModal(false);
+                alert(`🎉 Đã kích hoạt cấu hình Gmail (${smtpUserForm.trim()})! Bây giờ các mã OTP sẽ được gửi thực tế về hòm thư recipient!`);
+              }}
+              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs shadow-md"
+            >
+              Lưu & Kích Hoạt Gửi Email Thực Tế
+            </button>
           </div>
         </div>
       )}

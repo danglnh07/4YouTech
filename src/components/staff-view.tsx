@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useApp } from "@/lib/app-context";
-import { ServiceOrder, Milestone, SupportTicket } from "@/lib/store";
+import { ServiceOrder, Milestone, SupportTicket, ServiceReview } from "@/lib/store";
 import {
   Wrench,
   CheckSquare,
@@ -20,21 +20,31 @@ import {
   HelpCircle,
   ExternalLink,
   ChevronRight,
-  UserCheck
+  UserCheck,
+  Star,
+  Eye
 } from "lucide-react";
 
 export function StaffView() {
   const {
     currentUser,
     orders,
+    reviews,
     proposeWorkEstimate,
     updateMilestones,
     updateProgressPercent,
     uploadDeliverable,
     sendOrderMessage,
     resolveSupportTicket,
+    replyToServiceReview,
     sendOrderMessage: updateReqInfo
   } = useApp();
+
+  const [activeStaffTab, setActiveStaffTab] = useState<"tasks" | "reviews">("tasks");
+
+  // Review Inspection & Reply Modal state
+  const [viewingReviewDetail, setViewingReviewDetail] = useState<ServiceReview | null>(null);
+  const [replyInputText, setReplyInputText] = useState("");
 
   // Staff sees orders assigned to them or unassigned pending evaluation
   const assignedOrders = orders.filter(
@@ -125,12 +135,33 @@ export function StaffView() {
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Left Column: Assigned Tasks List */}
-        <div className="lg:col-span-4 space-y-3">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đơn Hàng Phân Công ({assignedOrders.length})</span>
+      {/* Staff Tab Switcher */}
+      <div className="flex border-b border-slate-200">
+        <button
+          onClick={() => setActiveStaffTab("tasks")}
+          className={`flex-1 sm:flex-none px-6 py-3 font-bold text-xs border-b-2 transition flex items-center justify-center gap-2 ${
+            activeStaffTab === "tasks" ? "border-purple-600 text-purple-600" : "border-transparent text-slate-400 hover:text-slate-600"
+          }`}
+        >
+          <Wrench className="w-4 h-4" /> Nhiệm Vụ Phân Công ({assignedOrders.length})
+        </button>
+        <button
+          onClick={() => setActiveStaffTab("reviews")}
+          className={`flex-1 sm:flex-none px-6 py-3 font-bold text-xs border-b-2 transition flex items-center justify-center gap-2 ${
+            activeStaffTab === "reviews" ? "border-purple-600 text-purple-600" : "border-transparent text-slate-400 hover:text-slate-600"
+          }`}
+        >
+          <Star className="w-4 h-4 text-amber-500 fill-amber-500" /> Đánh Giá Từ Khách Hàng ({reviews.length})
+        </button>
+      </div>
+
+      {/* TAB 1: ASSIGNED TASKS GRID */}
+      {activeStaffTab === "tasks" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* Left Column: Assigned Tasks List */}
+          <div className="lg:col-span-4 space-y-3">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đơn Hàng Phân Công ({assignedOrders.length})</span>
           
           {assignedOrders.length === 0 ? (
             <div className="p-8 bg-white rounded-2xl border border-slate-200 text-center text-xs text-slate-400">
@@ -463,6 +494,87 @@ export function StaffView() {
         </div>
 
       </div>
+      )}
+
+      {/* TAB 2: REVIEWS LIST FOR STAFF */}
+      {activeStaffTab === "reviews" && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Danh Sách Đánh Giá Từ Khách Hàng</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Nhân viên (Staff) xem chi tiết đánh giá chất lượng dịch vụ và phản hồi trực tiếp cho khách hàng</p>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold self-start">
+              Tổng số {reviews.length} đánh giá
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {reviews.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 text-xs italic">
+                Chưa có đánh giá dịch vụ nào từ khách hàng.
+              </div>
+            ) : (
+              reviews.map((rev) => (
+                <div key={rev.id} className="p-5 rounded-2xl border border-slate-200 hover:border-slate-300 bg-slate-50/50 space-y-3 transition">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-slate-900 text-sm">{rev.customerName}</span>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-xs flex items-center gap-1">
+                        {rev.rating} ★
+                      </span>
+                      <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2.5 py-0.5 rounded-md">
+                        {rev.serviceName}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-400 font-mono">{rev.createdAt}</span>
+                      {rev.replyText ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                          ✓ Đã phản hồi
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">
+                          Chưa phản hồi
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-800 font-medium bg-white p-3.5 rounded-xl border border-slate-200/80 leading-relaxed">
+                    "{rev.comment}"
+                  </div>
+
+                  {/* Reply snippet if present */}
+                  {rev.replyText && (
+                    <div className="bg-purple-50/80 p-3 rounded-xl border border-purple-100 text-xs space-y-1">
+                      <div className="font-bold text-purple-900 text-[11px] flex items-center justify-between">
+                        <span>💬 Phản hồi từ {rev.repliedBy}:</span>
+                        <span className="text-[10px] text-slate-400 font-normal">{rev.repliedAt}</span>
+                      </div>
+                      <div className="text-purple-950 font-medium italic">"{rev.replyText}"</div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        setViewingReviewDetail(rev);
+                        setReplyInputText(rev.replyText || "");
+                      }}
+                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> Xem Chi Tiết & Phản Hồi
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Propose Work Estimate Modal */}
       {showEstimateModal && selectedOrder && (
@@ -657,6 +769,91 @@ export function StaffView() {
             >
               Xác Nhận Giải Quyết Ticket
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* REVIEW DETAIL & REPLY MODAL FOR STAFF */}
+      {viewingReviewDetail && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 relative animate-fade-in">
+            <button
+              onClick={() => setViewingReviewDetail(null)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1">
+                  {viewingReviewDetail.rating} ★
+                </span>
+                <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-0.5 rounded-md">
+                  {viewingReviewDetail.serviceName}
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">Đơn: {viewingReviewDetail.orderId}</span>
+              </div>
+              <h3 className="text-lg font-black text-slate-900">Chi Tiết Đánh Giá Từ {viewingReviewDetail.customerName}</h3>
+              <div className="text-xs text-slate-400">Thời gian gửi: {viewingReviewDetail.createdAt}</div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
+                <div className="font-bold text-slate-600">Nội dung nhận xét của khách:</div>
+                <div className="text-slate-900 font-medium leading-relaxed italic text-sm">
+                  "{viewingReviewDetail.comment}"
+                </div>
+              </div>
+
+              {/* Existing Reply Display */}
+              {viewingReviewDetail.replyText && (
+                <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 space-y-1">
+                  <div className="font-bold text-purple-900 flex items-center justify-between text-xs">
+                    <span>💬 Phản hồi hiện tại từ {viewingReviewDetail.repliedBy}:</span>
+                    <span className="text-[10px] text-slate-400 font-normal">{viewingReviewDetail.repliedAt}</span>
+                  </div>
+                  <div className="text-purple-950 font-medium italic">"{viewingReviewDetail.replyText}"</div>
+                </div>
+              )}
+
+              {/* Write or Edit Reply */}
+              <div className="space-y-1.5 pt-2">
+                <label className="block font-bold text-slate-700 text-xs">
+                  {viewingReviewDetail.replyText ? "Chỉnh sửa phản hồi cho khách hàng:" : "Nhập phản hồi phản hồi cho khách hàng:"}
+                </label>
+                <textarea
+                  rows={3}
+                  value={replyInputText}
+                  onChange={(e) => setReplyInputText(e.target.value)}
+                  placeholder="Cảm ơn bạn đã tin tưởng dịch vụ của 4YouTech..."
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setViewingReviewDetail(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
+              >
+                Đóng
+              </button>
+              <button
+                onClick={() => {
+                  if (!replyInputText.trim()) {
+                    alert("Vui lòng nhập nội dung phản hồi!");
+                    return;
+                  }
+                  replyToServiceReview(viewingReviewDetail.id, replyInputText.trim());
+                  setViewingReviewDetail(null);
+                  alert("Staff đã gửi phản hồi đánh giá thành công! Khách hàng sẽ nhìn thấy phản hồi này.");
+                }}
+                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5"
+              >
+                <Send className="w-3.5 h-3.5" /> Gửi Phản Hồi Cho Khách
+              </button>
+            </div>
           </div>
         </div>
       )}

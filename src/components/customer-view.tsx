@@ -863,6 +863,47 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                   )}
                 </div>
 
+                {/* Customer Review & Staff/Admin Reply Section */}
+                {selectedOrder.review && (
+                  <div className="space-y-3 bg-amber-50/40 p-5 rounded-3xl border border-amber-200/70 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        Đánh Giá Của Bạn Cho Đơn Hàng
+                      </div>
+                      <span className="font-bold text-amber-600 bg-amber-100 px-2.5 py-0.5 rounded-full text-xs">
+                        {selectedOrder.review.rating} / 5 ★
+                      </span>
+                    </div>
+
+                    <div className="text-slate-800 font-medium bg-white p-3.5 rounded-2xl border border-amber-100 italic">
+                      "{selectedOrder.review.comment}"
+                    </div>
+
+                    {/* Admin / Staff Reply */}
+                    {selectedOrder.review.replyText ? (
+                      <div className="bg-indigo-50/90 p-4 rounded-2xl border border-indigo-100 space-y-1.5 animate-fade-in">
+                        <div className="font-bold text-indigo-900 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-xs">
+                            <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
+                            Phản hồi từ {selectedOrder.review.repliedBy || "4YouTech"}:
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            {selectedOrder.review.repliedAt}
+                          </span>
+                        </div>
+                        <p className="text-indigo-950 font-medium leading-relaxed pl-5 text-xs">
+                          {selectedOrder.review.replyText}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-slate-400 italic">
+                        💬 4YouTech đã ghi nhận đánh giá của bạn và sẽ sớm phản hồi!
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Direct Messages & Chat Box */}
                 <div className="space-y-4 border-t border-slate-100 pt-6">
                   <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">

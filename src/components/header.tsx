@@ -133,20 +133,22 @@ export function Header({
               <RotateCcw className="w-4 h-4" />
             </button>
 
-            {/* Cart Button */}
-            <button
-              onClick={() => setShowCartModal(true)}
-              className="px-3 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1.5 transition border border-indigo-200 shadow-xs relative"
-              title="Xem Giỏ hàng dịch vụ của bạn"
-            >
-              <ShoppingBag className="w-4 h-4 text-indigo-600" />
-              <span className="hidden sm:inline">Giỏ Hàng</span>
-              {cart.length > 0 && (
-                <span className="bg-indigo-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full min-w-4 text-center shadow-xs">
-                  {cart.length}
-                </span>
-              )}
-            </button>
+            {/* Cart Button (Visible ONLY for Guest and Customer) */}
+            {(currentUser.role === "guest" || currentUser.role === "customer") && (
+              <button
+                onClick={() => setShowCartModal(true)}
+                className="px-3 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1.5 transition border border-indigo-200 shadow-xs relative"
+                title="Xem Giỏ hàng dịch vụ của bạn"
+              >
+                <ShoppingBag className="w-4 h-4 text-indigo-600" />
+                <span className="hidden sm:inline">Giỏ Hàng</span>
+                {cart.length > 0 && (
+                  <span className="bg-indigo-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full min-w-4 text-center shadow-xs">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Realtime Status Indicator Badge */}
             <div
@@ -330,8 +332,8 @@ export function Header({
         </div>
       </div>
 
-      {/* Cart Modal Drawer */}
-      {showCartModal && (
+      {/* Cart Modal Drawer (Visible ONLY for Guest and Customer) */}
+      {showCartModal && (currentUser.role === "guest" || currentUser.role === "customer") && (
         <CartDrawerModal
           onClose={() => setShowCartModal(false)}
           onOpenWorkspace={(serviceId) => {

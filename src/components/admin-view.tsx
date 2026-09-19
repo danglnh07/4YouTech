@@ -8,7 +8,8 @@ import {
   SampleProject,
   ServiceOrder,
   Role,
-  ServiceCategory
+  ServiceCategory,
+  ServiceReview
 } from "@/lib/store";
 import {
   ShieldCheck,
@@ -68,6 +69,7 @@ export function AdminView() {
     verifyPayment,
     handleCancellation,
     moderateReview,
+    replyToServiceReview,
     updateStaffSkills
   } = useApp();
 
@@ -79,6 +81,10 @@ export function AdminView() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(orders[0]?.id || null);
   const [showOrderDetailModal, setShowOrderDetailModal] = useState<boolean>(false);
   const selectedOrder = orders.find((o) => o.id === selectedOrderId) || orders[0];
+
+  // Review Inspection & Reply Modal state
+  const [viewingReviewDetail, setViewingReviewDetail] = useState<ServiceReview | null>(null);
+  const [replyInputText, setReplyInputText] = useState("");
 
   // Search & Filter state for Orders
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
@@ -998,32 +1004,95 @@ export function AdminView() {
         </div>
       )}
 
-      {/* REVIEWS MODERATION TAB */}
+      {/* REVIEWS MODERATION & REPLY TAB */}
       {activeAdminTab === "reviews" && (
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 animate-fade-in">
-          <h2 className="text-xl font-black text-slate-900">Kiểm Duyệt Đánh Giá Từ Khách Hàng</h2>
-          <div className="space-y-3">
-            {reviews.map((rev) => (
-              <div key={rev.id} className="p-4 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">{rev.customerName}</span>
-                    <span className="text-amber-500 flex font-bold">{rev.rating} ★</span>
-                    <span className="text-slate-400">({rev.serviceName})</span>
-                  </div>
-                  <div className="text-slate-700 font-medium">"{rev.comment}"</div>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Quản Lý & Phản Hồi Đánh Giá Từ Khách Hàng</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Admin & Staff xem chi tiết đánh giá, kiểm duyệt và phản hồi trực tiếp cho khách hàng</p>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold self-start">
+              Tổng số {reviews.length} đánh giá
+            </span>
+          </div>
 
-                <button
-                  onClick={() => moderateReview(rev.id, !rev.moderated)}
-                  className={`px-3 py-1.5 rounded-xl font-bold ${
-                    rev.moderated ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
-                  }`}
-                >
-                  {rev.moderated ? "Công khai" : "Đã ẩn / Spam"}
-                </button>
+          <div className="space-y-4">
+            {reviews.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 text-xs italic">
+                Chưa có đánh giá dịch vụ nào từ khách hàng.
               </div>
-            ))}
+            ) : (
+              reviews.map((rev) => (
+                <div key={rev.id} className="p-5 rounded-2xl border border-slate-200 hover:border-slate-300 bg-slate-50/50 space-y-3 transition">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-slate-900 text-sm">{rev.customerName}</span>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-xs flex items-center gap-1">
+                        {rev.rating} ★
+                      </span>
+                      <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md">
+                        {rev.serviceName}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-400 font-mono">{rev.createdAt}</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        rev.moderated ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                      }`}>
+                        {rev.moderated ? "Đang công khai" : "Đã ẩn / Spam"}
+                      </span>
+                      {rev.replyText ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                          ✓ Đã phản hồi
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">
+                          Chưa phản hồi
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-800 font-medium bg-white p-3.5 rounded-xl border border-slate-200/80 leading-relaxed">
+                    "{rev.comment}"
+                  </div>
+
+                  {/* Reply snippet if present */}
+                  {rev.replyText && (
+                    <div className="bg-indigo-50/80 p-3 rounded-xl border border-indigo-100 text-xs space-y-1">
+                      <div className="font-bold text-indigo-900 text-[11px] flex items-center justify-between">
+                        <span>💬 Phản hồi từ {rev.repliedBy}:</span>
+                        <span className="text-[10px] text-slate-400 font-normal">{rev.repliedAt}</span>
+                      </div>
+                      <div className="text-indigo-950 font-medium italic">"{rev.replyText}"</div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                    <button
+                      onClick={() => moderateReview(rev.id, !rev.moderated)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                        rev.moderated ? "bg-slate-200 text-slate-700 hover:bg-slate-300" : "bg-emerald-600 text-white hover:bg-emerald-700"
+                      }`}
+                    >
+                      {rev.moderated ? "Ẩn khỏi web" : "Công khai lại"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setViewingReviewDetail(rev);
+                        setReplyInputText(rev.replyText || "");
+                      }}
+                      className="px-4 py-1.5 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> Xem Chi Tiết & Phản Hồi
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1838,6 +1907,108 @@ export function AdminView() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* REVIEW DETAIL & REPLY MODAL */}
+      {viewingReviewDetail && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 relative animate-fade-in">
+            <button
+              onClick={() => setViewingReviewDetail(null)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1">
+                  {viewingReviewDetail.rating} ★
+                </span>
+                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md">
+                  {viewingReviewDetail.serviceName}
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">Đơn: {viewingReviewDetail.orderId}</span>
+              </div>
+              <h3 className="text-lg font-black text-slate-900">Chi Tiết Đánh Giá Từ {viewingReviewDetail.customerName}</h3>
+              <div className="text-xs text-slate-400">Thời gian đánh giá: {viewingReviewDetail.createdAt}</div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
+                <div className="font-bold text-slate-600">Nội dung nhận xét của khách:</div>
+                <div className="text-slate-900 font-medium leading-relaxed italic text-sm">
+                  "{viewingReviewDetail.comment}"
+                </div>
+              </div>
+
+              {/* Moderation Status Bar */}
+              <div className="flex items-center justify-between bg-slate-100/70 p-3 rounded-xl">
+                <span className="font-bold text-slate-700">Trạng thái hiển thị:</span>
+                <button
+                  onClick={() => {
+                    const nextMod = !viewingReviewDetail.moderated;
+                    moderateReview(viewingReviewDetail.id, nextMod);
+                    setViewingReviewDetail({ ...viewingReviewDetail, moderated: nextMod });
+                  }}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                    viewingReviewDetail.moderated ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+                  }`}
+                >
+                  {viewingReviewDetail.moderated ? "✓ Đang Công Khai" : "✕ Đã Ẩn (Spam)"}
+                </button>
+              </div>
+
+              {/* Existing Reply Display */}
+              {viewingReviewDetail.replyText && (
+                <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 space-y-1">
+                  <div className="font-bold text-indigo-900 flex items-center justify-between text-xs">
+                    <span>💬 Phản hồi hiện tại từ {viewingReviewDetail.repliedBy}:</span>
+                    <span className="text-[10px] text-slate-400 font-normal">{viewingReviewDetail.repliedAt}</span>
+                  </div>
+                  <div className="text-indigo-950 font-medium italic">"{viewingReviewDetail.replyText}"</div>
+                </div>
+              )}
+
+              {/* Write or Edit Reply */}
+              <div className="space-y-1.5 pt-2">
+                <label className="block font-bold text-slate-700 text-xs">
+                  {viewingReviewDetail.replyText ? "Chỉnh sửa phản hồi cho khách hàng:" : "Nhập phản hồi phản hồi cho khách hàng:"}
+                </label>
+                <textarea
+                  rows={3}
+                  value={replyInputText}
+                  onChange={(e) => setReplyInputText(e.target.value)}
+                  placeholder="Cảm ơn bạn đã sử dụng dịch vụ của 4YouTech..."
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setViewingReviewDetail(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
+              >
+                Đóng
+              </button>
+              <button
+                onClick={() => {
+                  if (!replyInputText.trim()) {
+                    alert("Vui lòng nhập nội dung phản hồi!");
+                    return;
+                  }
+                  replyToServiceReview(viewingReviewDetail.id, replyInputText.trim());
+                  setViewingReviewDetail(null);
+                  alert("Đã gửi phản hồi đánh giá thành công! Khách hàng sẽ nhìn thấy phản hồi này.");
+                }}
+                className="px-5 py-2.5 rounded-xl gradient-btn font-bold text-xs shadow-md flex items-center gap-1.5"
+              >
+                <Send className="w-3.5 h-3.5" /> Gửi Phản Hồi Cho Khách
+              </button>
+            </div>
           </div>
         </div>
       )}

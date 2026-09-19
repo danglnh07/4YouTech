@@ -26,6 +26,7 @@ import {
   CartItem,
   hashPassword
 } from "./store";
+import { sendOtpEmail } from "./email";
 
 interface AppContextType {
   currentUser: User;
@@ -119,6 +120,7 @@ interface AppContextType {
   sendOrderMessage: (orderId: string, text: string, attachmentUrl?: string) => void;
   submitServiceReview: (orderId: string, rating: number, comment: string) => void;
   moderateReview: (reviewId: string, moderated: boolean) => void;
+  replyToServiceReview: (reviewId: string, replyText: string) => void;
   requestCancellation: (orderId: string, reason: string) => void;
   handleCancellation: (orderId: string, decision: "approved" | "rejected", refundAmount?: number) => void;
   submitSupportTicket: (orderId: string, subject: string, content: string, type: "support" | "complaint") => void;
@@ -303,6 +305,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       expiresAt: Date.now() + 5 * 60 * 1000
     };
     setActiveOtpSession(newSession);
+
+    // Asynchronously dispatch real email / API request
+    sendOtpEmail({
+      to_email: email,
+      otp_code: code,
+      type
+    }).then((res) => {
+      console.log("OTP Email dispatch status:", res.message);
+    }).catch((err) => {
+      console.error("OTP Email dispatch error:", err);
+    });
+
     return code;
   };
 
@@ -321,6 +335,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     phone: string;
     password: string;
   }): { user: User; otpCode: string } => {
+    const cleanEmail = data.email.trim().toLowerCase();
+    const existingUser = users.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (existingUser && existingUser.status === "active") {
+      throw new Error(`Email "${data.email}" đã được đăng ký trên hệ thống 4YouTech. Vui lòng đăng nhập hoặc sử dụng chức năng Quên Mật Khẩu.`);
+    }
+
     const hashedPassword = hashPassword(data.password);
     const newUser: User = {
       id: `usr-cust-${Date.now()}`,
@@ -333,7 +353,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: "pending_otp"
     };
 
-    setUsers((prev) => [newUser, ...prev]);
+    setUsers((prev) => [newUser, ...prev.filter(u => u.email.toLowerCase() !== cleanEmail)]);
     const generatedOtp = sendOtp(data.email, "activation");
     return { user: newUser, otpCode: generatedOtp };
   };
@@ -990,6 +1010,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const replyToServiceReview = (reviewId: string, replyText: string) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    const replierName = currentUser.name || (currentUser.role === "admin" ? "Quản trị viên 4YouTech" : "Nhân viên 4YouTech");
+
+    setReviews((prev) =>
+      prev.map((r) =>
+        r.id === reviewId
+          ? {
+              ...r,
+              replyText,
+              repliedBy: replierName,
+              repliedAt: now
+            }
+          : r
+      )
+    );
+
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.review && o.review.id === reviewId) {
+          return {
+            ...o,
+            review: {
+              ...o.review,
+              replyText,
+              repliedBy: replierName,
+              repliedAt: now
+            },
+            updatedAt: now
+          };
+        }
+        return o;
+      })
+    );
+  };
+
   const requestCancellation = (orderId: string, reason: string) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
     setOrders((prev) =>
@@ -1119,6 +1175,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         resetPasswordWithOtp,
         switchRole,
         addToCart: (service, requirements, desiredDeadline) => {
+          if (currentUser.role === "admin" || currentUser.role === "staff") {
+            alert("Tài khoản Admin và Nhân viên chỉ quản lý hệ thống, không thể đặt hoặc thêm dịch vụ vào giỏ hàng.");
+            return;
+          }
           const newItem: CartItem = {
             id: `cart-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
             serviceId: service.id,
@@ -1210,6 +1270,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sendOrderMessage,
         submitServiceReview,
         moderateReview,
+        replyToServiceReview,
         requestCancellation,
         handleCancellation,
         submitSupportTicket,

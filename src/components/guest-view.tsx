@@ -27,7 +27,8 @@ import {
   ShoppingBag,
   Plus,
   Check,
-  Info
+  Info,
+  Eye
 } from "lucide-react";
 
 export function GuestView({
@@ -299,35 +300,49 @@ export function GuestView({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center gap-2">
+                  {currentUser.role === "admin" || currentUser.role === "staff" ? (
+                    <div className="space-y-1.5 pt-1">
                       <button
                         onClick={() => setActiveDetailService(srv)}
-                        className="flex-1 py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-xs text-slate-700 transition"
+                        className="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold text-xs text-slate-700 transition flex items-center justify-center gap-1.5"
                       >
-                        Chi tiết
+                        <Eye className="w-3.5 h-3.5 text-slate-500" /> Xem chi tiết Dịch Vụ
                       </button>
+                      <div className="text-[10px] text-center text-slate-400 font-medium italic">
+                        🔒 Quyền {currentUser.role === "admin" ? "Quản trị viên (Admin)" : "Nhân viên (Staff)"}: Chỉ xem dịch vụ
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setActiveDetailService(srv)}
+                          className="flex-1 py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-xs text-slate-700 transition"
+                        >
+                          Chi tiết
+                        </button>
+                        <button
+                          onClick={() => handleAddToCart(srv)}
+                          className="flex-1 py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-1 border border-slate-200"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-indigo-600" /> Giỏ hàng
+                        </button>
+                      </div>
+
                       <button
-                        onClick={() => handleAddToCart(srv)}
-                        className="flex-1 py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-1 border border-slate-200"
+                        onClick={() => {
+                          if (currentUser.role === "guest") {
+                            setAuthModalOpen(true);
+                          } else {
+                            onSelectServiceToBook(srv.id);
+                          }
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1"
                       >
-                        <Plus className="w-3.5 h-3.5 text-indigo-600" /> Giỏ hàng
+                        Đặt Dịch Vụ Ngay <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
-
-                    <button
-                      onClick={() => {
-                        if (currentUser.role === "guest") {
-                          setAuthModalOpen(true);
-                        } else {
-                          onSelectServiceToBook(srv.id);
-                        }
-                      }}
-                      className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1"
-                    >
-                      Đặt Dịch Vụ Ngay <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -469,26 +484,34 @@ export function GuestView({
               >
                 Đóng
               </button>
-              <button
-                onClick={() => {
-                  handleAddToCart(activeDetailService);
-                  setActiveDetailService(null);
-                }}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 border border-slate-200"
-              >
-                <Plus className="w-4 h-4 text-indigo-600" /> Thêm vào Giỏ hàng
-              </button>
-              <button
-                onClick={() => {
-                  const srvId = activeDetailService.id;
-                  setActiveDetailService(null);
-                  if (currentUser.role === "guest") setAuthModalOpen(true);
-                  else onSelectServiceToBook(srvId);
-                }}
-                className="px-5 py-2.5 rounded-xl gradient-btn font-bold text-xs shadow-md"
-              >
-                Tiến hành Đặt ngay
-              </button>
+              {currentUser.role !== "admin" && currentUser.role !== "staff" ? (
+                <>
+                  <button
+                    onClick={() => {
+                      handleAddToCart(activeDetailService);
+                      setActiveDetailService(null);
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 border border-slate-200"
+                  >
+                    <Plus className="w-4 h-4 text-indigo-600" /> Thêm vào Giỏ hàng
+                  </button>
+                  <button
+                    onClick={() => {
+                      const srvId = activeDetailService.id;
+                      setActiveDetailService(null);
+                      if (currentUser.role === "guest") setAuthModalOpen(true);
+                      else onSelectServiceToBook(srvId);
+                    }}
+                    className="px-5 py-2.5 rounded-xl gradient-btn font-bold text-xs shadow-md"
+                  >
+                    Tiến hành Đặt ngay
+                  </button>
+                </>
+              ) : (
+                <div className="text-xs text-slate-400 font-medium italic self-center">
+                  🔒 Quyền {currentUser.role === "admin" ? "Admin" : "Staff"}: Chỉ xem chi tiết gói dịch vụ
+                </div>
+              )}
             </div>
           </div>
         </div>
