@@ -154,8 +154,8 @@ export function PaymentCheckoutModal({
         {/* Modal Header */}
         <div className="space-y-1 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" /> Cổng Thanh Toán An Toàn
+            <span className="px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 text-xs font-bold flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-sky-600" /> Cổng Thanh Toán An Toàn
             </span>
             <span className="text-xs font-bold text-slate-400">{order.id}</span>
           </div>
@@ -180,7 +180,7 @@ export function PaymentCheckoutModal({
               onClick={() => setPaymentType("deposit")}
               className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center ${
                 paymentType === "deposit"
-                  ? "bg-white text-indigo-600 shadow-xs"
+                  ? "bg-white text-sky-600 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -193,7 +193,7 @@ export function PaymentCheckoutModal({
               onClick={() => setPaymentType("full")}
               className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center ${
                 paymentType === "full"
-                  ? "bg-white text-indigo-600 shadow-xs"
+                  ? "bg-white text-sky-600 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -233,7 +233,7 @@ export function PaymentCheckoutModal({
 
         {/* TAB 1: VNPAY SANDBOX SIMULATOR */}
         {method === "vnpay" && (
-          <div className="space-y-5 bg-gradient-to-br from-blue-950 via-slate-900 to-indigo-950 p-6 rounded-3xl text-white shadow-xl">
+          <div className="space-y-5 bg-gradient-to-br from-blue-950 via-slate-900 to-sky-950 p-6 rounded-3xl text-white shadow-xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 bg-blue-500 text-white font-black text-[10px] rounded tracking-wider uppercase">
@@ -482,7 +482,7 @@ export function PaymentCheckoutModal({
                   value={receiptImage}
                   onChange={(e) => setReceiptImage(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
                 />
                 <span className="text-[11px] text-slate-400 mt-1 block">
                   Dán link ảnh screenshot giao diện chuyển khoản thành công trên App ngân hàng của bạn.
@@ -496,7 +496,7 @@ export function PaymentCheckoutModal({
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Ghi chú thêm nếu có..."
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 

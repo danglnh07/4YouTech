@@ -30,7 +30,9 @@ export interface ServiceItem {
   description: string;
   category: ServiceCategory;
   estimatedDays: number | null;
+  maxDays?: number | null;
   estimatedPrice: number | null;
+  maxPrice?: number | null;
   maxRevisions: number;
   scopeOutput: string;
   demoImages: string[];
@@ -44,16 +46,64 @@ export interface CartItem {
   serviceName: string;
   category: ServiceCategory;
   estimatedPrice: number | null;
+  maxPrice?: number | null;
   estimatedDays: number | null;
+  maxDays?: number | null;
   requirements?: string;
   desiredDeadline?: string;
   addedAt: string;
+}
+
+export function formatPriceRange(minPrice?: number | null, maxPrice?: number | null): string {
+  if (!minPrice && !maxPrice) return "Báo giá linh hoạt";
+  const minStr = minPrice ? minPrice.toLocaleString("vi-VN") : "";
+  const maxVal = maxPrice || (minPrice ? Math.round(minPrice * 1.5) : null);
+  const maxStr = maxVal ? maxVal.toLocaleString("vi-VN") : "";
+
+  if (minStr && maxStr) {
+    return `${minStr} - ${maxStr} ₫`;
+  } else if (minStr) {
+    return `Từ ${minStr} ₫`;
+  } else {
+    return `Đến ${maxStr} ₫`;
+  }
+}
+
+export function formatDaysRange(minDays?: number | null, maxDays?: number | null): string {
+  if (!minDays && !maxDays) return "Thỏa thuận";
+  const min = minDays || null;
+  const max = maxDays || (minDays ? minDays + 2 : null);
+
+  if (min && max) {
+    return min === max ? `${min} ngày` : `${min} - ${max} ngày`;
+  } else if (min) {
+    return `${min} ngày`;
+  } else {
+    return `${max} ngày`;
+  }
+}
+
+export function addDaysToDate(baseDate: Date, days: number): string {
+  const d = new Date(baseDate);
+  d.setDate(d.getDate() + days);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function formatVNShortDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
 export interface SampleProject {
   id: string;
   name: string;
   category: ServiceCategory;
+  subCategory?: "Logo" | "Banner" | "Website" | "UI/UX" | "Database" | "Other";
   image: string;
   description: string;
   link?: string;
@@ -347,7 +397,9 @@ export const SEED_SERVICES: ServiceItem[] = [
     description: "Xây dựng website portfolio cá nhân tối ưu SEO & responsive dựa trên file Figma/Adobe XD sẵn có.",
     category: "IT",
     estimatedDays: 3,
+    maxDays: 5,
     estimatedPrice: 1000000,
+    maxPrice: 1500000,
     maxRevisions: 3,
     scopeOutput: "Mã nguồn Next.js/React, Responsive chuẩn Mobile/Tablet, Deploy Vercel/Netlify miễn phí.",
     supportType: "Online",
@@ -361,8 +413,10 @@ export const SEED_SERVICES: ServiceItem[] = [
     name: "Portfolio trọn gói (Thiết kế & Code)",
     description: "Tư vấn ý tưởng, thiết kế UI cá tính và lập trình hoàn thiện website cá nhân từ A đến Z.",
     category: "IT/Design",
-    estimatedDays: 6,
+    estimatedDays: 5,
+    maxDays: 7,
     estimatedPrice: 1800000,
+    maxPrice: 2800000,
     maxRevisions: 4,
     scopeOutput: "File Figma UI, Mã nguồn Front-end, Tích hợp Form liên hệ, Hướng dẫn quản trị.",
     supportType: "Hybrid",
@@ -376,8 +430,10 @@ export const SEED_SERVICES: ServiceItem[] = [
     name: "Thiết kế Giao diện Web & App (UI/UX)",
     description: "Thiết kế UI/UX hiện đại theo chuẩn Design System, Wireframe, Prototype tương tác mượt mà.",
     category: "Design",
-    estimatedDays: 5,
+    estimatedDays: 4,
+    maxDays: 6,
     estimatedPrice: 1500000,
+    maxPrice: 2500000,
     maxRevisions: 3,
     scopeOutput: "File Figma master, Component Design System, Export PNG/SVG assets, Prototype link.",
     supportType: "Online",
@@ -392,7 +448,9 @@ export const SEED_SERVICES: ServiceItem[] = [
     description: "Chuẩn hóa bảng dữ liệu, vẽ sơ đồ ERD, tối ưu truy vấn SQL / MongoDB cho đồ án & sản phẩm.",
     category: "IT",
     estimatedDays: 2,
+    maxDays: 4,
     estimatedPrice: 500000,
+    maxPrice: 900000,
     maxRevisions: 2,
     scopeOutput: "Sơ đồ ERD (Draw.io/dbdiagram), File SQL script khởi tạo, Tài liệu giải thích mối quan hệ bảng.",
     supportType: "Online",
@@ -405,8 +463,10 @@ export const SEED_SERVICES: ServiceItem[] = [
     name: "Phân tích & Thiết kế Hệ thống (BA / System)",
     description: "Xác định Actor, Use Case, Sequence Diagram, Activity Diagram & lập tài liệu SRS bài bản.",
     category: "IT",
-    estimatedDays: 4,
+    estimatedDays: 3,
+    maxDays: 5,
     estimatedPrice: 800000,
+    maxPrice: 1400000,
     maxRevisions: 3,
     scopeOutput: "File tài liệu SRS PDF/Word, Bộ biểu đồ PlantUML/Draw.io đầy đủ.",
     supportType: "Online",
@@ -420,7 +480,9 @@ export const SEED_SERVICES: ServiceItem[] = [
     description: "Thiết kế Logo, Banner sự kiện, Poster, Standee, Slide thuyết trình chuyên nghiệp cho CLB/Nhóm.",
     category: "Design",
     estimatedDays: 3,
+    maxDays: 5,
     estimatedPrice: 700000,
+    maxPrice: 1200000,
     maxRevisions: 3,
     scopeOutput: "File thiết kế Vector (AI/PSD), File in chất lượng cao (PDF/PNG), Mockup thực tế.",
     supportType: "Online",
@@ -433,40 +495,64 @@ export const SEED_SERVICES: ServiceItem[] = [
 // Seed Sample Projects
 export const SEED_PROJECTS: SampleProject[] = [
   {
-    id: "proj-1",
-    name: "Website Đặt Sân & Quản Lý Sự Kiện Sinh Viên",
-    category: "IT",
-    description: "Hệ thống Web Fullstack hỗ trợ CLB trường đặt lịch sự kiện, thanh toán và quản lý thành viên.",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80",
-    link: "https://demo.4youtech.com/student-event",
+    id: "proj-logo-1",
+    name: "Mẫu Thiết Kế Logo & Bộ Nhận Diện Thương Hiệu 4Tech",
+    category: "Design",
+    subCategory: "Logo",
+    description: "Bộ thiết kế Logo Vector công nghệ hiện đại, kèm Brand Guidelines (Logo master, Màu sắc, Font chữ, Card visit, Mockup).",
+    image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=80",
+    link: "https://behance.net/gallery/4tech-brand-logo",
     featured: true
   },
   {
-    id: "proj-2",
-    name: "Bộ Giao diện UI App Sức Khỏe & Thể Thao",
+    id: "proj-banner-1",
+    name: "Bộ Mẫu Banner Quảng Cáo & Poster Truyền Thông Sự Kiện",
     category: "Design",
-    description: "Thiết kế UI/UX 18 màn hình phong cách Glassmorphism màu neon dành cho gen Z.",
+    subCategory: "Banner",
+    description: "Tuyển tập các mẫu Banner Facebook, Banner Website & Poster tuyển dụng / sự kiện thiết kế chuẩn ấn tượng.",
+    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&auto=format&fit=crop&q=80",
+    link: "https://dribbble.com/shots/banner-collection",
+    featured: true
+  },
+  {
+    id: "proj-web-1",
+    name: "Mẫu Website Portfolio Cá Nhân & Profile Chuyên Nghiệp",
+    category: "IT",
+    subCategory: "Website",
+    description: "Website thông tin cá nhân/doanh nghiệp 5 trang tối ưu SEO, hiệu ứng mượt mà, hỗ trợ giao diện Dark/Light mode.",
+    image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
+    link: "https://demo.4youtech.com/portfolio-sample",
+    featured: true
+  },
+  {
+    id: "proj-web-2",
+    name: "Mẫu Website Thương Mại Điện Tử & Đặt Hàng Trực Tuyến",
+    category: "IT",
+    subCategory: "Website",
+    description: "Giao diện Web Bán Hàng fullstack hỗ trợ lọc sản phẩm, giỏ hàng, thanh toán VietQR và quản lý đơn hàng.",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+    link: "https://demo.4youtech.com/shop-sample",
+    featured: true
+  },
+  {
+    id: "proj-ui-app",
+    name: "Mẫu Giao Diện UI/UX App Di Động Đặt Lịch & Sức Khỏe",
+    category: "Design",
+    subCategory: "UI/UX",
+    description: "Bản vẽ Figma Master 20+ màn hình Mobile App iOS/Android phong cách Glassmorphism mượt mà.",
     image: "https://images.unsplash.com/photo-1526498460520-4c246339dccb?w=800&auto=format&fit=crop&q=80",
     link: "https://figma.com/file/demo-fitness-ui",
     featured: true
   },
   {
-    id: "proj-3",
-    name: "Phân Tích ERD & Hệ Thống E-Commerce Chuyên Sâu",
+    id: "proj-erd-db",
+    name: "Mẫu Phân Tích ERD & Thiết Kế Cơ Sở Dữ Liệu SQL Đồ Án",
     category: "IT",
-    description: "Thiết kế CSDL SQL gồm 32 bảng chuẩn hóa 3NF xử lý đơn hàng, kho và khuyến mãi.",
-    image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80",
+    subCategory: "Database",
+    description: "Hồ sơ thiết kế CSDL SQL/MongoDB chuẩn 3NF, sơ đồ ERD, Use Case & Sequence Diagram dành cho đồ án CNTT.",
+    image: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80",
     link: "https://dbdiagram.io/d/demo-ecommerce",
     featured: false
-  },
-  {
-    id: "proj-4",
-    name: "Bộ Nhận Diện Thương Hiệu CLB Sáng Tạo TechClub",
-    category: "Design",
-    description: "Logo, Brand Guidelines, Template slide thuyết trình và 10 mẫu poster truyền thông.",
-    image: "https://images.unsplash.com/photo-1600508774634-4e11d34730e2?w=800&auto=format&fit=crop&q=80",
-    link: "https://behance.net/gallery/techclub-brand",
-    featured: true
   }
 ];
 

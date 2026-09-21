@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "@/lib/app-context";
 import { Role } from "@/lib/store";
 import {
@@ -27,15 +27,35 @@ export function Header({
   onOpenAuth,
   onSelectServiceToBook
 }: {
-  activeTab: "catalog" | "projects" | "workspace";
-  setActiveTab: (tab: "catalog" | "projects" | "workspace") => void;
-  onOpenAuth?: (portal: "customer" | "management") => void;
+  activeTab: "catalog" | "projects" | "about" | "workspace";
+  setActiveTab: (tab: "catalog" | "projects" | "about" | "workspace") => void;
+  onOpenAuth?: () => void;
   onSelectServiceToBook?: (serviceId: string) => void;
 }) {
   const { currentUser, logout, resetToDefaultSeed, orders, cart } = useApp();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
+
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Automatically close dropdowns when user clicks outside or interacts with page below
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotification(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const isAuthenticated = currentUser.role !== "guest";
 
@@ -44,6 +64,16 @@ export function Header({
     if (currentUser.role === "staff") return o.assignedStaffId === currentUser.id;
     return true; // Admin sees all
   });
+
+  const [hasUnreadNotification, setHasUnreadNotification] = useState(userOrders.length > 0);
+  const prevOrdersCountRef = useRef(userOrders.length);
+
+  useEffect(() => {
+    if (userOrders.length > prevOrdersCountRef.current) {
+      setHasUnreadNotification(true);
+    }
+    prevOrdersCountRef.current = userOrders.length;
+  }, [userOrders.length]);
 
   const roleColors: Record<Role, string> = {
     guest: "bg-slate-100 text-slate-700 border-slate-300",
@@ -65,16 +95,23 @@ export function Header({
         <div className="flex items-center justify-between h-16 gap-4">
           
           {/* Brand Logo */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab("catalog")}>
-            <div className="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center font-bold text-xl shadow-md">
+          <div 
+            className="flex items-center gap-2.5 cursor-pointer group select-none shrink-0" 
+            onClick={() => {
+              setActiveTab("catalog");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            title="Nhấp để về Trang chủ"
+          >
+            <div className="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center font-black text-xl shadow-md group-hover:scale-105 transition-transform shrink-0">
               4Y
             </div>
-            <div>
-              <div className="flex items-center gap-1.5 font-black text-lg tracking-tight text-slate-900">
-                4YouTech <Sparkles className="w-4 h-4 text-indigo-500 fill-indigo-500 animate-pulse" />
+            <div className="flex flex-col justify-center min-w-0">
+              <div className="flex items-center gap-1.5 font-black text-base sm:text-lg tracking-tight text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors whitespace-nowrap">
+                4YouTech <Sparkles className="w-4 h-4 text-indigo-500 fill-indigo-500 animate-pulse shrink-0" />
               </div>
-              <div className="text-[11px] font-medium text-slate-500 tracking-wide uppercase">
-                Dịch vụ IT & Design Sinh Viên
+              <div className="text-[10px] sm:text-[11px] font-bold text-indigo-600 tracking-wide whitespace-nowrap leading-none mt-0.5">
+                Your Tech & Design
               </div>
             </div>
           </div>
@@ -101,6 +138,17 @@ export function Header({
               }`}
             >
               Sản phẩm Mẫu
+            </button>
+
+            <button
+              onClick={() => setActiveTab("about")}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
+                activeTab === "about"
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Về Chúng Tôi
             </button>
 
             <button
@@ -137,13 +185,17 @@ export function Header({
             {(currentUser.role === "guest" || currentUser.role === "customer") && (
               <button
                 onClick={() => setShowCartModal(true)}
-                className="px-3 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1.5 transition border border-indigo-200 shadow-xs relative"
+                className={`px-3 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition border shadow-xs relative ${
+                  cart.length > 0
+                    ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
+                    : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"
+                }`}
                 title="Xem Giỏ hàng dịch vụ của bạn"
               >
-                <ShoppingBag className="w-4 h-4 text-indigo-600" />
+                <ShoppingBag className={`w-4 h-4 ${cart.length > 0 ? "text-rose-600" : "text-indigo-600"}`} />
                 <span className="hidden sm:inline">Giỏ Hàng</span>
                 {cart.length > 0 && (
-                  <span className="bg-indigo-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full min-w-4 text-center shadow-xs">
+                  <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full min-w-4 text-center shadow-xs animate-pulse">
                     {cart.length}
                   </span>
                 )}
@@ -164,14 +216,21 @@ export function Header({
 
             {/* Notification Bell */}
             {isAuthenticated && (
-              <div className="relative">
+              <div ref={notificationRef} className="relative">
                 <button
-                  onClick={() => setShowNotification(!showNotification)}
+                  onClick={() => {
+                    const nextState = !showNotification;
+                    setShowNotification(nextState);
+                    if (nextState) {
+                      setHasUnreadNotification(false);
+                    }
+                  }}
                   className="p-2 text-slate-600 hover:bg-slate-100 rounded-full relative transition"
+                  title="Thông báo đơn hàng"
                 >
-                  <Bell className="w-5 h-5" />
-                  {userOrders.length > 0 && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white"></span>
+                  <Bell className="w-5 h-5 text-slate-700" />
+                  {hasUnreadNotification && userOrders.length > 0 && (
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>
                   )}
                 </button>
 
@@ -218,7 +277,7 @@ export function Header({
 
             {/* Authenticated User Menu or Unauthenticated Login Links */}
             {isAuthenticated ? (
-              <div className="relative">
+              <div ref={profileRef} className="relative">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold shadow-xs transition ${
@@ -309,22 +368,12 @@ export function Header({
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onOpenAuth && onOpenAuth("customer")}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
-                >
-                  <LogIn className="w-3.5 h-3.5" /> Đăng Nhập Khách Hàng
-                </button>
-
-                <button
-                  onClick={() => onOpenAuth && onOpenAuth("management")}
-                  className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition flex items-center gap-1"
-                  title="Dành riêng cho Admin & Staff IT/Design"
-                >
-                  <Lock className="w-3.5 h-3.5 text-amber-500" /> Cổng Admin / Staff
-                </button>
-              </div>
+              <button
+                onClick={() => onOpenAuth && onOpenAuth()}
+                className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs shadow-md transition flex items-center gap-1.5"
+              >
+                <LogIn className="w-3.5 h-3.5" /> Đăng Nhập / Đăng Ký
+              </button>
             )}
 
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useApp } from "@/lib/app-context";
 import {
   User,
@@ -9,7 +9,9 @@ import {
   ServiceOrder,
   Role,
   ServiceCategory,
-  ServiceReview
+  ServiceReview,
+  formatPriceRange,
+  formatDaysRange
 } from "@/lib/store";
 import {
   ShieldCheck,
@@ -45,6 +47,287 @@ import {
   FileText,
   Lock
 } from "lucide-react";
+
+function getWeekNumber(d: Date) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+function RevenueLineChartComponent({
+  transactions,
+  orders
+}: {
+  transactions: any[];
+  orders: any[];
+}) {
+  const [filterMode, setFilterMode] = useState<"week" | "month">("month");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const chartData = useMemo(() => {
+    const items: { date: Date; amount: number }[] = [];
+
+    // 1) From verified transactions
+    transactions.forEach((tx) => {
+      if (tx.status === "verified" && tx.amount > 0) {
+        items.push({
+          date: new Date(tx.createdAt || Date.now()),
+          amount: Number(tx.amount) || 0
+        });
+      }
+    });
+
+    // 2) From verified orders payment without duplicate txns
+    orders.forEach((ord) => {
+      const hasTxn = transactions.some((t) => t.orderId === ord.id && t.status === "verified");
+      if (!hasTxn && ord.paymentInfo?.paymentStatus === "verified" && ord.paymentInfo.amountPaid > 0) {
+        items.push({
+          date: new Date(ord.createdAt || Date.now()),
+          amount: Number(ord.paymentInfo.amountPaid) || 0
+        });
+      }
+    });
+
+    const now = new Date();
+
+    if (filterMode === "month") {
+      // Last 6 calendar months
+      const months: { label: string; amount: number; year: number; month: number }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const label = `T${d.getMonth() + 1}/${d.getFullYear().toString().slice(2)}`;
+        months.push({ label, amount: 0, year: d.getFullYear(), month: d.getMonth() });
+      }
+
+      items.forEach((item) => {
+        const y = item.date.getFullYear();
+        const m = item.date.getMonth();
+        const found = months.find((mo) => mo.year === y && mo.month === m);
+        if (found) {
+          found.amount += item.amount;
+        }
+      });
+
+      return months.map((m) => ({ label: m.label, amount: m.amount }));
+    } else {
+      // Last 8 weeks
+      const weeks: { label: string; amount: number; startDate: Date; endDate: Date }[] = [];
+      for (let i = 7; i >= 0; i--) {
+        const start = new Date(now);
+        start.setDate(now.getDate() - i * 7 - ((now.getDay() + 6) % 7));
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+
+        const label = `W${getWeekNumber(start)} (${start.getDate()}/${start.getMonth() + 1})`;
+        weeks.push({ label, amount: 0, startDate: start, endDate: end });
+      }
+
+      items.forEach((item) => {
+        const found = weeks.find((w) => item.date >= w.startDate && item.date <= w.endDate);
+        if (found) {
+          found.amount += item.amount;
+        }
+      });
+
+      return weeks.map((w) => ({ label: w.label, amount: w.amount }));
+    }
+  }, [transactions, orders, filterMode]);
+
+  const maxAmount = Math.max(...chartData.map((d) => d.amount), 100000);
+  const totalInPeriod = chartData.reduce((acc, curr) => acc + curr.amount, 0);
+
+  const width = 700;
+  const height = 180;
+  const paddingX = 40;
+  const paddingY = 30;
+
+  const points = chartData.map((d, index) => {
+    const x = paddingX + (index / (chartData.length - 1 || 1)) * (width - paddingX * 2);
+    const y = height - paddingY - (d.amount / maxAmount) * (height - paddingY * 2);
+    return { x, y, label: d.label, amount: d.amount };
+  });
+
+  // Sharp polyline path like financial chart in reference image
+  const dPath = points.reduce((acc, point, i) => {
+    return i === 0 ? `M ${point.x},${point.y}` : `${acc} L ${point.x},${point.y}`;
+  }, "");
+
+  const areaPath = points.length > 0
+    ? `${dPath} L ${points[points.length - 1].x},${height - paddingY} L ${points[0].x},${height - paddingY} Z`
+    : "";
+
+  return (
+    <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="font-black text-slate-900 text-lg">Biểu Đồ Doanh Thu Thực Thu</h3>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-50 text-orange-600 border border-orange-200">
+              Đường Cam Nhỏ Gọn
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Doanh thu thực thu lọc theo {filterMode === "month" ? "Tháng" : "Tuần"}:{" "}
+            <span className="font-black text-orange-600">{totalInPeriod.toLocaleString("vi-VN")} ₫</span>
+          </p>
+        </div>
+
+        {/* Filter Toggle */}
+        <div className="inline-flex bg-slate-100 p-1 rounded-2xl self-start sm:self-auto border border-slate-200">
+          <button
+            onClick={() => setFilterMode("month")}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              filterMode === "month"
+                ? "bg-white text-orange-600 shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            Theo Tháng
+          </button>
+          <button
+            onClick={() => setFilterMode("week")}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              filterMode === "week"
+                ? "bg-white text-orange-600 shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            Theo Tuần
+          </button>
+        </div>
+      </div>
+
+      {/* SVG Chart */}
+      <div className="relative w-full overflow-hidden pt-2">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
+          <defs>
+            <linearGradient id="orangeChartGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.20" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+
+          {/* Left Vertical Boundary Line ("2 bên có đường thẳng đứng") */}
+          <line
+            x1={paddingX}
+            y1={15}
+            x2={paddingX}
+            y2={height - paddingY}
+            stroke="#e2e8f0"
+            strokeDasharray="3 3"
+            strokeWidth="1.5"
+          />
+
+          {/* Right Vertical Boundary Line ("2 bên có đường thẳng đứng") */}
+          <line
+            x1={width - paddingX}
+            y1={15}
+            x2={width - paddingX}
+            y2={height - paddingY}
+            stroke="#e2e8f0"
+            strokeDasharray="3 3"
+            strokeWidth="1.5"
+          />
+
+          {/* Horizontal Grid lines */}
+          {[0.2, 0.5, 0.8].map((ratio) => {
+            const y = height - paddingY - ratio * (height - paddingY * 2);
+            return (
+              <line
+                key={ratio}
+                x1={paddingX}
+                y1={y}
+                x2={width - paddingX}
+                y2={y}
+                stroke="#e2e8f0"
+                strokeDasharray="4 4"
+                strokeWidth="1.2"
+              />
+            );
+          })}
+
+          {/* Area fill */}
+          {areaPath && <path d={areaPath} fill="url(#orangeChartGradient)" />}
+
+          {/* Vertical dashed line down to baseline on hover */}
+          {hoveredIndex !== null && points[hoveredIndex] && (
+            <line
+              x1={points[hoveredIndex].x}
+              y1={points[hoveredIndex].y}
+              x2={points[hoveredIndex].x}
+              y2={height - paddingY}
+              stroke="#f97316"
+              strokeDasharray="3 3"
+              strokeWidth="1.5"
+            />
+          )}
+
+          {/* Sharp orange polyline stroke */}
+          {dPath && (
+            <path
+              d={dPath}
+              fill="none"
+              stroke="#f97316"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
+
+          {/* Interactive Data Points */}
+          {points.map((pt, idx) => (
+            <g
+              key={idx}
+              className="cursor-pointer"
+              onMouseEnter={() => setHoveredIndex(idx)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              <circle cx={pt.x} cy={pt.y} r="14" fill="transparent" />
+              <circle
+                cx={pt.x}
+                cy={pt.y}
+                r={hoveredIndex === idx ? "5.5" : "3.5"}
+                fill="#ffffff"
+                stroke="#f97316"
+                strokeWidth={hoveredIndex === idx ? "3" : "2.5"}
+                className="transition-all duration-150"
+              />
+              <text
+                x={pt.x}
+                y={height - 8}
+                textAnchor="middle"
+                className="text-[10px] fill-slate-400 font-bold"
+              >
+                {pt.label}
+              </text>
+            </g>
+          ))}
+        </svg>
+
+        {/* Floating Tooltip */}
+        {hoveredIndex !== null && points[hoveredIndex] && (
+          <div
+            className="absolute z-10 bg-slate-900 text-white text-xs py-1.5 px-3 rounded-xl shadow-xl pointer-events-none transform -translate-x-1/2 -translate-y-full mb-3 transition-all duration-150"
+            style={{
+              left: `${(points[hoveredIndex].x / width) * 100}%`,
+              top: `${(points[hoveredIndex].y / height) * 100}%`
+            }}
+          >
+            <div className="font-bold text-orange-400">{points[hoveredIndex].label}</div>
+            <div className="text-[11px] font-semibold text-white">
+              {points[hoveredIndex].amount.toLocaleString("vi-VN")} ₫
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function AdminView() {
   const {
@@ -210,7 +493,7 @@ export function AdminView() {
       case "submitted":
         return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Mới Gửi</span>;
       case "under_review":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Đang Khảo Sát</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Đang Khảo Sát</span>;
       case "quoted":
         return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">Đã Báo Giá</span>;
       case "deposit_pending":
@@ -300,11 +583,11 @@ export function AdminView() {
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Giá Trị Đã Báo Giá</div>
-                <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                <div className="p-2 bg-sky-50 rounded-xl text-sky-600">
                   <TrendingUp className="w-5 h-5" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-indigo-600">{totalQuotedContractValue.toLocaleString("vi-VN")} ₫</div>
+              <div className="text-2xl font-black text-sky-600">{totalQuotedContractValue.toLocaleString("vi-VN")} ₫</div>
               <div className="text-[11px] text-slate-400">Tổng hợp đồng & báo giá chính thức</div>
             </div>
 
@@ -351,6 +634,9 @@ export function AdminView() {
             </div>
           </div>
 
+          {/* Revenue Line Chart Component */}
+          <RevenueLineChartComponent transactions={transactions} orders={orders} />
+
           {/* Quick Orders Overview Table with 1-click Modal View */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -361,7 +647,7 @@ export function AdminView() {
 
               <button
                 onClick={() => setActiveAdminTab("requests")}
-                className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                className="text-xs font-bold text-sky-600 hover:underline flex items-center gap-1"
               >
                 <span>Xem tất cả {orders.length} đơn</span>
                 <ChevronRight className="w-4 h-4" />
@@ -391,7 +677,7 @@ export function AdminView() {
                       <td className="py-3 px-4 font-bold text-slate-900">{ord.id}</td>
                       <td className="py-3 px-4 text-slate-700 font-semibold">{ord.customerName}</td>
                       <td className="py-3 px-4 text-slate-800">{ord.serviceName}</td>
-                      <td className="py-3 px-4 font-bold text-indigo-600">
+                      <td className="py-3 px-4 font-bold text-sky-600">
                         {ord.quotation ? `${ord.quotation.amount.toLocaleString("vi-VN")} ₫` : "Chờ báo giá"}
                       </td>
                       <td className="py-3 px-4">
@@ -421,7 +707,7 @@ export function AdminView() {
                             e.stopPropagation();
                             openOrderDetail(ord.id);
                           }}
-                          className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg"
+                          className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs rounded-lg"
                         >
                           Xem Chi Tiết
                         </button>
@@ -458,8 +744,8 @@ export function AdminView() {
                             {srv.category}
                           </span>
                         </td>
-                        <td className="py-3 px-4 font-bold text-indigo-600">{count} đơn</td>
-                        <td className="py-3 px-4">{srv.estimatedPrice ? `${srv.estimatedPrice.toLocaleString("vi-VN")} ₫` : "Báo giá linh hoạt"}</td>
+                        <td className="py-3 px-4 font-bold text-sky-600">{count} đơn</td>
+                        <td className="py-3 px-4">{formatPriceRange(srv.estimatedPrice, srv.maxPrice)}</td>
                         <td className="py-3 px-4">
                           {srv.hidden ? (
                             <span className="text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Đã ẩn</span>
@@ -491,7 +777,7 @@ export function AdminView() {
                 placeholder="Tìm mã đơn, tên khách, email, dịch vụ..."
                 value={orderSearchQuery}
                 onChange={(e) => setOrderSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
@@ -549,7 +835,7 @@ export function AdminView() {
 
                         <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100 pt-2 mt-1">
                           <span>Khách: <strong className="text-slate-700">{ord.customerName}</strong></span>
-                          <span>Staff: <strong className="text-indigo-600">{ord.assignedStaffName || "Chưa phân công"}</strong></span>
+                          <span>Staff: <strong className="text-sky-600">{ord.assignedStaffName || "Chưa phân công"}</strong></span>
                         </div>
                       </div>
                     );
@@ -658,8 +944,8 @@ export function AdminView() {
                             isFinished
                               ? "bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300"
                               : isAlreadyAssigned
-                              ? "bg-indigo-100 text-indigo-900 border border-indigo-300 hover:bg-indigo-200"
-                              : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+                              ? "bg-sky-100 text-sky-900 border border-sky-300 hover:bg-sky-200"
+                              : "bg-sky-600 hover:bg-sky-700 text-white shadow-xs"
                           }`}
                         >
                           {isFinished ? (
@@ -668,7 +954,7 @@ export function AdminView() {
                             </>
                           ) : isAlreadyAssigned ? (
                             <>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-700" /> Đã Phân Công ({selectedOrder.assignedStaffName}) - Đổi
+                              <CheckCircle2 className="w-3.5 h-3.5 text-sky-700" /> Đã Phân Công ({selectedOrder.assignedStaffName}) - Đổi
                             </>
                           ) : (
                             "Phân Công Staff"
@@ -798,7 +1084,7 @@ export function AdminView() {
                       return (
                         <tr key={txn.id} className={`hover:bg-slate-50 transition ${txn.status === "pending" ? "bg-amber-50/40" : ""}`}>
                           <td className="py-3 px-4 font-bold text-slate-900 font-mono">{txn.id}</td>
-                          <td className="py-3 px-4 font-bold text-indigo-600 font-mono">{txn.orderId}</td>
+                          <td className="py-3 px-4 font-bold text-sky-600 font-mono">{txn.orderId}</td>
                           <td className="py-3 px-4 text-slate-800 font-semibold">{txn.customerName}</td>
                           <td className="py-3 px-4 font-black text-emerald-600 text-sm">
                             {txn.amount.toLocaleString("vi-VN")} ₫
@@ -827,7 +1113,7 @@ export function AdminView() {
                                 href={txn.receiptImage}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-indigo-600 font-bold hover:underline flex items-center gap-1"
+                                className="text-sky-600 font-bold hover:underline flex items-center gap-1"
                               >
                                 <Eye className="w-3.5 h-3.5" /> Xem biên lai
                               </a>
@@ -939,7 +1225,7 @@ export function AdminView() {
                               setEditingStaffId(usr.id);
                               setSkillsInput(usr.skills?.join(", ") || "");
                             }}
-                            className="text-[10px] font-bold text-indigo-600 hover:underline"
+                            className="text-[10px] font-bold text-sky-600 hover:underline"
                           >
                             + Sửa chuyên môn
                           </button>
@@ -1036,10 +1322,10 @@ export function AdminView() {
                       </span>
                     </td>
                     <td className="py-3 px-4 font-bold text-emerald-600 text-sm">
-                      {srv.estimatedPrice ? `${srv.estimatedPrice.toLocaleString("vi-VN")} ₫` : "Báo giá linh hoạt"}
+                      {formatPriceRange(srv.estimatedPrice, srv.maxPrice)}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-800">{srv.estimatedDays ? `${srv.estimatedDays} ngày` : "Thỏa thuận"}</div>
+                      <div className="font-semibold text-slate-800">{formatDaysRange(srv.estimatedDays, srv.maxDays)}</div>
                       <div className="text-[10px] text-slate-400">{srv.supportType || "Online"}</div>
                     </td>
                     <td className="py-3 px-4">
@@ -1071,7 +1357,7 @@ export function AdminView() {
                             });
                             setShowServiceModal(true);
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs flex items-center gap-1 transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 font-bold text-xs flex items-center gap-1 transition"
                         >
                           <Edit className="w-3.5 h-3.5" /> Sửa
                         </button>
@@ -1137,7 +1423,7 @@ export function AdminView() {
                     <td className="py-3 px-4">
                       <div className="font-bold text-slate-900 text-sm">{proj.name}</div>
                       {proj.link && (
-                        <a href={proj.link} target="_blank" rel="noreferrer" className="text-indigo-600 text-[11px] hover:underline inline-flex items-center gap-1 font-semibold mt-0.5">
+                        <a href={proj.link} target="_blank" rel="noreferrer" className="text-sky-600 text-[11px] hover:underline inline-flex items-center gap-1 font-semibold mt-0.5">
                           {proj.link} <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
@@ -1169,7 +1455,7 @@ export function AdminView() {
                             });
                             setShowProjectModal(true);
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs flex items-center gap-1 transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 font-bold text-xs flex items-center gap-1 transition"
                         >
                           <Edit className="w-3.5 h-3.5" /> Sửa
                         </button>
@@ -1221,7 +1507,7 @@ export function AdminView() {
                       <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-xs flex items-center gap-1">
                         {rev.rating} ★
                       </span>
-                      <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md">
+                      <span className="text-xs font-semibold text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-md">
                         {rev.serviceName}
                       </span>
                     </div>
@@ -1234,7 +1520,7 @@ export function AdminView() {
                         {rev.moderated ? "Đang công khai" : "Đã ẩn / Spam"}
                       </span>
                       {rev.replyText ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
                           ✓ Đã phản hồi
                         </span>
                       ) : (
@@ -1251,12 +1537,12 @@ export function AdminView() {
 
                   {/* Reply snippet if present */}
                   {rev.replyText && (
-                    <div className="bg-indigo-50/80 p-3 rounded-xl border border-indigo-100 text-xs space-y-1">
-                      <div className="font-bold text-indigo-900 text-[11px] flex items-center justify-between">
+                    <div className="bg-sky-50/80 p-3 rounded-xl border border-sky-100 text-xs space-y-1">
+                      <div className="font-bold text-sky-900 text-[11px] flex items-center justify-between">
                         <span>💬 Phản hồi từ {rev.repliedBy}:</span>
                         <span className="text-[10px] text-slate-400 font-normal">{rev.repliedAt}</span>
                       </div>
-                      <div className="text-indigo-950 font-medium italic">"{rev.replyText}"</div>
+                      <div className="text-sky-950 font-medium italic">"{rev.replyText}"</div>
                     </div>
                   )}
 
@@ -1309,7 +1595,7 @@ export function AdminView() {
                   type="number"
                   value={quoteForm.amount}
                   onChange={(e) => setQuoteForm({ ...quoteForm, amount: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold text-indigo-600"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold text-sky-600"
                 />
               </div>
 
@@ -1423,7 +1709,7 @@ export function AdminView() {
                   alert(`Đã phân công ${targetStaff.name} làm nhiệm vụ!`);
                 }
               }}
-              className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-sky-600 text-white font-bold text-xs disabled:opacity-50"
             >
               {adminSubmitting ? "Đang phân công..." : "Xác Nhận Phân Công"}
             </button>
@@ -1480,7 +1766,7 @@ export function AdminView() {
                     type="number"
                     value={serviceForm.estimatedPrice || 0}
                     onChange={(e) => setServiceForm({ ...serviceForm, estimatedPrice: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold text-indigo-600"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold text-sky-600"
                   />
                 </div>
                 <div>
@@ -1647,7 +1933,7 @@ export function AdminView() {
               <X className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-md text-xs font-bold bg-indigo-100 text-indigo-800">
+              <span className="px-3 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800">
                 {viewingServiceDetail.category}
               </span>
               <span className={`px-3 py-1 rounded-md text-xs font-bold ${viewingServiceDetail.hidden ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>
@@ -1662,13 +1948,13 @@ export function AdminView() {
               <div>
                 <span className="text-slate-400 block text-[10px]">Giá Tham Khảo</span>
                 <span className="font-bold text-emerald-600 text-sm mt-0.5 block">
-                  {viewingServiceDetail.estimatedPrice ? `${viewingServiceDetail.estimatedPrice.toLocaleString("vi-VN")} ₫` : "Linh hoạt"}
+                  {formatPriceRange(viewingServiceDetail.estimatedPrice, viewingServiceDetail.maxPrice)}
                 </span>
               </div>
               <div>
                 <span className="text-slate-400 block text-[10px]">Thời Gian</span>
-                <span className="font-bold text-indigo-600 text-sm mt-0.5 block">
-                  {viewingServiceDetail.estimatedDays ? `${viewingServiceDetail.estimatedDays} ngày` : "Thỏa thuận"}
+                <span className="font-bold text-sky-600 text-sm mt-0.5 block">
+                  {formatDaysRange(viewingServiceDetail.estimatedDays, viewingServiceDetail.maxDays)}
                 </span>
               </div>
               <div>
@@ -1709,10 +1995,10 @@ export function AdminView() {
               <X className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-4">
-              <img src={viewingUserDetail.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"} alt="avatar" className="w-16 h-16 rounded-full object-cover border-2 border-indigo-200" />
+              <img src={viewingUserDetail.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"} alt="avatar" className="w-16 h-16 rounded-full object-cover border-2 border-sky-200" />
               <div>
                 <h3 className="text-lg font-black text-slate-900">{viewingUserDetail.name}</h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 uppercase">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 uppercase">
                   {viewingUserDetail.role}
                 </span>
                 <span className={`ml-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${viewingUserDetail.status === "active" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
@@ -1749,7 +2035,7 @@ export function AdminView() {
               {viewingUserDetail.role === "customer" && (
                 <div className="flex justify-between pt-2 border-t border-slate-200">
                   <span className="text-slate-400">Số đơn hàng đã khởi tạo:</span>
-                  <span className="font-bold text-indigo-600">
+                  <span className="font-bold text-sky-600">
                     {orders.filter((o) => o.customerId === viewingUserDetail.id || o.customerEmail === viewingUserDetail.email).length} đơn
                   </span>
                 </div>
@@ -1772,15 +2058,15 @@ export function AdminView() {
             </button>
             <img src={viewingProjectDetail.image} alt={viewingProjectDetail.name} className="w-full h-52 object-cover rounded-2xl border border-slate-200" />
             <div className="space-y-2">
-              <span className="px-3 py-1 rounded-md text-xs font-bold bg-indigo-100 text-indigo-800">
+              <span className="px-3 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800">
                 {viewingProjectDetail.category}
               </span>
               <h3 className="text-xl font-black text-slate-900">{viewingProjectDetail.name}</h3>
               <p className="text-slate-600 text-xs leading-relaxed">{viewingProjectDetail.description}</p>
             </div>
             {viewingProjectDetail.link && (
-              <div className="p-3 bg-indigo-50 rounded-xl text-xs font-semibold text-indigo-800">
-                Link sản phẩm demo: <a href={viewingProjectDetail.link} target="_blank" rel="noreferrer" className="underline font-bold text-indigo-600 ml-1">{viewingProjectDetail.link}</a>
+              <div className="p-3 bg-sky-50 rounded-xl text-xs font-semibold text-sky-800">
+                Link sản phẩm demo: <a href={viewingProjectDetail.link} target="_blank" rel="noreferrer" className="underline font-bold text-sky-600 ml-1">{viewingProjectDetail.link}</a>
               </div>
             )}
             <button onClick={() => setViewingProjectDetail(null)} className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-xs">
@@ -1896,7 +2182,7 @@ export function AdminView() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/70 space-y-2">
                 <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                  <Users className="w-4 h-4 text-indigo-600" /> Thông Tin Khách Hàng
+                  <Users className="w-4 h-4 text-sky-600" /> Thông Tin Khách Hàng
                 </div>
                 <div><strong className="text-slate-700">Họ tên:</strong> {selectedOrder.customerName}</div>
                 <div><strong className="text-slate-700">Email:</strong> {selectedOrder.customerEmail}</div>
@@ -1906,7 +2192,7 @@ export function AdminView() {
 
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/70 space-y-2">
                 <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-indigo-600" /> Yêu Cầu & Mô Tả Chi Tiết
+                  <FileText className="w-4 h-4 text-sky-600" /> Yêu Cầu & Mô Tả Chi Tiết
                 </div>
                 <div className="text-slate-700 bg-white p-3 rounded-xl border border-slate-200/80 leading-relaxed max-h-32 overflow-y-auto">
                   {selectedOrder.requirements}
@@ -1921,7 +2207,7 @@ export function AdminView() {
                           href={file}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                          className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-sky-600 hover:underline flex items-center gap-1"
                         >
                           <ExternalLink className="w-3 h-3" /> File #{idx + 1}
                         </a>
@@ -1933,22 +2219,22 @@ export function AdminView() {
             </div>
 
             {/* Grid Section 2: Quotation & Progress Control */}
-            <div className="bg-indigo-50/50 p-5 rounded-3xl border border-indigo-100 space-y-4 text-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+            <div className="bg-sky-50/50 p-5 rounded-3xl border border-sky-100 space-y-4 text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-sky-100 pb-3">
                 <div>
-                  <div className="font-bold text-indigo-900 text-sm">Báo Giá & Phân Công Nhân Viên</div>
+                  <div className="font-bold text-sky-900 text-sm">Báo Giá & Phân Công Nhân Viên</div>
                   <div className="text-slate-500">Thông tin tài chính & nhân sự phụ trách đơn hàng</div>
                 </div>
                 <div className="text-right">
                   <div className="text-[11px] text-slate-400">Tổng giá trị hợp đồng:</div>
-                  <div className="text-lg font-black text-indigo-600">
+                  <div className="text-lg font-black text-sky-600">
                     {selectedOrder.quotation ? `${selectedOrder.quotation.amount.toLocaleString("vi-VN")} ₫` : "Chưa lập báo giá"}
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="bg-white p-3 rounded-2xl border border-indigo-100/80">
+                <div className="bg-white p-3 rounded-2xl border border-sky-100/80">
                   <div className="text-slate-400 font-semibold">Staff Phụ Trách:</div>
                   <div className="font-bold text-slate-900 text-sm mt-0.5">{selectedOrder.assignedStaffName || "Chưa phân công"}</div>
                   {selectedOrder.collaborators && selectedOrder.collaborators.length > 0 && (
@@ -1956,13 +2242,13 @@ export function AdminView() {
                   )}
                 </div>
 
-                <div className="bg-white p-3 rounded-2xl border border-indigo-100/80">
+                <div className="bg-white p-3 rounded-2xl border border-sky-100/80">
                   <div className="text-slate-400 font-semibold">Hạn Giao Báo Giá:</div>
                   <div className="font-bold text-slate-900 text-sm mt-0.5">{selectedOrder.quotation?.finalDeadline || selectedOrder.desiredDeadline}</div>
                   <div className="text-[10px] text-slate-500 mt-1">Số lần sửa free: {selectedOrder.quotation?.maxRevisions || 3} lần</div>
                 </div>
 
-                <div className="bg-white p-3 rounded-2xl border border-indigo-100/80">
+                <div className="bg-white p-3 rounded-2xl border border-sky-100/80">
                   <div className="text-slate-400 font-semibold">Tiến Độ Sản Xuất:</div>
                   <div className="font-black text-purple-600 text-sm mt-0.5">{selectedOrder.progressPercent}%</div>
                   <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-1.5">
@@ -1994,7 +2280,7 @@ export function AdminView() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
                       <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
                         <div className="text-[10px] text-slate-400 font-semibold">Báo Giá Tổng</div>
-                        <div className="font-extrabold text-indigo-700 text-xs mt-0.5">{quotedVal.toLocaleString("vi-VN")} ₫</div>
+                        <div className="font-extrabold text-sky-700 text-xs mt-0.5">{quotedVal.toLocaleString("vi-VN")} ₫</div>
                       </div>
                       <div className="bg-white p-2.5 rounded-xl border border-emerald-100">
                         <div className="text-[10px] text-slate-400 font-semibold">Yêu Cầu Cọc 50%</div>
@@ -2023,11 +2309,6 @@ export function AdminView() {
                 );
               })()}
 
-              {/* Admin View-Only Progress Info */}
-              <div className="bg-purple-50/70 p-2.5 rounded-2xl border border-purple-100 flex items-center justify-between text-[11px] text-purple-900">
-                <span className="font-bold flex items-center gap-1">👁️ Chế độ Admin: Chỉ xem tiến độ</span>
-                <span className="text-[10px] text-purple-700">Staff cập nhật max 90% • 100% tự động khi Khách nghiệm thu</span>
-              </div>
             </div>
 
             {/* Grid Section 3: Payment Transactions History */}
@@ -2151,7 +2432,7 @@ export function AdminView() {
                   });
                   setShowAssignModal(true);
                 }}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm"
+                className="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-sm"
               >
                 Phân Công Staff
               </button>
@@ -2177,7 +2458,7 @@ export function AdminView() {
                 <span className="px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1">
                   {viewingReviewDetail.rating} ★
                 </span>
-                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md">
+                <span className="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-md">
                   {viewingReviewDetail.serviceName}
                 </span>
                 <span className="text-[11px] text-slate-400 font-mono">Đơn: {viewingReviewDetail.orderId}</span>
@@ -2213,12 +2494,12 @@ export function AdminView() {
 
               {/* Existing Reply Display */}
               {viewingReviewDetail.replyText && (
-                <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 space-y-1">
-                  <div className="font-bold text-indigo-900 flex items-center justify-between text-xs">
+                <div className="bg-sky-50 p-4 rounded-2xl border border-sky-100 space-y-1">
+                  <div className="font-bold text-sky-900 flex items-center justify-between text-xs">
                     <span>💬 Phản hồi hiện tại từ {viewingReviewDetail.repliedBy}:</span>
                     <span className="text-[10px] text-slate-400 font-normal">{viewingReviewDetail.repliedAt}</span>
                   </div>
-                  <div className="text-indigo-950 font-medium italic">"{viewingReviewDetail.replyText}"</div>
+                  <div className="text-sky-950 font-medium italic">"{viewingReviewDetail.replyText}"</div>
                 </div>
               )}
 
@@ -2232,7 +2513,7 @@ export function AdminView() {
                   value={replyInputText}
                   onChange={(e) => setReplyInputText(e.target.value)}
                   placeholder="Cảm ơn bạn đã sử dụng dịch vụ của 4YouTech..."
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
             </div>

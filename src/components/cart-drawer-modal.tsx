@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useApp } from "@/lib/app-context";
+import { formatPriceRange, formatDaysRange } from "@/lib/store";
 import {
   X,
   ShoppingBag,
@@ -81,13 +82,13 @@ export function CartDrawerModal({
         {/* Modal Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+            <div className="p-2 bg-sky-50 text-sky-600 rounded-xl">
               <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-black text-slate-900">Giỏ Hàng Dịch Vụ</h2>
-                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-xs font-bold">
+                <span className="px-2 py-0.5 bg-sky-100 text-sky-800 rounded-full text-xs font-bold">
                   {cart.length} sản phẩm
                 </span>
               </div>
@@ -120,10 +121,10 @@ export function CartDrawerModal({
               <button
                 type="button"
                 onClick={toggleSelectAll}
-                className="flex items-center gap-2 font-bold text-slate-700 hover:text-indigo-600 transition"
+                className="flex items-center gap-2 font-bold text-slate-700 hover:text-sky-600 transition"
               >
                 {isAllSelected ? (
-                  <CheckSquare className="w-4 h-4 text-indigo-600" />
+                  <CheckSquare className="w-4 h-4 text-sky-600" />
                 ) : (
                   <Square className="w-4 h-4 text-slate-400" />
                 )}
@@ -152,7 +153,7 @@ export function CartDrawerModal({
               </p>
               <button
                 onClick={onClose}
-                className="mt-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition"
+                className="mt-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition"
               >
                 Khám phá Dịch vụ ngay
               </button>
@@ -167,14 +168,14 @@ export function CartDrawerModal({
                     onClick={() => toggleSelectItem(item.id)}
                     className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${
                       isChecked
-                        ? "bg-indigo-50/50 border-indigo-300 shadow-xs"
+                        ? "bg-sky-50/50 border-sky-300 shadow-xs"
                         : "bg-white border-slate-200 opacity-75 hover:opacity-100"
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="shrink-0">
                         {isChecked ? (
-                          <CheckSquare className="w-5 h-5 text-indigo-600" />
+                          <CheckSquare className="w-5 h-5 text-sky-600" />
                         ) : (
                           <Square className="w-5 h-5 text-slate-300" />
                         )}
@@ -183,16 +184,16 @@ export function CartDrawerModal({
                       <div className="space-y-0.5 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-slate-900 text-sm truncate">{item.serviceName}</span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-indigo-100 text-indigo-800 shrink-0">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-sky-100 text-sky-800 shrink-0">
                             {item.category}
                           </span>
                         </div>
                         <div className="text-slate-500 text-xs">
                           Giá tham khảo:{" "}
                           <span className="font-bold text-emerald-600">
-                            {item.estimatedPrice ? `${item.estimatedPrice.toLocaleString("vi-VN")} ₫` : "Báo giá linh hoạt"}
+                            {formatPriceRange(item.estimatedPrice, item.maxPrice)}
                           </span>
-                          {item.estimatedDays && ` • ${item.estimatedDays} ngày`}
+                          {item.estimatedDays && ` • ${formatDaysRange(item.estimatedDays, item.maxDays)}`}
                         </div>
                       </div>
                     </div>
@@ -223,7 +224,7 @@ export function CartDrawerModal({
             <div className="flex items-center justify-between text-xs">
               <div>
                 <div className="font-bold text-slate-800">
-                  Đã chọn: <span className="text-indigo-600">{selectedItems.length} / {cart.length}</span> gói dịch vụ
+                  Đã chọn: <span className="text-sky-600">{selectedItems.length} / {cart.length}</span> gói dịch vụ
                 </div>
                 <div className="text-[11px] text-slate-500 mt-0.5">
                   Ước tính cọc 50%: <strong className="text-amber-700">{selectedDeposit50.toLocaleString("vi-VN")} ₫</strong>
@@ -231,7 +232,7 @@ export function CartDrawerModal({
               </div>
               <div className="text-right">
                 <div className="text-[11px] text-slate-400 font-medium">Tổng giá trị ước tính</div>
-                <div className="text-xl font-black text-indigo-700">
+                <div className="text-xl font-black text-sky-700">
                   {selectedTotalPrice.toLocaleString("vi-VN")} ₫
                 </div>
               </div>

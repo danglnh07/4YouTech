@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useApp } from "@/lib/app-context";
-import { ServiceOrder, hashPassword } from "@/lib/store";
+import { ServiceOrder, hashPassword, addDaysToDate, formatVNShortDate, formatDaysRange } from "@/lib/store";
 import { PaymentCheckoutModal } from "@/components/payment-checkout-modal";
 import {
   PlusCircle,
@@ -25,6 +25,7 @@ import {
   DollarSign,
   ShieldCheck,
   Eye,
+  EyeOff,
   QrCode,
   Lock,
   Pencil,
@@ -76,6 +77,29 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
     customerPhone: currentUser.phone || ""
   });
 
+  // Selected service and calculated deadline range
+  const currentSelectedService = useMemo(() => {
+    return services.find((s) => s.id === newForm.serviceId) || services[0];
+  }, [services, newForm.serviceId]);
+
+  const serviceMinDays = currentSelectedService?.estimatedDays || 3;
+  const serviceMaxDays = currentSelectedService?.maxDays || (serviceMinDays + 2);
+
+  const minDeadlineDate = useMemo(() => {
+    return addDaysToDate(new Date(), serviceMinDays);
+  }, [serviceMinDays]);
+
+  const maxDeadlineDate = useMemo(() => {
+    return addDaysToDate(new Date(), serviceMaxDays);
+  }, [serviceMaxDays]);
+
+  // Keep desiredDeadline within allowed date range when service changes
+  useEffect(() => {
+    if (!newForm.desiredDeadline || newForm.desiredDeadline < minDeadlineDate || newForm.desiredDeadline > maxDeadlineDate) {
+      setNewForm((prev) => ({ ...prev, desiredDeadline: maxDeadlineDate }));
+    }
+  }, [newForm.serviceId, minDeadlineDate, maxDeadlineDate]);
+
   // Action Modals state
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [revisionText, setRevisionText] = useState("");
@@ -107,6 +131,9 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
     newPassword: "",
     confirmPassword: ""
   });
+  const [showCurrPass, setShowCurrPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [passMsg, setPassMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -188,6 +215,11 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
       return;
     }
 
+    if (newForm.desiredDeadline < minDeadlineDate || newForm.desiredDeadline > maxDeadlineDate) {
+      alert(`Vui lòng chọn ngày hoàn thành trong khoảng từ ${formatVNShortDate(minDeadlineDate)} đến ${formatVNShortDate(maxDeadlineDate)} (${serviceMinDays} - ${serviceMaxDays} ngày kể từ hôm nay).`);
+      return;
+    }
+
     setIsSubmittingRequest(true);
     try {
       const created = createServiceRequest({
@@ -250,24 +282,24 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
         <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl">
           <button
             onClick={() => setActiveTab("orders")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-              activeTab === "orders" ? "bg-white text-blue-600 shadow-xs" : "text-slate-600 hover:text-slate-900"
+            className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${
+              activeTab === "orders" ? "bg-white text-blue-600 shadow-sm" : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Đơn hàng ({myOrders.length})
           </button>
           <button
             onClick={() => setActiveTab("new_request")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-              activeTab === "new_request" ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 hover:text-indigo-600"
+            className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-2 ${
+              activeTab === "new_request" ? "bg-sky-600 text-white shadow-md" : "text-slate-600 hover:text-sky-600"
             }`}
           >
-            <PlusCircle className="w-4 h-4" /> Đặt Dịch Vụ Mới
+            <PlusCircle className="w-4.5 h-4.5" /> Đặt Dịch Vụ Mới
           </button>
           <button
             onClick={() => setActiveTab("profile")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-              activeTab === "profile" ? "bg-white text-blue-600 shadow-xs" : "text-slate-600 hover:text-slate-900"
+            className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${
+              activeTab === "profile" ? "bg-white text-blue-600 shadow-sm" : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Hồ sơ cá nhân
@@ -277,10 +309,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
       {/* Profile & Change Password Tab */}
       {activeTab === "profile" && (
-        <div className="max-w-2xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
           
           {/* Section 1: Update Profile */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="lg:col-span-6 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-xl font-black text-slate-900">Cập nhật Hồ Sơ Khách Hàng</h2>
@@ -291,7 +323,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 <button
                   type="button"
                   onClick={() => setIsEditingProfile(true)}
-                  className="px-4 py-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold text-xs transition flex items-center gap-1.5 border border-indigo-100"
+                  className="px-4 py-2 rounded-xl bg-sky-50 text-sky-600 hover:bg-sky-100 font-bold text-xs transition flex items-center gap-1.5 border border-sky-100"
                 >
                   <Pencil className="w-3.5 h-3.5" /> Chỉnh Sửa Thông Tin
                 </button>
@@ -329,8 +361,9 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 <input
                   type="email"
                   disabled
+                  readOnly
                   value={currentUser.email}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-500 cursor-not-allowed"
+                  className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium text-slate-500 cursor-not-allowed select-none"
                 />
               </div>
 
@@ -339,12 +372,13 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 <input
                   type="text"
                   disabled={!isEditingProfile}
+                  readOnly={!isEditingProfile}
                   value={profileForm.name}
                   onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
                   className={`w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none transition ${
                     isEditingProfile
-                      ? "bg-white border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
-                      : "bg-slate-50 border-slate-200 text-slate-700 cursor-not-allowed"
+                      ? "bg-white border-sky-400 focus:ring-2 focus:ring-sky-500/20"
+                      : "bg-slate-100 border-slate-200 text-slate-600 cursor-not-allowed select-none"
                   }`}
                 />
               </div>
@@ -354,12 +388,13 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 <input
                   type="text"
                   disabled={!isEditingProfile}
+                  readOnly={!isEditingProfile}
                   value={profileForm.phone}
                   onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                   className={`w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none transition ${
                     isEditingProfile
-                      ? "bg-white border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
-                      : "bg-slate-50 border-slate-200 text-slate-700 cursor-not-allowed"
+                      ? "bg-white border-sky-400 focus:ring-2 focus:ring-sky-500/20"
+                      : "bg-slate-100 border-slate-200 text-slate-600 cursor-not-allowed select-none"
                   }`}
                 />
               </div>
@@ -369,12 +404,13 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 <input
                   type="text"
                   disabled={!isEditingProfile}
+                  readOnly={!isEditingProfile}
                   value={profileForm.avatar}
                   onChange={(e) => setProfileForm({ ...profileForm, avatar: e.target.value })}
                   className={`w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none transition ${
                     isEditingProfile
-                      ? "bg-white border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
-                      : "bg-slate-50 border-slate-200 text-slate-700 cursor-not-allowed"
+                      ? "bg-white border-sky-400 focus:ring-2 focus:ring-sky-500/20"
+                      : "bg-slate-100 border-slate-200 text-slate-600 cursor-not-allowed select-none"
                   }`}
                 />
               </div>
@@ -399,14 +435,13 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
             </form>
           </div>
 
-          {/* Section 2: Change Password */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
-              <KeyRound className="w-5 h-5 text-indigo-600" />
-              <div>
-                <h2 className="text-xl font-black text-slate-900">Đổi Mật Khẩu</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Cập nhật mật khẩu đăng nhập bảo mật tài khoản</p>
-              </div>
+          {/* Section 2: Change Password with Eye Toggles */}
+          <div className="lg:col-span-6 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="border-b border-slate-100 pb-4">
+              <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-sky-600" /> Đổi Mật Khẩu Bảo Mật
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">Nên sử dụng mật khẩu mạnh có tối thiểu 6-8 ký tự</p>
             </div>
 
             {passMsg && (
@@ -429,38 +464,68 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Mật khẩu hiện tại *</label>
-                <input
-                  type="password"
-                  required
-                  value={passForm.currentPassword}
-                  onChange={(e) => setPassForm({ ...passForm, currentPassword: e.target.value })}
-                  placeholder="Nhập mật khẩu hiện tại..."
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showCurrPass ? "text" : "password"}
+                    required
+                    value={passForm.currentPassword}
+                    onChange={(e) => setPassForm({ ...passForm, currentPassword: e.target.value })}
+                    placeholder="Nhập mật khẩu hiện tại..."
+                    className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrPass(!showCurrPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-lg transition"
+                    title={showCurrPass ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showCurrPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Mật khẩu mới *</label>
-                <input
-                  type="password"
-                  required
-                  value={passForm.newPassword}
-                  onChange={(e) => setPassForm({ ...passForm, newPassword: e.target.value })}
-                  placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPass ? "text" : "password"}
+                    required
+                    value={passForm.newPassword}
+                    onChange={(e) => setPassForm({ ...passForm, newPassword: e.target.value })}
+                    placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
+                    className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-lg transition"
+                    title={showNewPass ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Xác nhận mật khẩu mới *</label>
-                <input
-                  type="password"
-                  required
-                  value={passForm.confirmPassword}
-                  onChange={(e) => setPassForm({ ...passForm, confirmPassword: e.target.value })}
-                  placeholder="Nhập lại mật khẩu mới..."
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPass ? "text" : "password"}
+                    required
+                    value={passForm.confirmPassword}
+                    onChange={(e) => setPassForm({ ...passForm, confirmPassword: e.target.value })}
+                    placeholder="Nhập lại mật khẩu mới..."
+                    className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPass(!showConfirmPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-lg transition"
+                    title={showConfirmPass ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -475,105 +540,154 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
         </div>
       )}
 
-      {/* New Request Tab */}
+      {/* New Request Tab (Expanded 2-column Layout to fill screen width) */}
       {activeTab === "new_request" && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-2xl mx-auto space-y-6">
-          <div>
-            <h2 className="text-xl font-black text-slate-900">Tạo Yêu Cầu Dịch Vụ Mới</h2>
-            <p className="text-xs text-slate-500 mt-1">Vui lòng điền thông tin chi tiết để Admin & Staff lập báo giá chính xác.</p>
-          </div>
-
-          {/* Payment policy alert */}
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-1">
-            <div className="font-extrabold flex items-center gap-1.5 text-amber-900">
-              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" /> Quy định đặt cọc & thanh toán 50% - 50%:
-            </div>
-            <p className="text-[11px] text-amber-800 leading-relaxed">
-              • Báo giá chính thức sẽ được Admin gửi sau khi đánh giá yêu cầu.<br />
-              • Bạn cần <strong>thanh toán 50% tiền đặt cọc</strong> trước khi nhân viên triển khai.<br />
-              • Sau khi nhận bản giao và <strong>nghiệm thu đạt yêu cầu</strong>, bạn thanh toán <strong>50% còn lại</strong> để nhận file gốc.
-            </p>
-          </div>
-
-          <form onSubmit={handleCreateRequest} className="space-y-4">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
+          
+          {/* Left Column: Form */}
+          <div className="lg:col-span-7 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Chọn gói dịch vụ *</label>
-              <select
-                value={newForm.serviceId}
-                onChange={(e) => setNewForm({ ...newForm, serviceId: e.target.value })}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+              <h2 className="text-xl font-black text-slate-900">Tạo Yêu Cầu Dịch Vụ Mới</h2>
+              <p className="text-xs text-slate-500 mt-1">Vui lòng điền thông tin chi tiết để Admin & Staff lập báo giá chính xác.</p>
+            </div>
+
+            <form onSubmit={handleCreateRequest} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Chọn gói dịch vụ *</label>
+                <select
+                  value={newForm.serviceId}
+                  onChange={(e) => setNewForm({ ...newForm, serviceId: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-sky-500"
+                >
+                  {services.filter((srv) => !srv.hidden).map((srv) => (
+                    <option key={srv.id} value={srv.id}>
+                      [{srv.category}] {srv.name} ({formatDaysRange(srv.estimatedDays, srv.maxDays)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mô tả chi tiết yêu cầu & đầu ra mong muốn *</label>
+                <textarea
+                  rows={4}
+                  required
+                  value={newForm.requirements}
+                  onChange={(e) => setNewForm({ ...newForm, requirements: e.target.value })}
+                  placeholder="Ví dụ: Cần làm website portfolio 5 trang phong cách tối giản màu tím neon, có trang giới thiệu kỹ năng và danh mục dự án đồ án môn Lập trình Web..."
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Link file đính kèm (Figma / Drive / Tham khảo nếu có)</label>
+                <input
+                  type="url"
+                  value={newForm.attachment}
+                  onChange={(e) => setNewForm({ ...newForm, attachment: e.target.value })}
+                  placeholder="https://drive.google.com/file/..."
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700">Thời hạn mong muốn hoàn thành *</label>
+                  <span className="text-[11px] font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md">
+                    Phạm vi: {serviceMinDays} - {serviceMaxDays} ngày
+                  </span>
+                </div>
+                <input
+                  type="date"
+                  required
+                  min={minDeadlineDate}
+                  max={maxDeadlineDate}
+                  value={newForm.desiredDeadline}
+                  onChange={(e) => setNewForm({ ...newForm, desiredDeadline: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500"
+                />
+                <div className="mt-2 p-3 bg-sky-50/80 border border-sky-100 rounded-xl text-xs text-sky-950 flex items-start gap-2.5">
+                  <Clock className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                  <div className="leading-relaxed text-[11px]">
+                    <span className="font-extrabold text-sky-950">Giới hạn chọn ngày hoàn thành:</span> Dịch vụ <strong>{currentSelectedService?.name}</strong> quy định thời gian xử lý từ <strong>{serviceMinDays} đến {serviceMaxDays} ngày</strong>. Ngày hoàn thành chỉ được chọn từ <strong className="text-sky-700">{formatVNShortDate(minDeadlineDate)}</strong> đến <strong className="text-sky-700">{formatVNShortDate(maxDeadlineDate)}</strong>.
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Họ tên người gửi</label>
+                  <input
+                    type="text"
+                    value={newForm.customerName}
+                    onChange={(e) => setNewForm({ ...newForm, customerName: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Số điện thoại Zalo</label>
+                  <input
+                    type="tel"
+                    value={newForm.customerPhone}
+                    onChange={(e) => setNewForm({ ...newForm, customerPhone: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmittingRequest}
+                className="w-full py-3.5 rounded-xl gradient-btn font-bold text-xs shadow-md mt-4 disabled:opacity-50"
               >
-                {services.filter((srv) => !srv.hidden).map((srv) => (
-                  <option key={srv.id} value={srv.id}>
-                    [{srv.category}] {srv.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                {isSubmittingRequest ? "Đang gửi yêu cầu..." : "Gửi Yêu Cầu & Nhận Báo Giá"}
+              </button>
+            </form>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Mô tả chi tiết yêu cầu & đầu ra mong muốn *</label>
-              <textarea
-                rows={4}
-                required
-                value={newForm.requirements}
-                onChange={(e) => setNewForm({ ...newForm, requirements: e.target.value })}
-                placeholder="Ví dụ: Cần làm website portfolio 5 trang phong cách tối giản màu tím neon, có trang giới thiệu kỹ năng và danh mục dự án đồ án môn Lập trình Web..."
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Link file đính kèm (Figma / Drive / Tham khảo nếu có)</label>
-              <input
-                type="url"
-                value={newForm.attachment}
-                onChange={(e) => setNewForm({ ...newForm, attachment: e.target.value })}
-                placeholder="https://drive.google.com/file/..."
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Thời hạn mong muốn hoàn thành *</label>
-              <input
-                type="date"
-                required
-                value={newForm.desiredDeadline}
-                onChange={(e) => setNewForm({ ...newForm, desiredDeadline: e.target.value })}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Họ tên người gửi</label>
-                <input
-                  type="text"
-                  value={newForm.customerName}
-                  onChange={(e) => setNewForm({ ...newForm, customerName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
-                />
+          {/* Right Column: Guidance & Side Cards to fill screen nicely */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Payment policy alert */}
+            <div className="p-6 bg-amber-50/80 rounded-3xl border border-amber-200 text-xs text-amber-900 space-y-3 shadow-xs">
+              <div className="font-black text-sm flex items-center gap-2 text-amber-900">
+                <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" /> Quy định đặt cọc & thanh toán 50% - 50%
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Số điện thoại Zalo</label>
-                <input
-                  type="tel"
-                  value={newForm.customerPhone}
-                  onChange={(e) => setNewForm({ ...newForm, customerPhone: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
-                />
+              <p className="text-xs text-amber-800 leading-relaxed space-y-1">
+                • Báo giá chính thức sẽ được Admin gửi sau khi đánh giá yêu cầu.<br />
+                • Bạn cần <strong>thanh toán 50% tiền đặt cọc</strong> trước khi nhân viên triển khai.<br />
+                • Sau khi nhận bản giao và <strong>nghiệm thu đạt yêu cầu</strong>, bạn thanh toán <strong>50% còn lại</strong> để nhận file gốc.
+              </p>
+            </div>
+
+            {/* Workflow Process Card */}
+            <div className="p-6 bg-white rounded-3xl border border-slate-200 text-xs space-y-4 shadow-xs">
+              <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-sky-600" /> Quy Trình Xử Lý Đơn Hàng 4Bước
+              </div>
+              
+              <div className="space-y-3 font-medium text-slate-600">
+                <div className="flex gap-3 items-start">
+                  <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-black text-[11px] flex items-center justify-center shrink-0">1</span>
+                  <div><strong className="text-slate-900">Gửi yêu cầu & Nhận báo giá:</strong> Admin gửi báo giá hợp đồng chi tiết trong 15-30 phút.</div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-black text-[11px] flex items-center justify-center shrink-0">2</span>
+                  <div><strong className="text-slate-900">Cọc 50% & Triển khai:</strong> Chuyển khoản 50% cọc qua VNPay/VietQR để Staff IT nhận việc.</div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-black text-[11px] flex items-center justify-center shrink-0">3</span>
+                  <div><strong className="text-slate-900">Cập nhật tiến độ %:</strong> Theo dõi tiến độ thời gian thực trực tiếp trên Workspace.</div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-black text-[11px] flex items-center justify-center shrink-0">4</span>
+                  <div><strong className="text-slate-900">Nghiệm thu & Bàn giao:</strong> Thanh toán 50% còn lại để nhận toàn bộ Source Code / Figma.</div>
+                </div>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSubmittingRequest}
-              className="w-full py-3.5 rounded-xl gradient-btn font-bold text-xs shadow-md mt-4 disabled:opacity-50"
-            >
-              {isSubmittingRequest ? "Đang gửi yêu cầu..." : "Gửi Yêu Cầu & Nhận Báo Giá"}
-            </button>
-          </form>
+          </div>
+
         </div>
       )}
 
@@ -590,7 +704,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 <div className="text-xs font-bold text-slate-700">Chưa có đơn hàng nào</div>
                 <button
                   onClick={() => setActiveTab("new_request")}
-                  className="mt-3 text-xs font-bold text-indigo-600 underline"
+                  className="mt-3 text-xs font-bold text-sky-600 underline"
                 >
                   Tạo yêu cầu đầu tiên ngay
                 </button>
@@ -606,7 +720,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                     onClick={() => setSelectedOrderId(ord.id)}
                     className={`p-4 rounded-2xl border transition cursor-pointer space-y-2 ${
                       isSelected
-                        ? "bg-indigo-50/70 border-indigo-500 shadow-sm"
+                        ? "bg-sky-50/70 border-sky-500 shadow-sm"
                         : "bg-white border-slate-200 hover:border-slate-300"
                     }`}
                   >
@@ -634,7 +748,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                           <Clock className="w-3 h-3" /> Chờ duyệt cọc
                         </span>
                       ) : (
-                        <span className="font-semibold text-indigo-600">{ord.progressPercent}% hoàn thành</span>
+                        <span className="font-semibold text-sky-600">{ord.progressPercent}% hoàn thành</span>
                       )}
                     </div>
                   </div>
@@ -652,7 +766,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
               const isPendingFinalPayment = selectedOrder.status === "accepted" && selectedRemaining > 0;
 
               return (
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-8 animate-fade-in">
+              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-8 animate-fade-in select-none cursor-default">
                 
                 {/* Header Summary */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
@@ -720,7 +834,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                     {/* Support & Cancel buttons */}
                     <button
                       onClick={() => setShowTicketModal(true)}
-                      className="p-2 text-slate-500 hover:text-indigo-600 rounded-xl hover:bg-slate-50 border border-slate-200"
+                      className="p-2 text-slate-500 hover:text-sky-600 rounded-xl hover:bg-slate-50 border border-slate-200"
                       title="Gửi hỗ trợ / Khiếu nại"
                     >
                       <LifeBuoy className="w-4 h-4" />
@@ -739,7 +853,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 </div>
 
                 {/* Progress Bar & Milestones Stepper */}
-                <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-100 select-none cursor-default">
                   <div className="space-y-3">
                     <div>
                       <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
@@ -748,7 +862,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                       </div>
                       <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-500 rounded-full"
+                          className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 transition-all duration-500 rounded-full"
                           style={{ width: `${selectedOrder.progressPercent}%` }}
                         ></div>
                       </div>
@@ -808,22 +922,22 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
                 {/* Quotation & VietQR Payment Trigger Details */}
                 {selectedOrder.quotation && (
-                  <div className="bg-indigo-50/40 p-5 rounded-2xl border border-indigo-100 space-y-3">
+                  <div className="bg-sky-50/40 p-5 rounded-2xl border border-sky-100 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Thông tin Báo Giá & Đặt Cọc 50%</span>
-                      <span className="text-base font-black text-indigo-700">
+                      <span className="text-xs font-bold text-sky-900 uppercase tracking-wider">Thông tin Báo Giá & Đặt Cọc 50%</span>
+                      <span className="text-base font-black text-sky-700">
                         {selectedOrder.quotation.amount.toLocaleString("vi-VN")} ₫
                       </span>
                     </div>
-                    <div className="text-xs text-indigo-950 font-medium leading-relaxed">
+                    <div className="text-xs text-sky-950 font-medium leading-relaxed">
                       {selectedOrder.quotation.scopeDetails}
                     </div>
 
                     {/* Deposit Breakdown Info Card */}
-                    <div className="grid grid-cols-2 gap-2 bg-white/80 p-3 rounded-xl border border-indigo-100 text-xs">
+                    <div className="grid grid-cols-2 gap-2 bg-white/80 p-3 rounded-xl border border-sky-100 text-xs">
                       <div>
                         <div className="text-[11px] text-slate-500">Số tiền đặt cọc 50%:</div>
-                        <div className="font-bold text-indigo-700 text-sm">
+                        <div className="font-bold text-sky-700 text-sm">
                           {Math.round(selectedOrder.quotation.amount * 0.5).toLocaleString("vi-VN")} ₫
                         </div>
                       </div>
@@ -835,8 +949,8 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                       </div>
                     </div>
                     
-                    <div className="flex flex-wrap items-center justify-between text-xs pt-3 border-t border-indigo-100 gap-2">
-                      <div className="text-indigo-800 font-medium flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center justify-between text-xs pt-3 border-t border-sky-100 gap-2">
+                      <div className="text-sky-800 font-medium flex items-center gap-1.5">
                         <span>Đã thu: <strong className="text-emerald-700">{selectedAmountPaid.toLocaleString("vi-VN")} ₫</strong></span>
                         <span className="text-slate-400">•</span>
                         <span>Còn nợ: <strong className="text-amber-700">{selectedRemaining.toLocaleString("vi-VN")} ₫</strong></span>
@@ -933,7 +1047,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                               href={del.fileLink}
                               target="_blank"
                               rel="noreferrer"
-                              className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs inline-flex items-center gap-1 shadow-xs"
+                              className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs inline-flex items-center gap-1 shadow-xs"
                             >
                               <Download className="w-3.5 h-3.5" /> Tải về / Xem Link
                             </a>
@@ -968,17 +1082,17 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
                     {/* Admin / Staff Reply */}
                     {selectedOrder.review.replyText ? (
-                      <div className="bg-indigo-50/90 p-4 rounded-2xl border border-indigo-100 space-y-1.5 animate-fade-in">
-                        <div className="font-bold text-indigo-900 flex items-center justify-between">
+                      <div className="bg-sky-50/90 p-4 rounded-2xl border border-sky-100 space-y-1.5 animate-fade-in">
+                        <div className="font-bold text-sky-900 flex items-center justify-between">
                           <span className="flex items-center gap-1.5 text-xs">
-                            <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
+                            <MessageSquare className="w-3.5 h-3.5 text-sky-600" />
                             Phản hồi từ {selectedOrder.review.repliedBy || "4YouTech"}:
                           </span>
                           <span className="text-[10px] text-slate-400 font-normal">
                             {selectedOrder.review.repliedAt}
                           </span>
                         </div>
-                        <p className="text-indigo-950 font-medium leading-relaxed pl-5 text-xs">
+                        <p className="text-sky-950 font-medium leading-relaxed pl-5 text-xs">
                           {selectedOrder.review.replyText}
                         </p>
                       </div>
@@ -993,7 +1107,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 {/* Direct Messages & Chat Box */}
                 <div className="space-y-4 border-t border-slate-100 pt-6">
                   <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                    <MessageSquare className="w-4 h-4 text-indigo-600" /> Trao đổi với Nhóm Thực Hiện
+                    <MessageSquare className="w-4 h-4 text-sky-600" /> Trao đổi với Nhóm Thực Hiện
                   </h3>
 
                   <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3 max-h-72 overflow-y-auto">
@@ -1010,7 +1124,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                             <div
                               className={`p-3 rounded-2xl max-w-md text-xs ${
                                 isMe
-                                  ? "bg-indigo-600 text-white rounded-tr-none shadow-xs"
+                                  ? "bg-sky-600 text-white rounded-tr-none shadow-xs"
                                   : "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
                               }`}
                             >
@@ -1028,7 +1142,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="Nhập tin nhắn cho Staff/Admin..."
-                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
                     />
                     <button type="submit" className="px-4 py-2.5 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1">
                       <Send className="w-3.5 h-3.5" /> Gửi

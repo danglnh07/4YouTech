@@ -136,7 +136,7 @@ const AppContext = createContext<AppContextType | null>(null);
 const STORAGE_KEYS = {
   USERS: "4youtech_users_v4",
   SERVICES: "4youtech_services_v4",
-  PROJECTS: "4youtech_projects_v4",
+  PROJECTS: "4youtech_projects_v5",
   ORDERS: "4youtech_orders_v4",
   REVIEWS: "4youtech_reviews_v4",
   TRANSACTIONS: "4youtech_transactions_v4",
@@ -1257,7 +1257,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             serviceName: service.name,
             category: service.category,
             estimatedPrice: service.estimatedPrice,
+            maxPrice: service.maxPrice,
             estimatedDays: service.estimatedDays,
+            maxDays: service.maxDays,
             requirements: requirements || "",
             desiredDeadline: desiredDeadline || "",
             addedAt: new Date().toISOString().replace("T", " ").substring(0, 16)

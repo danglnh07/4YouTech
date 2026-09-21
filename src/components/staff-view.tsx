@@ -270,7 +270,7 @@ export function StaffView() {
                   <div className="pt-2 border-t border-slate-200 text-xs">
                     <span className="font-bold text-slate-700">File/Link đính kèm: </span>
                     {selectedOrder.attachments.map((att, idx) => (
-                      <a key={idx} href={att} target="_blank" rel="noreferrer" className="text-indigo-600 font-bold underline ml-1">
+                      <a key={idx} href={att} target="_blank" rel="noreferrer" className="text-sky-600 font-bold underline ml-1">
                         [Link {idx + 1}]
                       </a>
                     ))}
@@ -431,7 +431,7 @@ export function StaffView() {
 
                       {tkt.response ? (
                         <div className="p-2.5 bg-white rounded-xl border border-amber-100 text-slate-800">
-                          <span className="font-bold text-indigo-600">Phản hồi của Staff: </span>{tkt.response}
+                          <span className="font-bold text-sky-600">Phản hồi của Staff: </span>{tkt.response}
                         </div>
                       ) : (
                         <button
@@ -531,7 +531,7 @@ export function StaffView() {
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-slate-400 font-mono">{rev.createdAt}</span>
                       {rev.replyText ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
                           ✓ Đã phản hồi
                         </span>
                       ) : (
