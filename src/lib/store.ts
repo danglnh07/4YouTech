@@ -103,7 +103,7 @@ export interface SampleProject {
   id: string;
   name: string;
   category: ServiceCategory;
-  subCategory?: "Logo" | "Banner" | "Website" | "UI/UX" | "Database" | "Other";
+  subCategory?: "Logo" | "Banner" | "Poster" | "Website" | "UI/UX" | "Database" | "Other";
   image: string;
   description: string;
   link?: string;
@@ -391,17 +391,18 @@ export const SEED_TRANSACTIONS: PaymentTransaction[] = [
 
 // Seed Services Catalog
 export const SEED_SERVICES: ServiceItem[] = [
+  // --- Category: IT ---
   {
-    id: "portfolio-co-san",
-    name: "Portfolio từ thiết kế có sẵn",
-    description: "Xây dựng website portfolio cá nhân tối ưu SEO & responsive dựa trên file Figma/Adobe XD sẵn có.",
+    id: "it-lap-trinh-portfolio",
+    name: "Lập trình Portfolio",
+    description: "Lập trình website portfolio cá nhân tối ưu SEO, giao diện cá tính, responsive chuẩn di động & web.",
     category: "IT",
     estimatedDays: 3,
     maxDays: 5,
     estimatedPrice: 1000000,
-    maxPrice: 1500000,
+    maxPrice: 1800000,
     maxRevisions: 3,
-    scopeOutput: "Mã nguồn Next.js/React, Responsive chuẩn Mobile/Tablet, Deploy Vercel/Netlify miễn phí.",
+    scopeOutput: "Mã nguồn Next.js/React, Chuẩn Responsive Mobile/Tablet, Hướng dẫn quản trị & Deploy Vercel/Netlify miễn phí.",
     supportType: "Online",
     demoImages: [
       "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
@@ -409,16 +410,16 @@ export const SEED_SERVICES: ServiceItem[] = [
     ]
   },
   {
-    id: "portfolio-chua-co-thiet-ke",
-    name: "Portfolio trọn gói (Thiết kế & Code)",
-    description: "Tư vấn ý tưởng, thiết kế UI cá tính và lập trình hoàn thiện website cá nhân từ A đến Z.",
-    category: "IT/Design",
+    id: "it-thiet-ke-web",
+    name: "Thiết kế Web",
+    description: "Xây dựng & lập trình website doanh nghiệp, trang bán hàng, landing page hiện đại, chuẩn SEO & tối ưu tốc độ.",
+    category: "IT",
     estimatedDays: 5,
-    maxDays: 7,
-    estimatedPrice: 1800000,
-    maxPrice: 2800000,
+    maxDays: 8,
+    estimatedPrice: 1500000,
+    maxPrice: 3000000,
     maxRevisions: 4,
-    scopeOutput: "File Figma UI, Mã nguồn Front-end, Tích hợp Form liên hệ, Hướng dẫn quản trị.",
+    scopeOutput: "Fullstack Website, Tích hợp CMS Quản lý nội dung, Form liên hệ, Chuẩn SEO Google & Security.",
     supportType: "Hybrid",
     demoImages: [
       "https://images.unsplash.com/photo-1542744094-3a31b272c490?w=800&auto=format&fit=crop&q=80",
@@ -426,16 +427,16 @@ export const SEED_SERVICES: ServiceItem[] = [
     ]
   },
   {
-    id: "ui-design",
-    name: "Thiết kế Giao diện Web & App (UI/UX)",
-    description: "Thiết kế UI/UX hiện đại theo chuẩn Design System, Wireframe, Prototype tương tác mượt mà.",
-    category: "Design",
+    id: "it-ui-ux",
+    name: "UI/UX",
+    description: "Nghiên cứu hành vi người dùng, vẽ Wireframe, thiết kế Prototype tương tác & lập trình giao diện Web/App mượt mà.",
+    category: "IT",
     estimatedDays: 4,
     maxDays: 6,
-    estimatedPrice: 1500000,
-    maxPrice: 2500000,
+    estimatedPrice: 1200000,
+    maxPrice: 2200000,
     maxRevisions: 3,
-    scopeOutput: "File Figma master, Component Design System, Export PNG/SVG assets, Prototype link.",
+    scopeOutput: "Wireframe UI/UX, Prototype tương tác Figma, Component Design System & Code Front-end.",
     supportType: "Online",
     demoImages: [
       "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&auto=format&fit=crop&q=80",
@@ -443,51 +444,93 @@ export const SEED_SERVICES: ServiceItem[] = [
     ]
   },
   {
-    id: "database-design-support",
-    name: "Hỗ trợ Thiết kế Cơ sở dữ liệu & ERD",
-    description: "Chuẩn hóa bảng dữ liệu, vẽ sơ đồ ERD, tối ưu truy vấn SQL / MongoDB cho đồ án & sản phẩm.",
+    id: "it-test-loi-phan-mem",
+    name: "Test lỗi phần mềm",
+    description: "Kiểm thử phần mềm (Manual & Automation Testing), rà soát lỗi UI/UX, bảo mật, hiệu năng & xuất báo cáo chi tiết.",
     category: "IT",
     estimatedDays: 2,
     maxDays: 4,
     estimatedPrice: 500000,
-    maxPrice: 900000,
+    maxPrice: 1200000,
     maxRevisions: 2,
-    scopeOutput: "Sơ đồ ERD (Draw.io/dbdiagram), File SQL script khởi tạo, Tài liệu giải thích mối quan hệ bảng.",
+    scopeOutput: "Báo cáo Test Case (Excel/PDF), Danh sách Bug Log, Video/Hình ảnh minh chứng lỗi & Đề xuất khắc phục.",
     supportType: "Online",
     demoImages: [
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80",
       "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80"
     ]
   },
+
+  // --- Category: Design ---
   {
-    id: "system-analysis-support",
-    name: "Phân tích & Thiết kế Hệ thống (BA / System)",
-    description: "Xác định Actor, Use Case, Sequence Diagram, Activity Diagram & lập tài liệu SRS bài bản.",
-    category: "IT",
-    estimatedDays: 3,
-    maxDays: 5,
-    estimatedPrice: 800000,
-    maxPrice: 1400000,
-    maxRevisions: 3,
-    scopeOutput: "File tài liệu SRS PDF/Word, Bộ biểu đồ PlantUML/Draw.io đầy đủ.",
-    supportType: "Online",
-    demoImages: [
-      "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80"
-    ]
-  },
-  {
-    id: "nhan-dien-thuong-hieu",
-    name: "Nhận diện thương hiệu & Ấn phẩm truyền thông",
-    description: "Thiết kế Logo, Banner sự kiện, Poster, Standee, Slide thuyết trình chuyên nghiệp cho CLB/Nhóm.",
+    id: "design-thiet-ke-ui",
+    name: "Thiết kế UI",
+    description: "Thiết kế Giao diện người dùng (User Interface) sắc nét, hiện đại trên Figma dành cho Website & Mobile App.",
     category: "Design",
     estimatedDays: 3,
     maxDays: 5,
-    estimatedPrice: 700000,
-    maxPrice: 1200000,
+    estimatedPrice: 1000000,
+    maxPrice: 2000000,
     maxRevisions: 3,
-    scopeOutput: "File thiết kế Vector (AI/PSD), File in chất lượng cao (PDF/PNG), Mockup thực tế.",
+    scopeOutput: "File Figma Master, Bộ Style Guide (Màu sắc, Typography, Icons), Export PNG/SVG assets.",
     supportType: "Online",
     demoImages: [
-      "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=80"
+      "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&auto=format&fit=crop&q=80"
+    ]
+  },
+  {
+    id: "design-logo",
+    name: "Logo",
+    description: "Thiết kế Logo nhận diện thương hiệu độc quyền, sáng tạo ấn tượng, kèm Brand Guidelines & file Vector gốc.",
+    category: "Design",
+    estimatedDays: 2,
+    maxDays: 4,
+    estimatedPrice: 600000,
+    maxPrice: 1200000,
+    maxRevisions: 3,
+    scopeOutput: "File Vector AI/PSD/PNG/SVG, Logo Mockup thực tế, Hướng dẫn quy chuẩn sử dụng Logo.",
+    supportType: "Online",
+    demoImages: [
+      "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=80",
+      "/images/logo-phin-coffee.png",
+      "/images/logo-ladybug-or.png"
+    ]
+  },
+  {
+    id: "design-banner",
+    name: "Banner",
+    description: "Thiết kế Banner quảng cáo, banner website, mạng xã hội (Facebook/Zalo/Instagram) bắt mắt, chuẩn tỷ lệ.",
+    category: "Design",
+    estimatedDays: 1,
+    maxDays: 3,
+    estimatedPrice: 300000,
+    maxPrice: 700000,
+    maxRevisions: 2,
+    scopeOutput: "File thiết kế Vector/PSD, File ảnh xuất chất lượng cao (PNG/JPG/WebP), Banner kích thước chuẩn.",
+    supportType: "Online",
+    demoImages: [
+      "/images/banner-y-te.png",
+      "/images/banner-mat-kinh.png",
+      "/images/banner-dau-tu.png"
+    ]
+  },
+  {
+    id: "design-poster",
+    name: "Poster",
+    description: "Thiết kế Poster sự kiện, poster truyền thông, nghệ thuật độ phân giải cao dành cho in ấn & đăng tải truyền thông.",
+    category: "Design",
+    estimatedDays: 2,
+    maxDays: 3,
+    estimatedPrice: 400000,
+    maxPrice: 800000,
+    maxRevisions: 3,
+    scopeOutput: "File in ấn PDF/TIFF chất lượng cao, File ảnh PNG/JPG truyền thông, Mockup poster thực tế.",
+    supportType: "Online",
+    demoImages: [
+      "/images/poster-avocado.png",
+      "/images/poster-longan.png",
+      "/images/poster-ocean.jpg"
     ]
   }
 ];
@@ -505,6 +548,36 @@ export const SEED_PROJECTS: SampleProject[] = [
     featured: true
   },
   {
+    id: "proj-logo-ladybug",
+    name: "Logo Monogram Chú Bọ Rùa Đỏ Cách Điệu (OR Monogram Ladybug Logo)",
+    category: "Design",
+    subCategory: "Logo",
+    description: "Thiết kế Logo Monogram sáng tạo hình chú bọ rùa (Ladybug) sắc đỏ nổi bật, lồng ghép khéo léo 2 chữ cái 'O' và 'R'. Phong cách đồ họa Vector hiện đại, đường nét mềm mại tinh tế, tượng trưng cho sự may mắn, tràn đầy sức sống và tinh thần sáng tạo đột phá.",
+    image: "/images/logo-ladybug-or.png",
+    link: "/images/logo-ladybug-or.png",
+    featured: true
+  },
+  {
+    id: "proj-logo-phin-coffee",
+    name: "Logo Thương Hiệu Cà Phê Quý Ông PHIN COFFEE",
+    category: "Design",
+    subCategory: "Logo",
+    description: "Thiết kế Logo nhận diện thương hiệu PHIN COFFEE độc đáo, phối màu vàng chanh nổi bật kết hợp sắc nâu sẫm cà phê rang xay. Ý tưởng tạo hình phin cà phê truyền thống kết hợp chiếc mũ Fedora quý ông lịch lãm, tạo nên dấu ấn thương hiệu cà phê mộc đậm đà, sang trọng và cá tính.",
+    image: "/images/logo-phin-coffee.png",
+    link: "/images/logo-phin-coffee.png",
+    featured: true
+  },
+  {
+    id: "proj-logo-vplus-health",
+    name: "Logo Y Tế & Chăm Sóc Sức Khỏe Trái Tim V+ (V+ Medical & Health Logo)",
+    category: "Design",
+    subCategory: "Logo",
+    description: "Thiết kế Logo thương hiệu trung tâm y tế & chăm sóc sức khỏe V+ biểu tượng hình trái tim kết hợp chiếc lá mầm xanh và dấu cộng y tế. Phối màu gradient chuyển sắc xanh lam - xanh lá dịu mát, truyền tải thông điệp về sự an tâm, yêu thương, tận tụy và sức sống vươn lên.",
+    image: "/images/logo-vplus-health.png",
+    link: "/images/logo-vplus-health.png",
+    featured: true
+  },
+  {
     id: "proj-banner-1",
     name: "Bộ Mẫu Banner Quảng Cáo & Poster Truyền Thông Sự Kiện",
     category: "Design",
@@ -512,6 +585,86 @@ export const SEED_PROJECTS: SampleProject[] = [
     description: "Tuyển tập các mẫu Banner Facebook, Banner Website & Poster tuyển dụng / sự kiện thiết kế chuẩn ấn tượng.",
     image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&auto=format&fit=crop&q=80",
     link: "https://dribbble.com/shots/banner-collection",
+    featured: true
+  },
+  {
+    id: "proj-banner-yte",
+    name: "Banner Quảng Cáo Trung Tâm Y Tế & Chăm Sóc Sức Khỏe Gia Đình",
+    category: "Design",
+    subCategory: "Banner",
+    description: "Banner quảng cáo cho chủ đề chăm sóc sức khỏe gia đình và lối sống lành mạnh, năng động, mang lại cảm giác tươi mới và giàu sức sống ngay từ cái nhìn đầu tiên. Nhờ sự kết hợp giữa màu xanh ngọc cùng với hình ảnh lá cây, biểu tượng dấu cộng y tế cùng hình ảnh các nhân vật hoạt hình đang tích cực vận động, banner truyền tải tinh thần tích cực, sự tận tâm và cảm giác được bảo vệ, đồng hành toàn diện cho sức khỏe của cả gia đình.",
+    image: "/images/banner-y-te.png",
+    link: "/images/banner-y-te.png",
+    featured: true
+  },
+  {
+    id: "proj-banner-matkinh",
+    name: "Banner Quảng Cáo Mắt Kính Thông Minh AR & Bluetooth",
+    category: "Design",
+    subCategory: "Banner",
+    description: "Banner mang chủ đề giới thiệu sản phẩm công nghệ đeo thông minh thế hệ mới, tập trung vào khả năng kết nối và hỗ trợ tiện ích rảnh tay cho người dùng. Tổng thể thiết kế tỏa ra cảm giác hiện đại, tối giản và tinh tế. Nền trắng sáng kết hợp với xanh lam nhạt và gọng kính đen sắc nét tạo nên một không gian thị giác sạch sẽ và hi-tech, mang lại cho người xem sự tin tưởng vào tính sáng tạo, tiện nghi và đột phá của sản phẩm.",
+    image: "/images/banner-mat-kinh.png",
+    link: "/images/banner-mat-kinh.png",
+    featured: true
+  },
+  {
+    id: "proj-banner-dautu",
+    name: "Banner Truyền Thông Dịch Vụ Đầu Tư Tài Chính & Bất Động Sản",
+    category: "Design",
+    subCategory: "Banner",
+    description: "Banner hướng đến chủ đề giải pháp tài chính và dịch vụ tư vấn đầu tư sinh lời bền vững. Banner này mang đến sự uy tín và chuyên nghiệp. Phông nền xanh navy trầm kết hợp cùng các gam màu tương phản mạnh như vàng kim của tiền tài và xanh lá của sự tăng trưởng tạo nên một cảm giác đáng tin. Sự xuất hiện của các biểu tượng đồ thị stock và đồng vàng làm tăng thêm cảm giác tài sản và thịnh vượng về một tương lai tài chính vững vàng.",
+    image: "/images/banner-dau-tu.png",
+    link: "/images/banner-dau-tu.png",
+    featured: true
+  },
+  {
+    id: "proj-poster-avocado",
+    name: "Poster Truyền Thông Sản Phẩm Trái Bơ Nông Sản Sạch (Avocado)",
+    category: "Design",
+    subCategory: "Poster",
+    description: "Poster quảng cáo trái bơ \"FRUIT AVOCADO\" được thiết kế theo phong cách hiện đại, tối giản và vô cùng sang trọng. Cận cảnh nửa quả bơ tươi ngon với phần thịt quả xanh bơ mịn màng, hạt bơ tròn màu nâu bóng ở chính giữa và lớp vỏ xanh đậm tự nhiên, gợi cảm giác béo ngậy và giàu dinh dưỡng. Chữ \"FRUIT\" màu đen thanh lịch nằm phía trên. Tên sản phẩm \"AVOCADO\" được in hoa, nét chữ nghệ thuật uốn lượn màu vàng rực rỡ, chiếm vị trí trung tâm vô cùng thu hút. Sử dụng tông màu vàng mù tạt / vàng đất làm chủ đạo ở nửa trên, kết hợp cùng sắc đen xám ở giữa và nền xanh lá / nâu tự nhiên ở nửa dưới. Bố cục chia mảng màu giúp poster có chiều sâu và làm nổi bật hình ảnh trái bơ.",
+    image: "/images/poster-avocado.png",
+    link: "/images/poster-avocado.png",
+    featured: true
+  },
+  {
+    id: "proj-poster-longan",
+    name: "Poster Quảng Báo Trái Cây Nhiệt Đới Việt Nam - Quả Nhãn (Longan)",
+    category: "Design",
+    subCategory: "Poster",
+    description: "Poster quảng cáo trái nhãn \"tropical fruit LONGAN\" được thiết kế vô cùng bắt mắt, hiện đại và tràn đầy cảm hứng tự nhiên. Sử dụng hình ảnh tán cây nhãn sai trĩu quả dưới ánh nắng vàng nhẹ, tạo cảm giác xanh tươi, tự nhiên và ngập tràn không khí nhiệt đới. Cận cảnh một quả nhãn đã bóc vỏ, để lộ phần cơm nhãn trắng trong, mọng nước cùng hạt đen bên trong, tạo ấn tượng thị giác vô cùng kích thích vị giác. Tông màu chủ đạo là sự kết hợp giữa xanh lá đậm của cây cỏ, màu nâu ấm của vỏ nhãn và sắc vàng rực rỡ của nắng/chữ. Poster truyền tải trọn vẹn thông điệp về một loại trái cây đặc sản Việt Nam tươi ngon, nguyên bản, giàu dưỡng chất và đậm đà hương vị nhiệt đới.",
+    image: "/images/poster-longan.png",
+    link: "/images/poster-longan.png",
+    featured: true
+  },
+  {
+    id: "proj-poster-ocean",
+    name: "Poster Truyền Thông Bảo Vệ Đại Dương & Sinh Vật Biển (Adaptation)",
+    category: "Design",
+    subCategory: "Poster",
+    description: "Poster với thông điệp cảnh tỉnh về môi trường được thể hiện với phong cách như hình chụp. Trung tâm bức ảnh là một con cá đang bơi lội giữa lòng đại dương xanh nhưng phần đuôi tự nhiên của nó đã bị biến đổi, xoắn lại và chuyển dần thành một chiếc bọc nilon trong suốt với các xác cá chết trôi nổi xung quanh. Hình ảnh này tương phản hoàn toàn với luồng ánh sáng mặt trời rạng rỡ đang xuyên qua làn nước trong xanh từ phía trên, gợi lên cảm giác mong manh của hệ sinh thái biển. Tone màu xanh lam đậm bao trùm không gian mang lại chiều sâu lặng lẽ, làm nổi bật sắc trắng của dải nhựa cùng tiêu đề \"ADAPTATION\" phía dưới. Đi kèm với câu khẩu hiệu \"When nature suffers, so do we\", poster là một lời nhắc nhở rằng sự \"thích nghi\" cưỡng ép này của sinh vật biển chính là lời cảnh báo cho tương lai và sức khỏe của chính con người nếu ô nhiễm nhựa tiếp tục tàn phá đại dương.",
+    image: "/images/poster-ocean.jpg",
+    link: "/images/poster-ocean.jpg",
+    featured: true
+  },
+  {
+    id: "proj-portfolio-camly",
+    name: "Website Portfolio Cá Nhân Pro - Nguyễn Thị Cẩm Lý",
+    category: "IT",
+    subCategory: "Website",
+    description: "Website Portfolio cá nhân được thiết kế hiện đại, bố cục ấn tượng, xuất bản trực tiếp trên Netlify. Trình bày thông tin giới thiệu, dự án thực tế, kỹ năng lập trình & liên hệ làm việc.",
+    image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
+    link: "https://nguyen-thi-cam-ly.netlify.app/",
+    featured: true
+  },
+  {
+    id: "proj-portfolio-danglnh",
+    name: "Website Personal Portfolio & Showcase - Đặng Lê Nho Hoàng",
+    category: "IT",
+    subCategory: "Website",
+    description: "Website Personal Portfolio lập trình viên chuyên nghiệp xuất bản trên GitHub Pages với giao diện tối ưu, trình bày bộ sưu tập sản phẩm công nghệ, kỹ năng Fullstack & hồ sơ làm việc.",
+    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=80",
+    link: "https://danglnh07.github.io/portfolio/",
     featured: true
   },
   {

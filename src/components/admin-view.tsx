@@ -373,6 +373,10 @@ export function AdminView() {
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
 
+  // Search & Filter state for Users
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState<string>("all");
+
   // Anti-Spam submitting state
   const [adminSubmitting, setAdminSubmitting] = useState(false);
 
@@ -488,32 +492,51 @@ export function AdminView() {
     return matchesSearch && matchesStatus;
   });
 
+  // Filtered Users List
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const q = userSearchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        (u.phone && u.phone.toLowerCase().includes(q)) ||
+        u.id.toLowerCase().includes(q) ||
+        (u.skills && u.skills.some((s) => s.toLowerCase().includes(q)));
+
+      const matchesRole =
+        userRoleFilter === "all" || u.role === userRoleFilter;
+
+      return matchesSearch && matchesRole;
+    });
+  }, [users, userSearchQuery, userRoleFilter]);
+
   const getStatusBadge = (status: ServiceOrder["status"]) => {
     switch (status) {
       case "submitted":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Mới Gửi</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 whitespace-nowrap inline-block">Mới Gửi</span>;
       case "under_review":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Đang Khảo Sát</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 whitespace-nowrap inline-block">Đang Khảo Sát</span>;
       case "quoted":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">Đã Báo Giá</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 whitespace-nowrap inline-block">Đã Báo Giá</span>;
       case "deposit_pending":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800">Chờ Duyệt Tiền</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800 whitespace-nowrap inline-block">Chờ Duyệt Tiền</span>;
       case "in_progress":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">Đang Thực Hiện</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 whitespace-nowrap inline-block">Đang Thực Hiện</span>;
       case "deliverable_sent":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100 text-cyan-800">Đã Bàn Giao (v1)</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100 text-cyan-800 whitespace-nowrap inline-block">Đã Bàn Giao (v1)</span>;
       case "revision_requested":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 text-pink-800">Yêu Cầu Chỉnh Sửa</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 text-pink-800 whitespace-nowrap inline-block">Yêu Cầu Chỉnh Sửa</span>;
       case "accepted":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Đã Nghiệm Thu (Chờ Thu 50%)</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap inline-block">Đã Nghiệm Thu (Chờ Thu 50%)</span>;
       case "completed":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Hoàn Thành (100%)</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap inline-block">Hoàn Thành (100%)</span>;
       case "cancel_requested":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Chờ Duyệt Hủy</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 whitespace-nowrap inline-block">Chờ Duyệt Hủy</span>;
       case "cancelled":
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Đã Hủy</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 whitespace-nowrap inline-block">Đã Hủy</span>;
       default:
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800">{status}</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 whitespace-nowrap inline-block">{status}</span>;
     }
   };
 
@@ -526,16 +549,16 @@ export function AdminView() {
     <div className="space-y-8 pb-16">
       
       {/* Admin Control Header Bar */}
-      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
             <ShieldCheck className="w-4 h-4" /> Executive Management Platform
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight mt-1">Quản Trị Hệ Thống 4YouTech</h1>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight mt-1">Quản Trị Hệ Thống 4YouTech</h1>
         </div>
 
         {/* Navigation Admin Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 bg-slate-800 p-1.5 rounded-2xl border border-slate-700 max-w-full">
           {[
             { id: "overview", label: "Báo Cáo Tổng Quan" },
             { id: "requests", label: `Đơn Hàng (${orders.length})` },
@@ -548,7 +571,7 @@ export function AdminView() {
             <button
               key={tab.id}
               onClick={() => setActiveAdminTab(tab.id as any)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap shrink-0 ${
                 activeAdminTab === tab.id
                   ? "bg-amber-500 text-slate-950 shadow-md"
                   : "text-slate-300 hover:text-white hover:bg-slate-700/60"
@@ -565,71 +588,71 @@ export function AdminView() {
         <div className="space-y-8 animate-fade-in">
           
           {/* Top KPI Cards - Real Accurate Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2 relative overflow-hidden">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Doanh Thu Thực Thu</div>
-                <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
-                  <DollarSign className="w-5 h-5" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-1.5 relative overflow-hidden flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-1">
+                <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider truncate">Doanh Thu Thực Thu</div>
+                <div className="p-1.5 bg-emerald-50 rounded-xl text-emerald-600 shrink-0">
+                  <DollarSign className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-emerald-600">{finalTotalRevenue.toLocaleString("vi-VN")} ₫</div>
-              <div className="text-[11px] text-slate-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                Đã xác minh qua VNPay & VietQR
+              <div className="text-lg sm:text-xl font-black text-emerald-600 truncate">{finalTotalRevenue.toLocaleString("vi-VN")} ₫</div>
+              <div className="text-[10px] text-slate-400 flex items-center gap-1 truncate">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                <span>Đã qua VNPay & VietQR</span>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Giá Trị Đã Báo Giá</div>
-                <div className="p-2 bg-sky-50 rounded-xl text-sky-600">
-                  <TrendingUp className="w-5 h-5" />
+            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-1.5 flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-1">
+                <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider truncate">Giá Trị Báo Giá</div>
+                <div className="p-1.5 bg-sky-50 rounded-xl text-sky-600 shrink-0">
+                  <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-sky-600">{totalQuotedContractValue.toLocaleString("vi-VN")} ₫</div>
-              <div className="text-[11px] text-slate-400">Tổng hợp đồng & báo giá chính thức</div>
+              <div className="text-lg sm:text-xl font-black text-sky-600 truncate">{totalQuotedContractValue.toLocaleString("vi-VN")} ₫</div>
+              <div className="text-[10px] text-slate-400 truncate">Tổng hợp đồng chính thức</div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Customer</div>
-                <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
-                  <Users className="w-5 h-5" />
+            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-1.5 flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-1">
+                <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider truncate">Tổng Customer</div>
+                <div className="p-1.5 bg-blue-50 rounded-xl text-blue-600 shrink-0">
+                  <Users className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">{customerList.length} Khách Hàng</div>
-              <div className="text-[11px] text-slate-400">
-                <span className="text-blue-600 font-bold">{activeCustomersCount} khách</span> phát sinh đơn hàng
+              <div className="text-lg sm:text-xl font-black text-slate-900 truncate">{customerList.length} Khách Hàng</div>
+              <div className="text-[10px] text-slate-400 truncate">
+                <span className="text-blue-600 font-bold">{activeCustomersCount} khách</span> phát sinh đơn
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Đơn Hàng</div>
-                <div className="p-2 bg-purple-50 rounded-xl text-purple-600">
-                  <Briefcase className="w-5 h-5" />
+            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-1.5 flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-1">
+                <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider truncate">Tổng Đơn Hàng</div>
+                <div className="p-1.5 bg-purple-50 rounded-xl text-purple-600 shrink-0">
+                  <Briefcase className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">{orders.length} Đơn Hàng</div>
-              <div className="text-[11px] text-slate-400">
-                <span className="text-purple-600 font-bold">{inProgressOrders.length} đang chạy</span> •{" "}
+              <div className="text-lg sm:text-xl font-black text-slate-900 truncate">{orders.length} Đơn Hàng</div>
+              <div className="text-[10px] text-slate-400 truncate">
+                <span className="text-purple-600 font-bold">{inProgressOrders.length} chạy</span> •{" "}
                 <span className="text-emerald-600 font-bold">{completedOrders.length} xong</span>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cần Xử Lý Ngay</div>
-                <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
-                  <AlertTriangle className="w-5 h-5" />
+            <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-1.5 flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-1">
+                <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider truncate">Cần Xử Lý Ngay</div>
+                <div className="p-1.5 bg-amber-50 rounded-xl text-amber-600 shrink-0">
+                  <AlertTriangle className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-black text-amber-500">
+              <div className="text-lg sm:text-xl font-black text-amber-500 truncate">
                 {pendingQuoteOrders.length + pendingTxns.length} Mục
               </div>
-              <div className="text-[11px] text-slate-400">
-                {pendingQuoteOrders.length} chưa báo giá • {pendingTxns.length} chờ duyệt tiền
+              <div className="text-[10px] text-slate-400 truncate">
+                {pendingQuoteOrders.length} chưa báo giá • {pendingTxns.length} chờ duyệt
               </div>
             </div>
           </div>
@@ -654,17 +677,17 @@ export function AdminView() {
               </button>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto w-full border border-slate-200 rounded-2xl">
+              <table className="w-full text-left text-xs border-collapse whitespace-nowrap min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider">
-                    <th className="py-3 px-4">Mã Đơn</th>
-                    <th className="py-3 px-4">Khách Hàng</th>
-                    <th className="py-3 px-4">Dịch Vụ</th>
-                    <th className="py-3 px-4">Giá Trị Báo Giá</th>
-                    <th className="py-3 px-4">Đã Thu Thực Tế</th>
-                    <th className="py-3 px-4">Trạng Thái</th>
-                    <th className="py-3 px-4 text-right">Thao Tác</th>
+                  <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50 font-bold">
+                    <th className="py-3 px-4 whitespace-nowrap">Mã Đơn</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Khách Hàng</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Dịch Vụ</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Giá Trị Báo Giá</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Đã Thu Thực Tế</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Trạng Thái</th>
+                    <th className="py-3 px-4 text-right whitespace-nowrap">Thao Tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
@@ -674,40 +697,40 @@ export function AdminView() {
                       className="hover:bg-slate-50/80 transition cursor-pointer"
                       onClick={() => openOrderDetail(ord.id)}
                     >
-                      <td className="py-3 px-4 font-bold text-slate-900">{ord.id}</td>
-                      <td className="py-3 px-4 text-slate-700 font-semibold">{ord.customerName}</td>
-                      <td className="py-3 px-4 text-slate-800">{ord.serviceName}</td>
-                      <td className="py-3 px-4 font-bold text-sky-600">
+                      <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap font-mono">{ord.id}</td>
+                      <td className="py-3 px-4 text-slate-700 font-semibold whitespace-nowrap">{ord.customerName}</td>
+                      <td className="py-3 px-4 text-slate-800 whitespace-nowrap">{ord.serviceName}</td>
+                      <td className="py-3 px-4 font-bold text-sky-600 whitespace-nowrap">
                         {ord.quotation ? `${ord.quotation.amount.toLocaleString("vi-VN")} ₫` : "Chờ báo giá"}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         {ord.quotation ? (
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 whitespace-nowrap">
                             <div className="font-bold text-emerald-600">
                               {ord.paymentInfo ? `${ord.paymentInfo.amountPaid.toLocaleString("vi-VN")} ₫` : "0 ₫"}
                             </div>
                             <div className="text-[10px]">
                               {(ord.paymentInfo?.amountPaid || 0) >= ord.quotation.amount ? (
-                                <span className="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded">Đã thu 100%</span>
+                                <span className="bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded whitespace-nowrap">Đã thu 100%</span>
                               ) : (ord.paymentInfo?.amountPaid || 0) > 0 ? (
-                                <span className="bg-amber-100 text-amber-900 font-extrabold px-1.5 py-0.2 rounded">Đã cọc 50%</span>
+                                <span className="bg-amber-100 text-amber-900 font-extrabold px-1.5 py-0.2 rounded whitespace-nowrap">Đã cọc 50%</span>
                               ) : (
-                                <span className="bg-slate-100 text-slate-600 font-semibold px-1.5 py-0.2 rounded">Chưa cọc</span>
+                                <span className="bg-slate-100 text-slate-600 font-semibold px-1.5 py-0.2 rounded whitespace-nowrap">Chưa cọc</span>
                               )}
                             </div>
                           </div>
                         ) : (
-                          <span className="text-slate-400 font-normal">Chờ báo giá</span>
+                          <span className="text-slate-400 font-normal whitespace-nowrap">Chờ báo giá</span>
                         )}
                       </td>
-                      <td className="py-3 px-4">{getStatusBadge(ord.status)}</td>
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3 px-4 whitespace-nowrap">{getStatusBadge(ord.status)}</td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             openOrderDetail(ord.id);
                           }}
-                          className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs rounded-lg"
+                          className="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs rounded-lg whitespace-nowrap"
                         >
                           Xem Chi Tiết
                         </button>
@@ -1061,19 +1084,19 @@ export function AdminView() {
                 Chưa có lịch sử giao dịch thanh toán nào được khởi tạo.
               </div>
             ) : (
-              <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-                <table className="w-full text-left text-xs border-collapse">
+              <div className="overflow-x-auto w-full border border-slate-200 rounded-2xl">
+                <table className="w-full min-w-[950px] text-left text-xs border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50 font-bold">
-                      <th className="py-3.5 px-4">Mã Giao Dịch</th>
-                      <th className="py-3.5 px-4">Mã Đơn Hàng</th>
-                      <th className="py-3.5 px-4">Khách Hàng</th>
-                      <th className="py-3.5 px-4">Số Tiền</th>
-                      <th className="py-3.5 px-4">Loại Thanh Toán</th>
-                      <th className="py-3.5 px-4">Phương Thức</th>
-                      <th className="py-3.5 px-4">Biên Lai / Ghi Chú</th>
-                      <th className="py-3.5 px-4">Trạng Thái</th>
-                      <th className="py-3.5 px-4 text-right">Thao Tác Duyệt</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Mã Giao Dịch</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Mã Đơn Hàng</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Khách Hàng</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Số Tiền</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Loại Thanh Toán</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Phương Thức</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Biên Lai / Ghi Chú</th>
+                      <th className="py-3.5 px-4 whitespace-nowrap">Trạng Thái</th>
+                      <th className="py-3.5 px-4 text-right whitespace-nowrap">Thao Tác Duyệt</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
@@ -1083,68 +1106,68 @@ export function AdminView() {
 
                       return (
                         <tr key={txn.id} className={`hover:bg-slate-50 transition ${txn.status === "pending" ? "bg-amber-50/40" : ""}`}>
-                          <td className="py-3 px-4 font-bold text-slate-900 font-mono">{txn.id}</td>
-                          <td className="py-3 px-4 font-bold text-sky-600 font-mono">{txn.orderId}</td>
-                          <td className="py-3 px-4 text-slate-800 font-semibold">{txn.customerName}</td>
-                          <td className="py-3 px-4 font-black text-emerald-600 text-sm">
+                          <td className="py-3 px-4 font-bold text-slate-900 font-mono whitespace-nowrap">{txn.id}</td>
+                          <td className="py-3 px-4 font-bold text-sky-600 font-mono whitespace-nowrap">{txn.orderId}</td>
+                          <td className="py-3 px-4 text-slate-800 font-semibold whitespace-nowrap">{txn.customerName}</td>
+                          <td className="py-3 px-4 font-black text-emerald-600 text-xs sm:text-sm whitespace-nowrap">
                             {txn.amount.toLocaleString("vi-VN")} ₫
                           </td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap inline-flex items-center ${
                               isDeposit ? "bg-amber-100 text-amber-900 border border-amber-300" : isRemaining ? "bg-blue-100 text-blue-900 border border-blue-300" : "bg-purple-100 text-purple-900 border border-purple-300"
                             }`}>
                               {isDeposit ? "Đặt Cọc 50%" : isRemaining ? "50% Còn Lại" : "Full 100%"}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-semibold text-slate-700">
+                          <td className="py-3 px-4 font-semibold text-slate-700 whitespace-nowrap">
                             {txn.paymentMethod === "VNPay" ? (
-                              <span className="text-blue-600 font-bold flex items-center gap-1">
+                              <span className="text-blue-600 font-bold inline-flex items-center gap-1 whitespace-nowrap">
                                 <CreditCard className="w-3.5 h-3.5" /> VNPay Sandbox
                               </span>
                             ) : (
-                              <span className="text-emerald-700 font-bold flex items-center gap-1">
+                              <span className="text-emerald-700 font-bold inline-flex items-center gap-1 whitespace-nowrap">
                                 <QrCode className="w-3.5 h-3.5" /> VietQR
                               </span>
                             )}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 whitespace-nowrap">
                             {txn.receiptImage ? (
                               <a
                                 href={txn.receiptImage}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-sky-600 font-bold hover:underline flex items-center gap-1"
+                                className="text-sky-600 font-bold hover:underline inline-flex items-center gap-1 whitespace-nowrap"
                               >
                                 <Eye className="w-3.5 h-3.5" /> Xem biên lai
                               </a>
                             ) : (
-                              <span className="text-slate-400 text-[11px]">{txn.note || "Tự động VNPay"}</span>
+                              <span className="text-slate-400 text-[11px] whitespace-nowrap">{txn.note || "Tự động VNPay"}</span>
                             )}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 whitespace-nowrap">
                             {txn.status === "verified" ? (
-                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 w-max">
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 inline-flex items-center gap-1 whitespace-nowrap">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Đã Duyệt (Thành công)
                               </span>
                             ) : txn.status === "rejected" ? (
-                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 flex items-center gap-1 w-max">
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 inline-flex items-center gap-1 whitespace-nowrap">
                                 <XCircle className="w-3.5 h-3.5 text-rose-600" /> Đã Từ Chối
                               </span>
                             ) : (
-                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 flex items-center gap-1 w-max animate-pulse">
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 inline-flex items-center gap-1 animate-pulse whitespace-nowrap">
                                 <Clock className="w-3.5 h-3.5 text-amber-600" /> Chờ Admin Duyệt
                               </span>
                             )}
                           </td>
-                          <td className="py-3.5 px-4 text-right">
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
                             {txn.status === "pending" ? (
-                              <div className="flex items-center justify-end gap-1.5">
+                              <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                                 <button
                                   onClick={() => {
                                     approvePaymentTransaction(txn.id);
                                     alert(`🎉 Đã duyệt giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫)! Trạng thái đơn hàng ${txn.orderId} đã được cập nhật thanh toán.`);
                                   }}
-                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1"
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center gap-1 whitespace-nowrap"
                                 >
                                   <Check className="w-3.5 h-3.5" /> Duyệt GD
                                 </button>
@@ -1153,13 +1176,13 @@ export function AdminView() {
                                     rejectPaymentTransaction(txn.id);
                                     alert(`Đã từ chối giao dịch ${txn.id}!`);
                                   }}
-                                  className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition flex items-center gap-1"
+                                  className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition inline-flex items-center gap-1 whitespace-nowrap"
                                 >
                                   <X className="w-3.5 h-3.5" /> Từ Chối
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-[11px] text-slate-400 italic">Xử lý hoàn tất</span>
+                              <span className="text-[11px] text-slate-400 italic whitespace-nowrap">Xử lý hoàn tất</span>
                             )}
                           </td>
                         </tr>
@@ -1176,87 +1199,129 @@ export function AdminView() {
       {/* USER & STAFF MANAGEMENT TAB */}
       {activeAdminTab === "users" && (
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-black text-slate-900">Danh Sách Tài Khoản & Chuyên Môn Nhân Viên</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Danh Sách Tài Khoản & Chuyên Môn Nhân Viên</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Tìm kiếm tài khoản theo tên, email, sĐT, vai trò (Customer/Staff/Admin) hoặc kỹ năng chuyên môn.</p>
+            </div>
+            <span className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold self-start">
+              Tổng số {filteredUsers.length} / {users.length} tài khoản
+            </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          {/* Search & Role Filter Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <input
+                type="text"
+                placeholder="Tìm tên, email, SĐT, kỹ năng..."
+                value={userSearchQuery}
+                onChange={(e) => setUserSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-medium text-slate-900"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+              <select
+                value={userRoleFilter}
+                onChange={(e) => setUserRoleFilter(e.target.value)}
+                className="w-full sm:w-auto px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="all">Tất cả vai trò ({users.length})</option>
+                <option value="customer">Khách hàng - Customer ({users.filter((u) => u.role === "customer").length})</option>
+                <option value="staff">Nhân viên - Staff ({users.filter((u) => u.role === "staff").length})</option>
+                <option value="admin">Quản trị viên - Admin ({users.filter((u) => u.role === "admin").length})</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto w-full border border-slate-200 rounded-2xl">
+            <table className="w-full text-left text-xs border-collapse whitespace-nowrap min-w-[700px]">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-4">Người Dùng</th>
-                  <th className="py-3 px-4">Email / SĐT</th>
-                  <th className="py-3 px-4">Vai Trò (Role)</th>
-                  <th className="py-3 px-4">Chuyên Môn IT/Design (Staff)</th>
-                  <th className="py-3 px-4">Hành Động</th>
+                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50 font-bold">
+                  <th className="py-3 px-4 whitespace-nowrap">Người Dùng</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Email / SĐT</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Vai Trò (Role)</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Chuyên Môn IT/Design (Staff)</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Hành Động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
-                {users.map((usr) => (
-                  <tr key={usr.id} className="hover:bg-slate-50">
-                    <td className="py-3 px-4 flex items-center gap-2.5">
-                      <img src={usr.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
-                      <span className="font-bold text-slate-900">{usr.name}</span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-600">{usr.email}<br />{usr.phone}</td>
-                    <td className="py-3 px-4">
-                      <select
-                        value={usr.role}
-                        onChange={(e) => updateUserProfile(usr.id, { role: e.target.value as Role })}
-                        className="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold"
-                      >
-                        <option value="customer">Customer</option>
-                        <option value="staff">Staff</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </td>
-                    <td className="py-3 px-4">
-                      {usr.role === "staff" ? (
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap gap-1">
-                            {usr.skills?.map((sk, i) => (
-                              <span key={i} className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-bold">
-                                {sk}
-                              </span>
-                            ))}
-                          </div>
-                          <button
-                            onClick={() => {
-                              setEditingStaffId(usr.id);
-                              setSkillsInput(usr.skills?.join(", ") || "");
-                            }}
-                            className="text-[10px] font-bold text-sky-600 hover:underline"
-                          >
-                            + Sửa chuyên môn
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-slate-300">-</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setViewingUserDetail(usr)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-1 transition"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> Chi tiết
-                        </button>
-                        <button
-                          onClick={() => {
-                            const nextStatus = usr.status === "active" ? "locked" : "active";
-                            updateUserProfile(usr.id, { status: nextStatus });
-                          }}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                            usr.status === "active" ? "bg-rose-50 text-rose-700 hover:bg-rose-100" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                          }`}
-                        >
-                          {usr.status === "active" ? "Khóa TK" : "Kích hoạt"}
-                        </button>
-                      </div>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-8 text-slate-400 text-xs">
+                      Không tìm thấy tài khoản nào khớp với điều kiện tìm kiếm.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredUsers.map((usr) => (
+                    <tr key={usr.id} className="hover:bg-slate-50">
+                      <td className="py-3 px-4 whitespace-nowrap flex items-center gap-2.5">
+                        <img src={usr.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"} alt="avatar" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                        <span className="font-bold text-slate-900 whitespace-nowrap">{usr.name}</span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-600 whitespace-nowrap">{usr.email}<br />{usr.phone}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <select
+                          value={usr.role}
+                          onChange={(e) => updateUserProfile(usr.id, { role: e.target.value as Role })}
+                          className="px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-900 font-extrabold text-xs rounded-lg outline-none cursor-pointer focus:ring-2 focus:ring-sky-500 whitespace-nowrap shadow-xs"
+                        >
+                          <option value="customer" className="bg-white text-slate-900 font-bold py-1">Customer</option>
+                          <option value="staff" className="bg-white text-slate-900 font-bold py-1">Staff</option>
+                          <option value="admin" className="bg-white text-slate-900 font-bold py-1">Admin</option>
+                        </select>
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {usr.role === "staff" ? (
+                          <div className="space-y-1 whitespace-nowrap">
+                            <div className="flex flex-wrap gap-1 whitespace-nowrap">
+                              {usr.skills?.map((sk, i) => (
+                                <span key={i} className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-bold whitespace-nowrap">
+                                  {sk}
+                                </span>
+                              ))}
+                            </div>
+                            <button
+                              onClick={() => {
+                                setEditingStaffId(usr.id);
+                                setSkillsInput(usr.skills?.join(", ") || "");
+                              }}
+                              className="text-[10px] font-bold text-sky-600 hover:underline whitespace-nowrap"
+                            >
+                              + Sửa chuyên môn
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-slate-300">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                          <button
+                            onClick={() => setViewingUserDetail(usr)}
+                            className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-1 transition whitespace-nowrap"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> Chi tiết
+                          </button>
+                          <button
+                            onClick={() => {
+                              const nextStatus = usr.status === "active" ? "locked" : "active";
+                              updateUserProfile(usr.id, { status: nextStatus });
+                            }}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap ${
+                              usr.status === "active" ? "bg-rose-50 text-rose-700 hover:bg-rose-100" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            }`}
+                          >
+                            {usr.status === "active" ? "Khóa TK" : "Kích hoạt"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -1290,54 +1355,54 @@ export function AdminView() {
             </button>
           </div>
 
-          <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-            <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto w-full border border-slate-200 rounded-2xl">
+            <table className="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[750px]">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50">
-                  <th className="py-3.5 px-4 font-bold">Tên Dịch Vụ</th>
-                  <th className="py-3.5 px-4 font-bold">Phân Loại</th>
-                  <th className="py-3.5 px-4 font-bold">Giá Tham Khảo</th>
-                  <th className="py-3.5 px-4 font-bold">Thời Gian & Hình Thức</th>
-                  <th className="py-3.5 px-4 font-bold">Trạng Thái</th>
-                  <th className="py-3.5 px-4 font-bold text-right">Thao Tác</th>
+                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50 font-bold">
+                  <th className="py-3.5 px-4 whitespace-nowrap font-bold">Tên Dịch Vụ</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap font-bold">Phân Loại</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap font-bold">Giá Tham Khảo</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap font-bold">Thời Gian & Hình Thức</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap font-bold">Trạng Thái</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap font-bold text-right">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {services.map((srv) => (
                   <tr key={srv.id} className={`hover:bg-slate-50 transition ${srv.hidden ? "bg-slate-50/70 opacity-80" : ""}`}>
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="font-bold text-slate-900 text-sm flex items-center gap-2 whitespace-nowrap">
                         {srv.name}
                         {srv.hidden && (
-                          <span className="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-extrabold">
+                          <span className="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-extrabold whitespace-nowrap">
                             ĐÃ ẨN
                           </span>
                         )}
                       </div>
-                      <div className="text-slate-500 line-clamp-1 max-w-xs text-[11px] mt-0.5">{srv.description}</div>
+                      <div className="text-slate-500 line-clamp-1 max-w-xs text-[11px] mt-0.5 whitespace-nowrap truncate">{srv.description}</div>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200 whitespace-nowrap">
                         {srv.category}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-bold text-emerald-600 text-sm">
+                    <td className="py-3 px-4 font-bold text-emerald-600 text-sm whitespace-nowrap">
                       {formatPriceRange(srv.estimatedPrice, srv.maxPrice)}
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-800">{formatDaysRange(srv.estimatedDays, srv.maxDays)}</div>
-                      <div className="text-[10px] text-slate-400">{srv.supportType || "Online"}</div>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="font-semibold text-slate-800 whitespace-nowrap">{formatDaysRange(srv.estimatedDays, srv.maxDays)}</div>
+                      <div className="text-[10px] text-slate-400 whitespace-nowrap">{srv.supportType || "Online"}</div>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${srv.hidden ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${srv.hidden ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>
                         {srv.hidden ? "Ẩn với Khách & Staff" : "Đang Hiện Public"}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                         <button
                           onClick={() => setViewingServiceDetail(srv)}
-                          className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1 transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1 transition whitespace-nowrap"
                         >
                           <Eye className="w-3.5 h-3.5" /> Chi tiết
                         </button>
@@ -1357,13 +1422,13 @@ export function AdminView() {
                             });
                             setShowServiceModal(true);
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 font-bold text-xs flex items-center gap-1 transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 font-bold text-xs flex items-center gap-1 transition whitespace-nowrap"
                         >
                           <Edit className="w-3.5 h-3.5" /> Sửa
                         </button>
                         <button
                           onClick={() => toggleServiceHidden(srv.id)}
-                          className={`px-2.5 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 ${
+                          className={`px-2.5 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 whitespace-nowrap ${
                             srv.hidden ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
                           }`}
                         >
@@ -1403,42 +1468,42 @@ export function AdminView() {
             </button>
           </div>
 
-          <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-            <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto w-full border border-slate-200 rounded-2xl">
+            <table className="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[750px]">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50">
-                  <th className="py-3.5 px-4 font-bold">Hình Ảnh</th>
-                  <th className="py-3.5 px-4 font-bold">Tên Dự Án Mẫu</th>
-                  <th className="py-3.5 px-4 font-bold">Phân Loại</th>
-                  <th className="py-3.5 px-4 font-bold">Mô Tả Sản Phẩm</th>
-                  <th className="py-3.5 px-4 font-bold text-right">Thao Tác</th>
+                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50 font-bold">
+                  <th className="py-3.5 px-4 whitespace-nowrap">Hình Ảnh</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Tên Dự Án Mẫu</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Phân Loại</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Mô Tả Sản Phẩm</th>
+                  <th className="py-3.5 px-4 text-right whitespace-nowrap">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {projects.map((proj) => (
                   <tr key={proj.id} className="hover:bg-slate-50 transition">
-                    <td className="py-3 px-4">
-                      <img src={proj.image} alt={proj.name} className="w-16 h-12 rounded-xl object-cover border border-slate-200" />
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <img src={proj.image} alt={proj.name} className="w-16 h-12 rounded-xl object-cover border border-slate-200 shrink-0" />
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 text-sm">{proj.name}</div>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="font-bold text-slate-900 text-sm whitespace-nowrap">{proj.name}</div>
                       {proj.link && (
-                        <a href={proj.link} target="_blank" rel="noreferrer" className="text-sky-600 text-[11px] hover:underline inline-flex items-center gap-1 font-semibold mt-0.5">
+                        <a href={proj.link} target="_blank" rel="noreferrer" className="text-sky-600 text-[11px] hover:underline inline-flex items-center gap-1 font-semibold mt-0.5 whitespace-nowrap">
                           {proj.link} <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200 whitespace-nowrap">
                         {proj.category}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-600 line-clamp-2 max-w-xs">{proj.description}</td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="py-3 px-4 text-slate-600 truncate max-w-xs whitespace-nowrap">{proj.description}</td>
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                         <button
                           onClick={() => setViewingProjectDetail(proj)}
-                          className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1 transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1 transition whitespace-nowrap"
                         >
                           <Eye className="w-3.5 h-3.5" /> Chi tiết
                         </button>
@@ -1455,7 +1520,7 @@ export function AdminView() {
                             });
                             setShowProjectModal(true);
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 font-bold text-xs flex items-center gap-1 transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 font-bold text-xs flex items-center gap-1 transition whitespace-nowrap"
                         >
                           <Edit className="w-3.5 h-3.5" /> Sửa
                         </button>
@@ -1466,7 +1531,7 @@ export function AdminView() {
                               alert("Đã xóa dự án mẫu!");
                             }
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs flex items-center gap-1 transition"
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs flex items-center gap-1 transition whitespace-nowrap"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Xóa
                         </button>
@@ -1742,7 +1807,7 @@ export function AdminView() {
                   value={serviceForm.name}
                   onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
                   placeholder="Ví dụ: Thiết kế & Lập trình Web Portfolio"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-900 bg-white placeholder-slate-400"
                 />
               </div>
 
@@ -1751,11 +1816,11 @@ export function AdminView() {
                 <select
                   value={serviceForm.category}
                   onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value as ServiceCategory })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold text-slate-900 bg-white"
                 >
-                  <option value="IT">IT (Code / Database / System)</option>
-                  <option value="Design">Design (UI/UX / Branding)</option>
-                  <option value="IT/Design">IT/Design Trọn gói</option>
+                  <option value="IT" className="text-slate-900 bg-white">IT (Code / Database / System)</option>
+                  <option value="Design" className="text-slate-900 bg-white">Design (UI/UX / Branding)</option>
+                  <option value="IT/Design" className="text-slate-900 bg-white">IT/Design Trọn gói</option>
                 </select>
               </div>
 
@@ -1766,7 +1831,7 @@ export function AdminView() {
                     type="number"
                     value={serviceForm.estimatedPrice || 0}
                     onChange={(e) => setServiceForm({ ...serviceForm, estimatedPrice: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold text-sky-600"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold text-sky-600 bg-white"
                   />
                 </div>
                 <div>
@@ -1775,7 +1840,7 @@ export function AdminView() {
                     type="number"
                     value={serviceForm.estimatedDays || 0}
                     onChange={(e) => setServiceForm({ ...serviceForm, estimatedDays: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-900 bg-white"
                   />
                 </div>
               </div>
@@ -1786,11 +1851,11 @@ export function AdminView() {
                   <select
                     value={serviceForm.supportType}
                     onChange={(e) => setServiceForm({ ...serviceForm, supportType: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-900 bg-white"
                   >
-                    <option value="Online">Online</option>
-                    <option value="Direct">Trực tiếp</option>
-                    <option value="Hybrid">Hybrid (Kết hợp)</option>
+                    <option value="Online" className="text-slate-900 bg-white">Online</option>
+                    <option value="Direct" className="text-slate-900 bg-white">Trực tiếp</option>
+                    <option value="Hybrid" className="text-slate-900 bg-white">Hybrid (Kết hợp)</option>
                   </select>
                 </div>
                 <div>
@@ -1799,7 +1864,7 @@ export function AdminView() {
                     type="number"
                     value={serviceForm.maxRevisions}
                     onChange={(e) => setServiceForm({ ...serviceForm, maxRevisions: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-900 bg-white"
                   />
                 </div>
               </div>
@@ -1810,7 +1875,7 @@ export function AdminView() {
                   rows={2}
                   value={serviceForm.description}
                   onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-900 bg-white placeholder-slate-400"
                 />
               </div>
 
@@ -1821,8 +1886,86 @@ export function AdminView() {
                   value={serviceForm.scopeOutput}
                   onChange={(e) => setServiceForm({ ...serviceForm, scopeOutput: e.target.value })}
                   placeholder="Ví dụ: Link Source Code Github, Link Figma, Đĩa demo"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-900 bg-white placeholder-slate-400"
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Hình ảnh đại diện & minh họa Dịch Vụ (URL/Link Ảnh) *</label>
+                
+                {/* Live Image Preview Card */}
+                {serviceForm.demoImages && serviceForm.demoImages[0] ? (
+                  <div className="relative mb-2 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 group shadow-inner">
+                    <img
+                      src={serviceForm.demoImages[0]}
+                      alt="Xem trước ảnh dịch vụ"
+                      className="w-full h-40 object-cover group-hover:scale-105 transition duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80";
+                      }}
+                    />
+                    <div className="absolute top-2 left-2 bg-slate-950/80 backdrop-blur-xs px-2.5 py-1 rounded-lg text-cyan-300 text-[10px] font-bold border border-cyan-500/30">
+                      🖼️ Live Preview (Xem trực tiếp)
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-2 h-28 rounded-2xl border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400 text-xs">
+                    <span>Chưa chọn đường dẫn hình ảnh</span>
+                  </div>
+                )}
+
+                <input
+                  type="text"
+                  value={serviceForm.demoImages?.[0] || ""}
+                  onChange={(e) =>
+                    setServiceForm({
+                      ...serviceForm,
+                      demoImages: [e.target.value.trim()]
+                    })
+                  }
+                  placeholder="Nhập link đường dẫn ảnh (ví dụ: https://... hoặc /images/banner-y-te.png)"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-900 bg-white placeholder-slate-400 font-medium"
+                />
+                
+                {/* Quick Presets for Demo Images */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-slate-500 font-bold">Mẫu ảnh có sẵn:</span>
+                  <button
+                    type="button"
+                    onClick={() => setServiceForm({ ...serviceForm, demoImages: ["https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"] })}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] font-semibold text-slate-700 cursor-pointer"
+                  >
+                    Web Portfolio
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setServiceForm({ ...serviceForm, demoImages: ["https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&auto=format&fit=crop&q=80"] })}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] font-semibold text-slate-700 cursor-pointer"
+                  >
+                    UI/UX App
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setServiceForm({ ...serviceForm, demoImages: ["/images/logo-phin-coffee.png"] })}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] font-semibold text-slate-700 cursor-pointer"
+                  >
+                    Logo Phin Coffee
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setServiceForm({ ...serviceForm, demoImages: ["/images/banner-y-te.png"] })}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] font-semibold text-slate-700 cursor-pointer"
+                  >
+                    Banner Y Tế
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setServiceForm({ ...serviceForm, demoImages: ["/images/poster-avocado.png"] })}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-[10px] font-semibold text-slate-700 cursor-pointer"
+                  >
+                    Poster Avocado
+                  </button>
+                </div>
               </div>
             </div>
 

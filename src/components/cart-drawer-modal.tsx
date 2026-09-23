@@ -20,7 +20,7 @@ export function CartDrawerModal({
   onOpenWorkspace
 }: {
   onClose: () => void;
-  onOpenWorkspace: (serviceId?: string) => void;
+  onOpenWorkspace: (serviceId?: string | string[]) => void;
 }) {
   const { cart, removeFromCart, clearCart, currentUser, switchRole } = useApp();
 
@@ -70,9 +70,9 @@ export function CartDrawerModal({
       switchRole("customer");
     }
 
-    const firstServiceId = selectedItems[0].serviceId;
+    const selectedServiceIds = selectedItems.map((item) => item.serviceId);
     onClose();
-    onOpenWorkspace(firstServiceId);
+    onOpenWorkspace(selectedServiceIds);
   };
 
   return (

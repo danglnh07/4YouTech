@@ -404,12 +404,12 @@ export function UnifiedAuthPage({
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     placeholder="email@domain.com"
-                    className={`w-full pl-9 pr-3.5 py-2.5 border rounded-xl text-xs outline-none font-medium transition ${
+                    className={`w-full pl-9 pr-3.5 py-2.5 border rounded-xl text-xs outline-none font-bold text-slate-900 transition ${
                       showLoginEmailErr
                         ? "border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-400 text-rose-900"
                         : showLoginEmailOk
-                        ? "border-emerald-400 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-400"
-                        : "border-slate-200 focus:ring-2 focus:ring-sky-500"
+                        ? "border-emerald-400 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-400 text-slate-900"
+                        : "border-slate-200 focus:ring-2 focus:ring-sky-500 text-slate-900 bg-white"
                     }`}
                   />
                 </div>
@@ -449,7 +449,7 @@ export function UnifiedAuthPage({
                     value={loginPass}
                     onChange={(e) => setLoginPass(e.target.value)}
                     placeholder="Mật khẩu của bạn"
-                    className="w-full pl-9 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full pl-9 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                   <button
                     type="button"
@@ -494,7 +494,7 @@ export function UnifiedAuthPage({
                     value={regForm.name}
                     onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
                     placeholder="Ví dụ: Nguyễn Văn An"
-                    className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                 </div>
               </div>
@@ -509,12 +509,12 @@ export function UnifiedAuthPage({
                     value={regForm.email}
                     onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
                     placeholder="student@edu.vn"
-                    className={`w-full pl-9 pr-3.5 py-2.5 border rounded-xl text-xs outline-none font-medium transition ${
+                    className={`w-full pl-9 pr-3.5 py-2.5 border rounded-xl text-xs outline-none font-bold text-slate-900 transition ${
                       showRegEmailErr
                         ? "border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-400 text-rose-900"
                         : showRegEmailOk
-                        ? "border-emerald-400 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-400"
-                        : "border-slate-200 focus:ring-2 focus:ring-sky-500"
+                        ? "border-emerald-400 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-400 text-slate-900"
+                        : "border-slate-200 focus:ring-2 focus:ring-sky-500 text-slate-900 bg-white"
                     }`}
                   />
                 </div>
@@ -540,7 +540,7 @@ export function UnifiedAuthPage({
                     value={regForm.phone}
                     onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
                     placeholder="0912 345 678"
-                    className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-medium"
+                    className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                 </div>
               </div>
@@ -555,7 +555,7 @@ export function UnifiedAuthPage({
                     value={regForm.password}
                     onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
                     placeholder="Tối thiểu 8 ký tự"
-                    className="w-full pl-9 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full pl-9 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                   <button
                     type="button"
@@ -599,7 +599,7 @@ export function UnifiedAuthPage({
                     value={regForm.confirmPassword}
                     onChange={(e) => setRegForm({ ...regForm, confirmPassword: e.target.value })}
                     placeholder="Nhập lại mật khẩu"
-                    className="w-full pl-9 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full pl-9 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                   <button
                     type="button"
@@ -624,8 +624,17 @@ export function UnifiedAuthPage({
           {/* OTP ACTIVATION FORM */}
           {simulatedOtpCode && (
             <form onSubmit={handleVerifyActivationOtp} className="space-y-4">
-              <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl text-xs text-sky-900 space-y-1">
-                <div className="font-bold text-sm">Nhập mã OTP kích hoạt 6 chữ số</div>
+              <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl text-xs text-sky-900 space-y-2">
+                <div className="font-bold text-sm flex items-center justify-between">
+                  <span>Nhập mã OTP kích hoạt 6 chữ số</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowSmtpModal(true)}
+                    className="text-[11px] font-bold text-sky-700 hover:text-sky-900 underline flex items-center gap-1 cursor-pointer"
+                  >
+                    ⚙️ Cấu hình Gmail gửi thư thật
+                  </button>
+                </div>
                 <div>Mã OTP đã được phát tới Email: <strong>{activationEmail}</strong></div>
               </div>
 
@@ -638,7 +647,7 @@ export function UnifiedAuthPage({
                   value={otpCodeInput}
                   onChange={(e) => setOtpCodeInput(e.target.value)}
                   placeholder="------"
-                  className="w-full text-center tracking-widest font-mono text-xl py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full text-center tracking-widest font-mono text-xl py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                 />
               </div>
 
@@ -708,12 +717,12 @@ export function UnifiedAuthPage({
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     placeholder="student@edu.vn"
-                    className={`w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none font-medium transition ${
+                    className={`w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none font-bold text-slate-900 transition ${
                       showForgotEmailErr
                         ? "border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-400 text-rose-900"
                         : showForgotEmailOk
-                        ? "border-emerald-400 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-400"
-                        : "border-slate-200 focus:ring-2 focus:ring-sky-500"
+                        ? "border-emerald-400 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-400 text-slate-900"
+                        : "border-slate-200 focus:ring-2 focus:ring-sky-500 text-slate-900 bg-white"
                     }`}
                   />
                   {showForgotEmailErr && (
@@ -762,7 +771,7 @@ export function UnifiedAuthPage({
                     value={forgotOtpInput}
                     onChange={(e) => setForgotOtpInput(e.target.value)}
                     placeholder="------"
-                    className="w-full text-center tracking-widest font-mono text-xl py-2.5 border border-slate-200 rounded-xl outline-none"
+                    className="w-full text-center tracking-widest font-mono text-xl py-2.5 border border-slate-200 rounded-xl outline-none font-bold text-slate-900 bg-white"
                   />
                 </div>
 
@@ -785,7 +794,7 @@ export function UnifiedAuthPage({
                       value={forgotNewPass}
                       onChange={(e) => setForgotNewPass(e.target.value)}
                       placeholder="Mật khẩu mới"
-                      className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                     />
                     <button
                       type="button"
@@ -807,7 +816,7 @@ export function UnifiedAuthPage({
                       value={forgotConfirmPass}
                       onChange={(e) => setForgotConfirmPass(e.target.value)}
                       placeholder="Nhập lại mật khẩu mới"
-                      className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                     />
                     <button
                       type="button"

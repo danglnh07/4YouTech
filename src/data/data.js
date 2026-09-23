@@ -8,113 +8,131 @@
 // name, description, category, estimated_days, estimated_price, demo_images
 // (camelCase here since this is plain JS, same fields otherwise.)
 export const SERVICES = [
+  // --- IT ---
   {
-    id: "portfolio-co-san",
-    name: "Portfolio từ thiết kế có sẵn",
-    description:
-      "Xây dựng website portfolio cá nhân dựa trên file/link thiết kế khách hàng đã có sẵn.",
-    category: "IT", // "IT" | "Design" | "IT/Design"
-    estimatedDays: 3, // e.g. 7 — leave null to show "Liên hệ để báo giá"
-    estimatedPrice: 100000, // VND, e.g. 1500000 — leave null to show "Liên hệ để báo giá"
-    demoImages: ["https://cdn-media.sforum.vn/storage/app/media/thanhhuyen/m%E1%BA%ABu%20Portfolio/mau-portfolio-thumb.jpg"], // array of image URLs, e.g. ["https://.../shot1.jpg"]
+    id: "it-lap-trinh-portfolio",
+    name: "Lập trình Portfolio",
+    description: "Lập trình website portfolio cá nhân tối ưu SEO, giao diện cá tính, responsive chuẩn di động & web.",
+    category: "IT",
+    estimatedDays: 3,
+    estimatedPrice: 1000000,
+    demoImages: ["https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"]
   },
   {
-    id: "portfolio-chua-co-thiet-ke",
-    name: "Portfolio chưa có thiết kế",
-    description:
-      "Tư vấn và xây dựng website portfolio cá nhân từ đầu, bao gồm cả phần thiết kế giao diện theo phong cách và website tham khảo khách cung cấp.",
+    id: "it-thiet-ke-web",
+    name: "Thiết kế Web",
+    description: "Xây dựng & lập trình website doanh nghiệp, trang bán hàng, landing page hiện đại, chuẩn SEO & tối ưu tốc độ.",
     category: "IT",
     estimatedDays: 5,
-    estimatedPrice: 150000,
-    demoImages: ["https://careers.hbr.edu.vn/storage/images/2025/07/29/mau-portfolio-2.webp"],
+    estimatedPrice: 1500000,
+    demoImages: ["https://images.unsplash.com/photo-1542744094-3a31b272c490?w=800&auto=format&fit=crop&q=80"]
   },
   {
-    id: "ui-design",
-    name: "UI Design",
-    description:
-      "Thiết kế giao diện website hoặc ứng dụng dựa trên danh sách màn hình, luồng sử dụng và nhận diện thương hiệu sẵn có (nếu có).",
-    category: "IT/Design",
-    estimatedDays: 5,
-    estimatedPrice: 200000,
-    demoImages: [
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReqiyRdORLEmFgPrgiHEWUlF6ldcVfj0tJudcrNzwfcJg8shAnD6Ht4Jxl&s=10",
-      "https://cdn.dribbble.com/userupload/47885259/file/8fdd38e5380156785cc4f427fcfd4d7c.png"
-    ],
-  },
-  {
-    id: "database-design-support",
-    name: "Database Design Support",
-    description:
-      "Hỗ trợ thiết kế hoặc rà soát cơ sở dữ liệu (ERD/schema) dựa trên mô tả nghiệp vụ và workflow hiện tại.",
+    id: "it-ui-ux",
+    name: "UI/UX",
+    description: "Nghiên cứu hành vi người dùng, vẽ Wireframe, thiết kế Prototype tương tác & lập trình giao diện Web/App mượt mà.",
     category: "IT",
-    estimatedDays: null,
-    estimatedPrice: null,
-    demoImages: ["https://substackcdn.com/image/fetch/$s_!DTF5!,w_1200,h_675,c_fill,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fd7e87813-2921-4379-a1c9-c101092fda5d_1241x1600.png"],
+    estimatedDays: 4,
+    estimatedPrice: 1200000,
+    demoImages: ["https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&auto=format&fit=crop&q=80"]
   },
   {
-    id: "system-analysis-support",
-    name: "System Analysis Support",
-    description:
-      "Hỗ trợ phân tích hệ thống: actor, use case, sequence diagram dựa trên yêu cầu hệ thống hiện có.",
+    id: "it-test-loi-phan-mem",
+    name: "Test lỗi phần mềm",
+    description: "Kiểm thử phần mềm (Manual & Automation Testing), rà soát lỗi UI/UX, bảo mật, hiệu năng & xuất báo cáo chi tiết.",
     category: "IT",
-    estimatedDays: null,
-    estimatedPrice: null,
-    demoImages: ["https://cdn.prod.website-files.com/6529762860f5d2796d4eb495/66cc5478f7467215966986ec_65e85cd00d3fa3f98a476ba9_System%2520analysis%2520and%2520design-system%2520development%2520lifecycle-grorapidlabs.png"],
+    estimatedDays: 2,
+    estimatedPrice: 500000,
+    demoImages: ["https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80"]
   },
+
+  // --- Design ---
   {
-    id: "nhan-dien-thuong-hieu",
-    name: "Nhận diện thương hiệu và ấn phẩm",
-    description:
-      "Thiết kế các hạng mục nhận diện thương hiệu và ấn phẩm: logo, banner, poster, menu, thiệp, standee, slide.",
+    id: "design-thiet-ke-ui",
+    name: "Thiết kế UI",
+    description: "Thiết kế Giao diện người dùng (User Interface) sắc nét, hiện đại trên Figma dành cho Website & Mobile App.",
     category: "Design",
-    estimatedDays: null,
-    estimatedPrice: null,
-    demoImages: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaRjjrKKecxrJJG-rArfygfBHWx5qkJdeXtRh0ijR1kzXJ4XBgth_xlYa1&s=10"],
+    estimatedDays: 3,
+    estimatedPrice: 1000000,
+    demoImages: ["https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&auto=format&fit=crop&q=80"]
   },
+  {
+    id: "design-logo",
+    name: "Logo",
+    description: "Thiết kế Logo nhận diện thương hiệu độc quyền, sáng tạo ấn tượng, kèm Brand Guidelines & file Vector gốc.",
+    category: "Design",
+    estimatedDays: 2,
+    estimatedPrice: 600000,
+    demoImages: ["/images/logo-phin-coffee.png"]
+  },
+  {
+    id: "design-banner",
+    name: "Banner",
+    description: "Thiết kế Banner quảng cáo, banner website, mạng xã hội (Facebook/Zalo/Instagram) bắt mắt, chuẩn tỷ lệ.",
+    category: "Design",
+    estimatedDays: 1,
+    estimatedPrice: 300000,
+    demoImages: ["/images/banner-y-te.png"]
+  },
+  {
+    id: "design-poster",
+    name: "Poster",
+    description: "Thiết kế Poster sự kiện, poster truyền thông, nghệ thuật độ phân giải cao dành cho in ấn & đăng tải truyền thông.",
+    category: "Design",
+    estimatedDays: 2,
+    estimatedPrice: 400000,
+    demoImages: ["/images/poster-avocado.png"]
+  }
 ];
 
 export const PROJECT_REFERENCES = [
   {
     id: "portfolio-ca-nhan",
-    name: "Portfolio cá nhân",
+    name: "Lập trình Portfolio cá nhân",
     category: "IT",
-    image:
-      "https://cdn-media.sforum.vn/storage/app/media/thanhhuyen/m%E1%BA%ABu%20Portfolio/mau-portfolio-thumb.jpg",
+    image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"
   },
   {
-    id: "portfolio-thiet-ke-moi",
-    name: "Portfolio thiết kế mới",
+    id: "thiet-ke-web",
+    name: "Thiết kế Website doanh nghiệp",
     category: "IT",
-    image:
-      "https://careers.hbr.edu.vn/storage/images/2025/07/29/mau-portfolio-2.webp",
+    image: "https://images.unsplash.com/photo-1542744094-3a31b272c490?w=800&auto=format&fit=crop&q=80"
   },
   {
-    id: "giao-dien-ung-dung",
-    name: "Giao diện ứng dụng",
-    category: "IT/Design",
-    image:
-      "https://cdn.dribbble.com/userupload/47885259/file/8fdd38e5380156785cc4f427fcfd4d7c.png",
-  },
-  {
-    id: "co-so-du-lieu",
-    name: "Thiết kế cơ sở dữ liệu",
+    id: "ui-ux",
+    name: "Giao diện UI/UX App Mobile & Web",
     category: "IT",
-    image:
-      "https://substackcdn.com/image/fetch/$s_!DTF5!,w_1200,h_675,c_fill,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fd7e87813-2921-4379-a1c9-c101092fda5d_1241x1600.png",
+    image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&auto=format&fit=crop&q=80"
   },
   {
-    id: "phan-tich-he-thong",
-    name: "Phân tích hệ thống",
+    id: "test-loi-phan-mem",
+    name: "Kiểm thử & Rà soát Bug phần mềm",
     category: "IT",
-    image:
-      "https://cdn.prod.website-files.com/6529762860f5d2796d4eb495/66cc5478f7467215966986ec_65e85cd00d3fa3f98a476ba9_System%2520analysis%2520and%2520design-system%2520development%2520lifecycle-grorapidlabs.png",
+    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80"
   },
   {
-    id: "nhan-dien-thuong-hieu",
-    name: "Nhận diện thương hiệu",
+    id: "thiet-ke-ui",
+    name: "Thiết kế UI Figma sắc nét",
     category: "Design",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaRjjrKKecxrJJG-rArfygfBHWx5qkJdeXtRh0ijR1kzXJ4XBgth_xlYa1&s=10",
+    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&auto=format&fit=crop&q=80"
   },
+  {
+    id: "logo-brand",
+    name: "Logo & Bộ nhận diện thương hiệu",
+    category: "Design",
+    image: "/images/logo-phin-coffee.png"
+  },
+  {
+    id: "banner-quang-cao",
+    name: "Banner truyền thông & Quảng cáo",
+    category: "Design",
+    image: "/images/banner-y-te.png"
+  },
+  {
+    id: "poster-su-kien",
+    name: "Poster nghệ thuật & Sự kiện",
+    category: "Design",
+    image: "/images/poster-avocado.png"
+  }
 ];
 

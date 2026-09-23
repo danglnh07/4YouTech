@@ -135,8 +135,8 @@ const AppContext = createContext<AppContextType | null>(null);
 
 const STORAGE_KEYS = {
   USERS: "4youtech_users_v4",
-  SERVICES: "4youtech_services_v4",
-  PROJECTS: "4youtech_projects_v5",
+  SERVICES: "4youtech_services_v6",
+  PROJECTS: "4youtech_projects_v15",
   ORDERS: "4youtech_orders_v4",
   REVIEWS: "4youtech_reviews_v4",
   TRANSACTIONS: "4youtech_transactions_v4",
@@ -172,7 +172,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (savedUsers) setUsers(JSON.parse(savedUsers));
       if (savedServices) setServices(JSON.parse(savedServices));
-      if (savedProjects) setProjects(JSON.parse(savedProjects));
+      if (savedProjects) {
+        const parsed: SampleProject[] = JSON.parse(savedProjects);
+        const updated = parsed.map((p) => {
+          const seed = SEED_PROJECTS.find((s) => s.id === p.id);
+          return seed ? { ...p, description: seed.description } : p;
+        });
+        const missingSeed = SEED_PROJECTS.filter((sp) => !updated.some((p) => p.id === sp.id));
+        setProjects([...updated, ...missingSeed]);
+      } else {
+        setProjects(SEED_PROJECTS);
+      }
       if (savedOrders) setOrders(JSON.parse(savedOrders));
       if (savedReviews) setReviews(JSON.parse(savedReviews));
       if (savedTxns) setTransactions(JSON.parse(savedTxns));
@@ -185,7 +195,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (found) setCurrentUser(found);
       }
     } catch (e) {
-      console.error("Failed to load state from localStorage", e);
+      console.error("Initial load from storage failed", e);
     }
     setIsLoaded(true);
   }, []);
@@ -205,7 +215,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         if (savedUsers) setUsers(JSON.parse(savedUsers));
         if (savedServices) setServices(JSON.parse(savedServices));
-        if (savedProjects) setProjects(JSON.parse(savedProjects));
+        if (savedProjects) {
+          const parsed: SampleProject[] = JSON.parse(savedProjects);
+          const updated = parsed.map((p) => {
+            const seed = SEED_PROJECTS.find((s) => s.id === p.id);
+            return seed ? { ...p, description: seed.description } : p;
+          });
+          const missingSeed = SEED_PROJECTS.filter((sp) => !updated.some((p) => p.id === sp.id));
+          setProjects([...updated, ...missingSeed]);
+        }
         if (savedOrders) setOrders(JSON.parse(savedOrders));
         if (savedReviews) setReviews(JSON.parse(savedReviews));
         if (savedTxns) setTransactions(JSON.parse(savedTxns));
@@ -370,6 +388,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     setUsers((prev) => [newUser, ...prev.filter(u => u.email.toLowerCase() !== cleanEmail)]);
+    
+    // Sync newly registered user to SQL Server DB with status 'pending_otp'
+    fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newUser)
+    }).catch((err) => console.warn("Sync new user to SQL Server notice:", err));
+
     const generatedOtp = sendOtp(data.email, "activation");
     return { user: newUser, otpCode: generatedOtp };
   };
@@ -387,6 +413,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUsers((prev) => prev.map((u) => (u.id === targetUser.id ? updatedUser : u)));
     setCurrentUser(updatedUser);
     setActiveOtpSession(null);
+
+    // Sync active status to SQL Server DB
+    fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedUser)
+    }).catch((err) => console.warn("Sync activated user to SQL Server notice:", err));
+
     return { success: true, message: "Kích hoạt tài khoản thành công! Bạn đã được tự động đăng nhập." };
   };
 
@@ -404,10 +438,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!targetUser) return { success: false, message: "Tài khoản không tồn tại." };
 
     const newHashed = hashPassword(newPass);
+    const updatedUser: User = { ...targetUser, password: newHashed };
     setUsers((prev) =>
-      prev.map((u) => (u.id === targetUser.id ? { ...u, password: newHashed } : u))
+      prev.map((u) => (u.id === targetUser.id ? updatedUser : u))
     );
     setActiveOtpSession(null);
+
+    // Sync new password to SQL Server DB
+    fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedUser)
+    }).catch((err) => console.warn("Sync reset password to SQL Server notice:", err));
+
     return { success: true, message: "Đặt lại mật khẩu mới thành công! Vui lòng đăng nhập với mật khẩu mới." };
   };
 

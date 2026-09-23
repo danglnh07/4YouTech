@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useApp } from "@/lib/app-context";
 import { getPasswordRules } from "./auth-pages";
 import { ServiceItem, SampleProject, ServiceCategory, formatPriceRange, formatDaysRange } from "@/lib/store";
@@ -33,15 +33,201 @@ import {
   Mail,
   RefreshCw,
   Maximize2,
-  ChevronLeft
+  ChevronLeft,
+  CheckSquare,
+  Square
 } from "lucide-react";
+
+function AnimatedShowcaseBanner() {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const slides = [
+    {
+      id: "web-portfolio",
+      title: "Lập Trình Web & Portfolio",
+      badge: "IT & Software",
+      subTitle: "Build Create Together",
+      desc: "Lập trình Website & Portfolio cá nhân tối ưu SEO, giao diện cá tính, chuẩn Mobile & Web.",
+      type: "code",
+      image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1000&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "test-software",
+      title: "Test Lỗi Phần Mềm",
+      badge: "IT Quality Control",
+      subTitle: "Manual & Automation Testing",
+      desc: "Kiểm thử phần mềm, rà soát lỗi UI/UX, bảo mật, hiệu năng & lập báo cáo chi tiết.",
+      type: "test",
+      image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1000&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "ui-logo-design",
+      title: "Thiết Kế UI & Logo",
+      badge: "Branding & UI/UX",
+      subTitle: "Good Ideas Brighter Tomorrow",
+      desc: "Thiết kế Giao diện người dùng UI Figma sắc nét & Logo nhận diện thương hiệu độc quyền.",
+      type: "graphic",
+      image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=1000&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "banner-poster",
+      title: "Banner & Poster",
+      badge: "Media Design",
+      subTitle: "Truyền thông & Quảng cáo",
+      desc: "Thiết kế Banner truyền thông, poster sự kiện, ấn phẩm quảng cáo thu hút lượt nhấp.",
+      type: "banner",
+      image: "/images/banner-y-te.png"
+    }
+  ];
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isPaused, slides.length]);
+
+  const current = slides[activeSlide];
+
+  return (
+    <div
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className="relative rounded-3xl overflow-hidden border border-cyan-500/30 bg-[#091026]/90 shadow-[0_0_40px_rgba(0,150,255,0.25)] flex flex-col justify-between h-[390px] sm:h-[440px] group select-none backdrop-blur-xl"
+    >
+      {/* Top Banner Header Info */}
+      <div className="p-4 sm:p-5 flex items-center justify-between border-b border-blue-500/20 bg-slate-950/70 backdrop-blur-md z-10">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+          <span className="text-xs font-extrabold text-cyan-300 tracking-wider uppercase">Showcase Dịch Vụ 4YouTech</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 bg-blue-900/40 px-3 py-1 rounded-full border border-blue-500/30">
+          <span className="text-cyan-400">{activeSlide + 1}</span> / <span>{slides.length}</span>
+        </div>
+      </div>
+
+      {/* Main Slide Content Presentation Area */}
+      <div className="relative flex-1 p-5 overflow-hidden flex flex-col justify-center">
+        {/* Background Ambient Glow */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-950/90 via-slate-950/40 to-cyan-900/40 pointer-events-none"></div>
+
+        {/* Visual Mockups based on slide type */}
+        {current.type === "code" && (
+          <div className="relative z-10 space-y-3 animate-fade-in">
+            <div className="rounded-xl overflow-hidden border border-blue-500/40 bg-slate-950/95 shadow-2xl p-3 sm:p-4 text-xs font-mono space-y-2">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2 text-[10px] text-slate-400">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                  <span className="ml-2 font-sans font-bold text-slate-300">Web_Portfolio_Design.tsx</span>
+                </div>
+                <span className="text-cyan-400 font-sans">4YouTech Code</span>
+              </div>
+              <div className="text-slate-300 text-[11px] leading-relaxed">
+                <span className="text-cyan-400">const</span> <span className="text-amber-300">PortfolioApp</span> = () =&gt; &#123;<br />
+                &nbsp;&nbsp;<span className="text-cyan-400">return</span> (<br />
+                &nbsp;&nbsp;&nbsp;&nbsp;&lt;<span className="text-blue-400">WebServices</span> <span className="text-purple-300">responsive</span>=<span className="text-emerald-300">true</span> /&gt;<br />
+                &nbsp;&nbsp;);<br />
+                &#125;;
+              </div>
+            </div>
+          </div>
+        )}
+
+        {current.type === "test" && (
+          <div className="relative z-10 space-y-3 animate-fade-in">
+            <div className="bg-slate-950/95 rounded-xl p-4 border border-emerald-500/40 text-xs shadow-xl space-y-2.5">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px] font-bold text-emerald-400">
+                <span>⚡ Test Case Report: PASS 98.5%</span>
+                <span className="px-2 py-0.5 bg-emerald-950 text-emerald-300 rounded border border-emerald-500/30 text-[10px]">Zero Critical Bug</span>
+              </div>
+              <div className="text-[11px] text-slate-300 font-mono space-y-1">
+                <div>✓ UI/UX Responsiveness: Passed</div>
+                <div>✓ Performance & Speed Test: 99/100</div>
+                <div>✓ Security & Form Validation: Verified</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {current.type === "graphic" && (
+          <div className="relative z-10 space-y-3 animate-fade-in">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/80 via-indigo-900/80 to-pink-900/80 border border-purple-500/40 shadow-xl space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-pink-300 px-2.5 py-0.5 rounded bg-purple-950/80 border border-pink-500/30">Good Ideas Brighter Tomorrow</span>
+              <div className="text-xl font-black text-white leading-tight">Thiết Kế UI & Logo Thương Hiệu</div>
+              <p className="text-xs text-purple-200">Giao diện người dùng sắc nét, Logo nhận diện độc quyền.</p>
+            </div>
+          </div>
+        )}
+
+        {current.type === "banner" && (
+          <div className="relative z-10 space-y-3 animate-fade-in">
+            <div className="bg-slate-950/95 rounded-xl border border-blue-500/40 p-3 space-y-2 shadow-2xl">
+              <div className="h-28 bg-slate-900 rounded-lg overflow-hidden relative flex items-center justify-center">
+                <img src={current.image} alt="banner preview" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex items-center justify-between text-[11px] font-mono text-cyan-300 px-1">
+                <span>Banner Quảng Cáo & Poster truyền thông</span>
+                <span className="px-2 py-0.5 bg-blue-900/80 rounded text-[10px] text-white font-bold">HD Vector</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Slide Overlay Text */}
+        <div className="mt-3 relative z-10 bg-slate-950/80 p-3.5 rounded-2xl border border-blue-500/30 backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <h4 className="font-extrabold text-sm text-white">{current.title}</h4>
+            <span className="text-[10px] font-bold text-cyan-300 px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/30">{current.badge}</span>
+          </div>
+          <p className="text-xs text-slate-300 mt-1 line-clamp-1">{current.desc}</p>
+        </div>
+      </div>
+
+      {/* Slide Controls Footer */}
+      <div className="p-4 flex items-center justify-between border-t border-blue-500/20 bg-slate-950/80 backdrop-blur-md z-10">
+        <div className="flex items-center gap-1.5">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveSlide(idx)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                activeSlide === idx ? "w-7 bg-cyan-400" : "w-2 bg-slate-700 hover:bg-slate-500"
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+            className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white hover:border-cyan-500 transition"
+            title="Slide trước"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setActiveSlide((prev) => (prev + 1) % slides.length)}
+            className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white hover:border-cyan-500 transition"
+            title="Slide tiếp"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function GuestView({
   onSelectServiceToBook,
   onSwitchToWorkspace,
   activeTab
 }: {
-  onSelectServiceToBook: (serviceId: string) => void;
+  onSelectServiceToBook: (serviceId: string | string[]) => void;
   onSwitchToWorkspace: () => void;
   activeTab?: string;
 }) {
@@ -64,9 +250,55 @@ export function GuestView({
   const [selectedSupportType, setSelectedSupportType] = useState<string>("all");
   const [activeDetailService, setActiveDetailService] = useState<ServiceItem | null>(null);
 
-  // Projects Showcase filter & preview modal state
+  // Horizontal Scroll ref & helpers for Services Catalog
+  const serviceScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollServicesLeft = () => {
+    if (serviceScrollRef.current) {
+      serviceScrollRef.current.scrollBy({ left: -380, behavior: "smooth" });
+    }
+  };
+
+  const scrollServicesRight = () => {
+    if (serviceScrollRef.current) {
+      serviceScrollRef.current.scrollBy({ left: 380, behavior: "smooth" });
+    }
+  };
+
+  // Multi-selection for Services Catalog
+  const [selectedCatalogServiceIds, setSelectedCatalogServiceIds] = useState<string[]>([]);
+
+  const handleBatchAddToCart = () => {
+    if (selectedCatalogServiceIds.length === 0) return;
+    const selectedSrvs = services.filter((s) => selectedCatalogServiceIds.includes(s.id));
+    selectedSrvs.forEach((srv) => addToCart(srv));
+    setToastMsg(`🛒 Đã thêm thành công ${selectedSrvs.length} dịch vụ vào giỏ hàng!`);
+    setSelectedCatalogServiceIds([]);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
+
+  const handleBatchBookNow = () => {
+    if (selectedCatalogServiceIds.length === 0) return;
+    const idsToBook = [...selectedCatalogServiceIds];
+    if (currentUser.role === "guest") {
+      setAuthModalOpen(true);
+    } else {
+      onSelectServiceToBook(idsToBook);
+    }
+  };
+
+  // Projects Showcase filter, pagination & preview modal state
   const [projectSubCategory, setProjectSubCategory] = useState<string>("all");
   const [previewProject, setPreviewProject] = useState<SampleProject | null>(null);
+
+  // Pagination for Sample Projects Showcase (8 items per page)
+  const PROJECTS_PER_PAGE = 8;
+  const [currentProjectPage, setCurrentProjectPage] = useState<number>(1);
+
+  // Reset page to 1 when subcategory filter changes
+  useEffect(() => {
+    setCurrentProjectPage(1);
+  }, [projectSubCategory]);
 
   // Auto scroll to sample projects slide showcase if activeTab is "projects"
   useEffect(() => {
@@ -83,9 +315,21 @@ export function GuestView({
   const filteredProjects = useMemo(() => {
     if (projectSubCategory === "all") return projects;
     return projects.filter(
-      (p) => p.subCategory === projectSubCategory || p.category === projectSubCategory
+      (p) =>
+        p.subCategory === projectSubCategory ||
+        p.category === projectSubCategory ||
+        (projectSubCategory === "Banner" && (p.subCategory === "Banner" || p.subCategory === "Poster"))
     );
   }, [projects, projectSubCategory]);
+
+  const totalProjectPages = useMemo(() => {
+    return Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE) || 1;
+  }, [filteredProjects]);
+
+  const paginatedProjects = useMemo(() => {
+    const start = (currentProjectPage - 1) * PROJECTS_PER_PAGE;
+    return filteredProjects.slice(start, start + PROJECTS_PER_PAGE);
+  }, [filteredProjects, currentProjectPage]);
 
   // Cart toast notification
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -303,91 +547,131 @@ export function GuestView({
       
       {/* Floating Toast Notification */}
       {toastMsg && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up border border-slate-700">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0b132e] text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up border border-cyan-500/40 backdrop-blur-xl">
           <ShoppingBag className="w-5 h-5 text-cyan-400 shrink-0" />
           <span className="text-xs font-bold">{toastMsg}</span>
         </div>
       )}
 
       {/* Hero Banner Section */}
-      <section className="relative overflow-hidden bg-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-2xl">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-96 h-96 bg-sky-500/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/3 -ml-16 -mb-16 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <section className="relative overflow-hidden dark-glass rounded-3xl p-6 sm:p-10 lg:p-12 shadow-2xl border border-blue-500/30">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-1/3 -ml-16 -mb-16 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="relative z-10 max-w-3xl space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-cyan-300 text-xs font-medium select-none cursor-default">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            Nền tảng hỗ trợ Đồ án & Dịch vụ IT/Design Chất Lượng Cao
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+          
+          {/* Left Column: Headline & Action */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-xs font-bold tracking-wide select-none">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              SÁNG TẠO • THỰC TIỄN • ĐỒNG HÀNH CÙNG BẠN
+            </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight select-none cursor-default">
-            Giải pháp IT & Design <br />
-            <span className="bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-300 bg-clip-text text-transparent">
-              Chuyên Nghiệp cho Sinh Viên & CLB
-            </span>
-          </h1>
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-[1.15] text-white select-none">
+              Biến ý tưởng thành <br />
+              <span className="gradient-title-cyan">
+                Sản phẩm số.
+              </span>
+            </h1>
 
-          <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl font-normal select-none cursor-default">
-            Nhận thiết kế Website Portfolio, UI/UX App, Sơ đồ CSDL ERD, Phân tích Hệ thống SRS và Ấn phẩm truyền thông với chi phí tối ưu, quy trình nghiệm thu rõ ràng.
-          </p>
+            <p className="text-slate-300 text-base sm:text-lg leading-relaxed font-normal select-none">
+              Giải pháp IT & Design dành cho sinh viên, cá nhân và câu lạc bộ. Lập trình Website Portfolio, thiết kế UI/UX, Kiểm thử phần mềm, Logo, Banner & Poster chuyên nghiệp.
+            </p>
 
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <a
-              href="#catalog"
-              className="px-6 py-3.5 rounded-xl gradient-btn font-bold text-sm flex items-center gap-2 shadow-lg"
-            >
-              Khám phá Dịch vụ <ArrowRight className="w-4 h-4" />
-            </a>
-            
-            {currentUser.role === "guest" ? (
-              <button
-                onClick={() => setAuthModalOpen(true)}
-                className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-sm transition flex items-center gap-2"
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              <a
+                href="#catalog"
+                className="px-6 py-3.5 rounded-full gradient-btn font-extrabold text-sm flex items-center gap-2 shadow-lg shadow-cyan-500/25"
               >
-                <LogIn className="w-4 h-4" /> Đăng ký / Đăng nhập
-              </button>
-            ) : (
-              <button
-                onClick={onSwitchToWorkspace}
-                className="px-6 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition flex items-center gap-2 shadow-md shadow-emerald-900/30"
+                Khám phá dịch vụ <ArrowRight className="w-4 h-4" />
+              </a>
+              
+              <a
+                href="#sample-projects-section"
+                className="px-6 py-3.5 rounded-full gradient-btn-secondary font-bold text-sm flex items-center gap-2"
               >
-                <Layers className="w-4 h-4" /> Đã đăng nhập: Vào Workspace ({currentUser.name})
-              </button>
-            )}
+                <Eye className="w-4 h-4 text-cyan-400" /> Xem showreel
+              </a>
+            </div>
+
+            {/* Trust Checkmarks */}
+            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-blue-500/20 text-xs text-slate-300 select-none">
+              <div className="flex items-center gap-1.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>Tư vấn tận tâm</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>Triển khai chuyên nghiệp</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>Đồng hành lâu dài</span>
+              </div>
+            </div>
           </div>
 
-          {/* Quick Metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-white/10 text-xs select-none cursor-default">
-            <div>
-              <div className="text-2xl font-black text-white">100+</div>
-              <div className="text-slate-400">Dự án hoàn thành</div>
-            </div>
-            <div>
-              <div className="text-2xl font-black text-cyan-400">99.8%</div>
-              <div className="text-slate-400">Đánh giá 5 sao</div>
-            </div>
-            <div>
-              <div className="text-2xl font-black text-sky-400">100%</div>
-              <div className="text-slate-400">Bảo mật & Đúng hạn</div>
-            </div>
-            <div>
-              <div className="text-2xl font-black text-teal-400">24/7</div>
-              <div className="text-slate-400">Hỗ trợ kỹ thuật</div>
-            </div>
+          {/* Right Column: Animated Showcase Banner */}
+          <div className="lg:col-span-5 w-full">
+            <AnimatedShowcaseBanner />
           </div>
+
         </div>
       </section>
 
+      {/* Quick Category Highlights Bar Below Banner */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 rounded-2xl dark-glass-card flex items-center gap-3.5 border border-blue-500/20">
+          <div className="w-10 h-10 rounded-xl bg-blue-900/60 border border-blue-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+            <Laptop className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-sm text-white">Website & Portfolio</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">Hiện thực hóa ý tưởng của bạn trên web</div>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl dark-glass-card flex items-center gap-3.5 border border-blue-500/20">
+          <div className="w-10 h-10 rounded-xl bg-cyan-900/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+            <Palette className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-sm text-white">UI/UX Design</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">Giao diện đẹp, trải nghiệm tốt</div>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl dark-glass-card flex items-center gap-3.5 border border-blue-500/20">
+          <div className="w-10 h-10 rounded-xl bg-purple-900/60 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-sm text-white">Branding</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">Xây dựng dấu ấn riêng</div>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl dark-glass-card flex items-center gap-3.5 border border-blue-500/20">
+          <div className="w-10 h-10 rounded-xl bg-pink-900/60 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0">
+            <Layers className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-sm text-white">Banner & Poster</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">Ấn phẩm truyền thông chuyên nghiệp</div>
+          </div>
+        </div>
+      </div>
+
       {/* Payment Policy Notice Banner */}
-      <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3.5 text-amber-900 shadow-xs select-none cursor-default">
-        <div className="p-2.5 bg-amber-100 rounded-xl shrink-0">
-          <Info className="w-5 h-5 text-amber-700" />
+      <div className="bg-amber-950/40 border border-amber-500/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3.5 text-amber-200 shadow-md backdrop-blur-md select-none cursor-default">
+        <div className="p-2.5 bg-amber-900/60 rounded-xl shrink-0 border border-amber-500/30">
+          <Info className="w-5 h-5 text-amber-400" />
         </div>
         <div className="space-y-0.5 flex-1">
-          <div className="font-extrabold text-xs sm:text-sm flex items-center gap-2">
+          <div className="font-extrabold text-xs sm:text-sm flex items-center gap-2 text-amber-300">
             ⚠️ Quy Định Đặt Đơn & Thanh Toán 50% - 50% tại 4YouTech:
           </div>
-          <p className="text-xs text-amber-800 leading-relaxed">
+          <p className="text-xs text-amber-200/90 leading-relaxed">
             1. Quý khách có thể <strong>Đặt Dịch Vụ ngay</strong> hoặc <strong>Thêm vào Giỏ hàng</strong> để book cùng lúc nhiều dịch vụ.<br />
             2. Sau khi Admin xem xét yêu cầu & chốt báo giá, quý khách <strong>thanh toán đặt cọc 50%</strong> trước để bắt đầu thực hiện.<br />
             3. Khi sản phẩm hoàn thành, quý khách kiểm tra <strong>Nghiệm Thu thành công</strong> rồi thanh toán <strong>50% còn lại</strong> để nhận bàn giao chính thức.
@@ -395,12 +679,15 @@ export function GuestView({
         </div>
       </div>
 
-      {/* Services Catalog Section */}
-      <section id="catalog" className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-4">
+      {/* Services Catalog Section ("Dịch vụ dành cho bạn") */}
+      <section id="catalog" className="space-y-6 pt-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-blue-500/20 pb-4">
           <div>
-            <span className="text-xs font-bold text-sky-300 uppercase tracking-widest">Catalog Dịch vụ</span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Danh mục Gói Dịch Vụ 4YouTech</h2>
+            <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest px-2.5 py-1 rounded bg-blue-950/80 border border-blue-500/30">DỊCH VỤ CỦA CHÚNG TÔI</span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mt-2">
+              Dịch vụ <span className="gradient-title-cyan">dành cho bạn</span>
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">Từ ý tưởng đến sản phẩm hoàn chỉnh – 4YouTech đồng hành cùng bạn ở mọi giai đoạn.</p>
           </div>
 
           {/* Filters Bar */}
@@ -413,20 +700,20 @@ export function GuestView({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Tìm dịch vụ..."
-                className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-sky-500 outline-none"
+                className="w-full pl-9 pr-3 py-2 bg-[#091026] border border-blue-500/30 rounded-full text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-400 outline-none"
               />
             </div>
 
             {/* Category Filter Pills */}
-            <div className="flex items-center gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-700/80">
+            <div className="flex items-center gap-1 bg-[#091026] p-1.5 rounded-full border border-blue-500/30">
               {["all", "IT", "Design", "IT/Design"].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${
                     selectedCategory === cat
-                      ? "bg-sky-500 text-white shadow-xs font-bold"
-                      : "text-slate-200 hover:text-white"
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/30 font-bold"
+                      : "text-slate-300 hover:text-white"
                   }`}
                 >
                   {cat === "all" ? "Tất cả" : cat}
@@ -438,129 +725,235 @@ export function GuestView({
             <select
               value={selectedSupportType}
               onChange={(e) => setSelectedSupportType(e.target.value)}
-              className="bg-white border border-slate-200 text-xs font-medium rounded-xl px-3 py-2 outline-none"
+              className="bg-[#091026] border border-blue-500/30 text-xs font-bold text-white rounded-full px-3.5 py-2 outline-none cursor-pointer focus:ring-2 focus:ring-cyan-400 transition hover:border-cyan-400/50"
             >
-              <option value="all">Hình thức: Tất cả</option>
-              <option value="Online">Hỗ trợ Online</option>
-              <option value="Direct">Trực tiếp</option>
-              <option value="Hybrid">Kết hợp Hybrid</option>
+              <option value="all" className="bg-[#0b132e] text-white font-medium py-1">Hình thức: Tất cả</option>
+              <option value="Online" className="bg-[#0b132e] text-white font-medium py-1">Hỗ trợ Online</option>
+              <option value="Direct" className="bg-[#0b132e] text-white font-medium py-1">Trực tiếp</option>
+              <option value="Hybrid" className="bg-[#0b132e] text-white font-medium py-1">Kết hợp Hybrid</option>
             </select>
           </div>
         </div>
 
-        {/* Services Grid */}
+        {/* Multi-selection Floating / Sticky Action Bar */}
+        {selectedCatalogServiceIds.length > 0 && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/90 via-cyan-950/90 to-slate-950/90 border border-cyan-500/50 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in backdrop-blur-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center justify-center font-black text-sm">
+                {selectedCatalogServiceIds.length}
+              </div>
+              <div>
+                <div className="font-extrabold text-sm text-white">Đã chọn {selectedCatalogServiceIds.length} dịch vụ</div>
+                <div className="text-[11px] text-slate-300">Tích chọn nhiều dịch vụ để thêm vào giỏ hoặc đặt đơn hàng cùng lúc</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleBatchAddToCart}
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-blue-900/80 hover:bg-blue-800 text-cyan-300 font-bold text-xs border border-cyan-500/40 transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+              >
+                <Plus className="w-4 h-4 text-cyan-400" /> Thêm {selectedCatalogServiceIds.length} dịch vụ vào giỏ hàng
+              </button>
+              <button
+                type="button"
+                onClick={handleBatchBookNow}
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl gradient-btn font-extrabold text-xs text-white transition flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/30 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-white" /> Đặt ngay {selectedCatalogServiceIds.length} dịch vụ
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCatalogServiceIds([])}
+                className="px-3 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-400 text-xs font-semibold cursor-pointer"
+              >
+                Bỏ chọn
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Scroll Control Header Bar */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1 select-none">
+          <div className="flex items-center gap-2 text-xs font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span>Hiển thị 6 dịch vụ trên khung nhìn • Trượt ngang để xem tiếp ({filteredServices.length} dịch vụ)</span>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button
+              type="button"
+              onClick={scrollServicesLeft}
+              className="p-2.5 rounded-full bg-[#091026] hover:bg-cyan-950 border border-blue-500/30 text-slate-300 hover:text-cyan-400 transition cursor-pointer shadow-md active:scale-95 flex items-center justify-center"
+              title="Trượt sang trái"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={scrollServicesRight}
+              className="p-2.5 rounded-full bg-[#091026] hover:bg-cyan-950 border border-blue-500/30 text-slate-300 hover:text-cyan-400 transition cursor-pointer shadow-md active:scale-95 flex items-center justify-center"
+              title="Trượt sang phải"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Services Grid with Horizontal Scroll */}
         {filteredServices.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-8">
-            <Layers className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <div className="font-bold text-slate-700">Không tìm thấy dịch vụ phù hợp</div>
+          <div className="text-center py-12 dark-glass rounded-2xl border border-blue-500/20 p-8">
+            <Layers className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+            <div className="font-bold text-white">Không tìm thấy dịch vụ phù hợp</div>
             <div className="text-xs text-slate-400 mt-1">Vui lòng thay đổi từ khóa hoặc bộ lọc tìm kiếm.</div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredServices.map((srv) => (
-              <div
-                key={srv.id}
-                className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col overflow-hidden group"
-              >
-                {/* Demo Image Thumbnail */}
-                <div className="h-44 bg-slate-100 relative overflow-hidden">
-                  <img
-                    src={srv.demoImages[0]}
-                    alt={srv.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  />
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
-                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase ${categoryBadgeClass(srv.category)}`}>
-                      {srv.category}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur-md text-white px-2.5 py-1 rounded-md text-[11px] font-semibold">
-                    {srv.supportType}
-                  </div>
-                </div>
+          <div
+            ref={serviceScrollRef}
+            className="grid grid-rows-1 md:grid-rows-2 grid-flow-col auto-cols-[88vw] sm:auto-cols-[calc(50%-12px)] lg:auto-cols-[calc(33.333%-16px)] gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4"
+          >
+            {filteredServices.map((srv) => {
+              const isCheckedInCatalog = selectedCatalogServiceIds.includes(srv.id);
+              return (
+                <div
+                  key={srv.id}
+                  className={`dark-glass-card rounded-2xl border transition-all overflow-hidden flex flex-col justify-between group relative snap-start ${
+                    isCheckedInCatalog
+                      ? "border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] bg-cyan-950/20"
+                      : "border-blue-500/20 hover:border-blue-500/40"
+                  }`}
+                >
+                  {/* Top Checkbox Button for Multi-selection */}
+                  {currentUser.role !== "admin" && currentUser.role !== "staff" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCatalogServiceIds((prev) =>
+                          prev.includes(srv.id) ? prev.filter((id) => id !== srv.id) : [...prev, srv.id]
+                        );
+                      }}
+                      className={`absolute top-3 right-3 z-20 px-2.5 py-1 rounded-xl border backdrop-blur-md transition flex items-center gap-1.5 text-[11px] font-extrabold cursor-pointer ${
+                        isCheckedInCatalog
+                          ? "bg-cyan-400 text-slate-950 border-cyan-300 shadow-md"
+                          : "bg-slate-950/80 text-slate-300 border-slate-700 hover:border-cyan-400 hover:text-white"
+                      }`}
+                      title={isCheckedInCatalog ? "Bỏ chọn dịch vụ này" : "Tích chọn dịch vụ này"}
+                    >
+                      {isCheckedInCatalog ? (
+                        <>
+                          <CheckSquare className="w-4 h-4 text-slate-950" />
+                          <span>Đã chọn</span>
+                        </>
+                      ) : (
+                        <>
+                          <Square className="w-4 h-4 text-slate-400" />
+                          <span>Chọn</span>
+                        </>
+                      )}
+                    </button>
+                  )}
 
-                {/* Card Body */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-lg group-hover:text-sky-600 transition line-clamp-1">
-                      {srv.name}
-                    </h3>
-                    <p className="text-slate-500 text-xs mt-2 line-clamp-2 leading-relaxed">
-                      {srv.description}
-                    </p>
-                  </div>
-
-                  {/* Meta Specs */}
-                  <div className="grid grid-cols-2 gap-2 text-xs py-3 border-y border-slate-100 items-center">
-                    <div className="flex items-center gap-1.5 text-slate-600 min-w-0">
-                      <Clock className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-                      <span className="truncate font-medium">{formatDaysRange(srv.estimatedDays, srv.maxDays)}</span>
+                  {/* Demo Image Thumbnail */}
+                  <div className="h-44 bg-slate-900 relative overflow-hidden">
+                    <img
+                      src={srv.demoImages[0]}
+                      alt={srv.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#091026] via-transparent to-transparent opacity-80"></div>
+                    <div className="absolute top-3 left-3 flex items-center gap-2">
+                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase ${categoryBadgeClass(srv.category)}`}>
+                        {srv.category}
+                      </span>
                     </div>
-                    <div className="flex items-center justify-end gap-1.5 text-slate-600 font-semibold min-w-0">
-                      <DollarSign className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="whitespace-nowrap text-[11px] sm:text-xs text-emerald-700 font-bold">{formatPriceRange(srv.estimatedPrice, srv.maxPrice)}</span>
+                    <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md text-cyan-300 border border-cyan-500/30 px-2.5 py-1 rounded-md text-[11px] font-semibold">
+                      {srv.supportType}
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  {currentUser.role === "admin" || currentUser.role === "staff" ? (
-                    <div className="pt-1">
-                      <button
-                        onClick={() => setActiveDetailService(srv)}
-                        className="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 font-bold text-xs text-slate-700 transition flex items-center justify-center gap-1.5"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-slate-500" /> Xem chi tiết Dịch Vụ
-                      </button>
+                  {/* Card Body */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div>
+                      <h3 className="font-bold text-white text-lg group-hover:text-cyan-400 transition line-clamp-1">
+                        {srv.name}
+                      </h3>
+                      <p className="text-slate-400 text-xs mt-2 line-clamp-2 leading-relaxed">
+                        {srv.description}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="space-y-2 pt-1">
-                      <div className="flex items-center gap-2">
+
+                    {/* Meta Specs */}
+                    <div className="grid grid-cols-2 gap-2 text-xs py-3 border-y border-blue-500/15 items-center">
+                      <div className="flex items-center gap-1.5 text-slate-300 min-w-0">
+                        <Clock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        <span className="truncate font-medium">{formatDaysRange(srv.estimatedDays, srv.maxDays)}</span>
+                      </div>
+                      <div className="flex items-center justify-end gap-1.5 text-emerald-400 font-semibold min-w-0">
+                        <DollarSign className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span className="whitespace-nowrap text-[11px] sm:text-xs font-bold">{formatPriceRange(srv.estimatedPrice, srv.maxPrice)}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    {currentUser.role === "admin" || currentUser.role === "staff" ? (
+                      <div className="pt-1">
                         <button
                           onClick={() => setActiveDetailService(srv)}
-                          className="flex-1 py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-xs text-slate-700 transition"
+                          className="w-full py-2.5 px-3 rounded-xl border border-blue-500/30 bg-blue-950/50 hover:bg-blue-900/60 font-bold text-xs text-slate-200 transition flex items-center justify-center gap-1.5"
                         >
-                          Chi tiết
-                        </button>
-                        <button
-                          onClick={() => handleAddToCart(srv)}
-                          className="flex-1 py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-1 border border-slate-200"
-                        >
-                          <Plus className="w-3.5 h-3.5 text-sky-600" /> Giỏ hàng
+                          <Eye className="w-3.5 h-3.5 text-cyan-400" /> Xem chi tiết Dịch Vụ
                         </button>
                       </div>
+                    ) : (
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setActiveDetailService(srv)}
+                            className="flex-1 py-2 px-2.5 rounded-xl border border-blue-500/30 hover:bg-white/5 font-semibold text-xs text-slate-300 transition"
+                          >
+                            Chi tiết
+                          </button>
+                          <button
+                            onClick={() => handleAddToCart(srv)}
+                            className="flex-1 py-2 px-2.5 rounded-xl bg-blue-950/60 hover:bg-blue-900/80 text-cyan-300 font-bold text-xs transition flex items-center justify-center gap-1 border border-cyan-500/30"
+                          >
+                            <Plus className="w-3.5 h-3.5 text-cyan-400" /> Giỏ hàng
+                          </button>
+                        </div>
 
-                      <button
-                        onClick={() => {
-                          if (currentUser.role === "guest") {
-                            setAuthModalOpen(true);
-                          } else {
-                            onSelectServiceToBook(srv.id);
-                          }
-                        }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1"
-                      >
-                        Đặt Dịch Vụ Ngay <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
+                        <button
+                          onClick={() => {
+                            if (currentUser.role === "guest") {
+                              setAuthModalOpen(true);
+                            } else {
+                              onSelectServiceToBook(srv.id);
+                            }
+                          }}
+                          className="w-full py-2.5 px-3 rounded-xl gradient-btn font-bold text-xs shadow-md transition flex items-center justify-center gap-1"
+                        >
+                          Đặt ngay dịch vụ này <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
 
-      {/* Sample Projects Gallery & Slide Section */}
-      <section id="sample-projects-section" className="space-y-6 pt-8 border-t border-white/10">
+      {/* Featured Projects Gallery & Showcase Section */}
+      <section id="sample-projects-section" className="space-y-6 pt-10 border-t border-blue-500/20">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-500/20 border border-sky-400/30 text-sky-300 rounded-full text-xs font-bold mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-sky-300" />
-              <span>Showcase Slide Sản Phẩm Mẫu</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">Danh Sách Sản Phẩm Mẫu Tiêu Biểu</h2>
-            <p className="text-slate-200 text-sm mt-1 font-normal">
-              Khám phá các mẫu Logo, Banner, Website, App UI/UX & Cơ sở dữ liệu đã triển khai công khai.
+            <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest px-2.5 py-1 rounded bg-blue-950/80 border border-blue-500/30">DỰ ÁN MẪU</span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mt-2">
+              Ý tưởng thật. <span className="gradient-title-cyan">Sản phẩm thật.</span>
+            </h2>
+            <p className="text-slate-400 text-xs mt-1 font-normal">
+              Một số dự án tiêu biểu mà 4YouTech đã thực hiện cho khách hàng.
             </p>
           </div>
 
@@ -568,138 +961,279 @@ export function GuestView({
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
             <button
               onClick={() => setProjectSubCategory("all")}
-              className={`px-3.5 py-1.5 rounded-xl transition ${
+              className={`px-3.5 py-1.5 rounded-full transition ${
                 projectSubCategory === "all"
-                  ? "bg-sky-500 text-white shadow-sm font-bold"
-                  : "bg-slate-900/60 text-slate-200 border border-slate-700/80 hover:bg-slate-900"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
               }`}
             >
               Tất cả Mẫu
             </button>
             <button
               onClick={() => setProjectSubCategory("Logo")}
-              className={`px-3.5 py-1.5 rounded-xl transition ${
+              className={`px-3.5 py-1.5 rounded-full transition ${
                 projectSubCategory === "Logo"
-                  ? "bg-sky-500 text-white shadow-sm font-bold"
-                  : "bg-slate-900/60 text-slate-200 border border-slate-700/80 hover:bg-slate-900"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
               }`}
             >
               🎨 Logo & Brand
             </button>
             <button
               onClick={() => setProjectSubCategory("Banner")}
-              className={`px-3.5 py-1.5 rounded-xl transition ${
+              className={`px-3.5 py-1.5 rounded-full transition ${
                 projectSubCategory === "Banner"
-                  ? "bg-sky-500 text-white shadow-sm font-bold"
-                  : "bg-slate-900/60 text-slate-200 border border-slate-700/80 hover:bg-slate-900"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
               }`}
             >
               🖼️ Banner & Poster
             </button>
             <button
               onClick={() => setProjectSubCategory("Website")}
-              className={`px-3.5 py-1.5 rounded-xl transition ${
+              className={`px-3.5 py-1.5 rounded-full transition ${
                 projectSubCategory === "Website"
-                  ? "bg-sky-500 text-white shadow-sm font-bold"
-                  : "bg-slate-900/60 text-slate-200 border border-slate-700/80 hover:bg-slate-900"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
               }`}
             >
               💻 Website & Portfolio
             </button>
             <button
               onClick={() => setProjectSubCategory("UI/UX")}
-              className={`px-3.5 py-1.5 rounded-xl transition ${
+              className={`px-3.5 py-1.5 rounded-full transition ${
                 projectSubCategory === "UI/UX"
-                  ? "bg-sky-500 text-white shadow-sm font-bold"
-                  : "bg-slate-900/60 text-slate-200 border border-slate-700/80 hover:bg-slate-900"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
               }`}
             >
               📱 App UI/UX
-            </button>
-            <button
-              onClick={() => setProjectSubCategory("Database")}
-              className={`px-3.5 py-1.5 rounded-xl transition ${
-                projectSubCategory === "Database"
-                  ? "bg-sky-500 text-white shadow-sm font-bold"
-                  : "bg-slate-900/60 text-slate-200 border border-slate-700/80 hover:bg-slate-900"
-              }`}
-            >
-              🗄️ Database & ERD
             </button>
           </div>
         </div>
 
         {/* Projects Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((proj) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {paginatedProjects.map((proj) => (
             <div
               key={proj.id}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between"
+              className="dark-glass-card rounded-3xl border border-blue-500/25 overflow-hidden shadow-xl transition-all duration-300 group flex flex-col justify-between"
             >
               <div
-                className="h-52 bg-slate-100 relative overflow-hidden cursor-pointer"
+                className="h-56 bg-slate-950 relative overflow-hidden cursor-pointer"
                 onClick={() => setPreviewProject(proj)}
               >
                 <img
                   src={proj.image}
                   alt={proj.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100"
                 />
-                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
-                  <span className="px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur-xs font-bold text-xs text-slate-900 shadow-md flex items-center gap-1">
-                    <Maximize2 className="w-3.5 h-3.5 text-sky-600" /> Xem phóng to
+                <div className="absolute inset-0 bg-slate-950/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                  <span className="px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5">
+                    <Maximize2 className="w-4 h-4" /> Xem phóng to
                   </span>
                 </div>
                 <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase shadow-xs ${categoryBadgeClass(proj.category)}`}>
+                  <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-cyan-950/80 text-cyan-300 border border-cyan-500/40">
+                    Dự án mẫu
+                  </span>
+                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase ${categoryBadgeClass(proj.category)}`}>
                     {proj.category}
                   </span>
-                  {proj.subCategory && (
-                    <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-slate-900/80 backdrop-blur-xs text-white">
-                      #{proj.subCategory}
-                    </span>
-                  )}
                 </div>
               </div>
 
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div>
-                  <h4 className="font-bold text-slate-900 text-base group-hover:text-sky-600 transition line-clamp-1">
+                  <h4 className="font-extrabold text-white text-base group-hover:text-cyan-400 transition line-clamp-1">
                     {proj.name}
                   </h4>
-                  <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">
                     {proj.description}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                  {proj.link ? (
-                    <a
-                      href={proj.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:text-sky-800"
-                    >
-                      Xem Demo <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  ) : (
-                    <span className="text-xs text-slate-400 font-medium">Đã nghiệm thu</span>
-                  )}
-
+                <div className="pt-4 border-t border-blue-500/15 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                   <button
-                    onClick={() => {
-                      const matchedSrv = services.find((s) => s.category === proj.category);
-                      if (matchedSrv) onSelectServiceToBook(matchedSrv.id);
-                      else onSwitchToWorkspace();
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs transition"
+                    onClick={() => setPreviewProject(proj)}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-cyan-400 hover:text-cyan-300"
                   >
-                    Đặt mẫu tương tự
+                    Chi tiết <ChevronRight className="w-3.5 h-3.5" />
                   </button>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {proj.link && proj.link.startsWith("http") && (
+                      <a
+                        href={proj.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-extrabold text-[11px] hover:bg-cyan-900 transition flex items-center gap-1 shadow-sm"
+                        title="Mở link demo sản phẩm thực tế"
+                      >
+                        <ExternalLink className="w-3 h-3 text-cyan-400" /> Demo
+                      </a>
+                    )}
+                    <button
+                      onClick={() => {
+                        const matchedSrv = services.find((s) => s.category === proj.category);
+                        if (matchedSrv) onSelectServiceToBook(matchedSrv.id);
+                        else onSwitchToWorkspace();
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-blue-950/60 border border-blue-500/30 text-cyan-300 font-bold text-xs hover:bg-blue-900/80 transition shrink-0"
+                    >
+                      Đặt mẫu
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Projects Pagination Bar */}
+        {totalProjectPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-blue-500/20">
+            <div className="text-xs text-slate-400 font-medium">
+              Đang xem trang <span className="text-cyan-400 font-bold">{currentProjectPage}</span> / <span className="text-white font-bold">{totalProjectPages}</span> (Hiển thị <span className="text-white font-bold">{Math.min(filteredProjects.length, (currentProjectPage - 1) * PROJECTS_PER_PAGE + 1)}</span> - <span className="text-white font-bold">{Math.min(filteredProjects.length, currentProjectPage * PROJECTS_PER_PAGE)}</span> trên tổng số <span className="text-cyan-400 font-bold">{filteredProjects.length}</span> dự án mẫu)
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (currentProjectPage > 1) {
+                    setCurrentProjectPage((prev) => prev - 1);
+                    document.getElementById("sample-projects-section")?.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                disabled={currentProjectPage === 1}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                  currentProjectPage === 1
+                    ? "bg-slate-900/50 text-slate-600 cursor-not-allowed border border-slate-800"
+                    : "bg-blue-950/80 text-cyan-300 border border-blue-500/30 hover:bg-blue-900 hover:text-white"
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4" /> Trang trước
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalProjectPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => {
+                      setCurrentProjectPage(pageNum);
+                      document.getElementById("sample-projects-section")?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className={`w-9 h-9 rounded-xl text-xs font-black transition ${
+                      currentProjectPage === pageNum
+                        ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-500/30 border border-cyan-400/50 scale-105"
+                        : "bg-slate-900/80 text-slate-400 border border-blue-500/20 hover:text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  if (currentProjectPage < totalProjectPages) {
+                    setCurrentProjectPage((prev) => prev + 1);
+                    document.getElementById("sample-projects-section")?.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                disabled={currentProjectPage === totalProjectPages}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                  currentProjectPage === totalProjectPages
+                    ? "bg-slate-900/50 text-slate-600 cursor-not-allowed border border-slate-800"
+                    : "bg-blue-950/80 text-cyan-300 border border-blue-500/30 hover:bg-blue-900 hover:text-white"
+                }`}
+              >
+                Trang sau <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Working Process Section ("Quy trình làm việc") */}
+      <section className="space-y-8 pt-10 border-t border-blue-500/20">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest px-2.5 py-1 rounded bg-blue-950/80 border border-blue-500/30">QUY TRÌNH LÀM VIỆC</span>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">Đơn giản nhưng hiệu quả</h2>
+          <p className="text-slate-400 text-xs">Chúng tôi tối ưu quy trình để mang lại trải nghiệm tốt nhất cho bạn.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 rounded-3xl dark-glass-card border border-blue-500/25 relative space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-3xl font-black text-cyan-400">01</span>
+              <div className="w-10 h-10 rounded-2xl bg-blue-900/60 border border-blue-500/30 flex items-center justify-center text-cyan-400">
+                <Mail className="w-5 h-5" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-extrabold text-base text-white">Chia sẻ ý tưởng</h3>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Trao đổi nhu cầu, mục tiêu và định hướng dự án để chốt phạm vi công việc.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-3xl dark-glass-card border border-blue-500/25 relative space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-3xl font-black text-cyan-400">02</span>
+              <div className="w-10 h-10 rounded-2xl bg-cyan-900/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <Laptop className="w-5 h-5" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-extrabold text-base text-white">Thiết kế & phát triển</h3>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Lên ý tưởng, thiết kế, lập trình và thường xuyên cập nhật tiến độ cho bạn.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-3xl dark-glass-card border border-blue-500/25 relative space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-3xl font-black text-cyan-400">03</span>
+              <div className="w-10 h-10 rounded-2xl bg-purple-900/60 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-extrabold text-base text-white">Bàn giao & hỗ trợ</h3>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Hoàn thiện, bàn giao sản phẩm chính thức và đồng hành hỗ trợ sau dự án.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action Section ("LET'S BUILD TOGETHER") */}
+      <section className="rounded-3xl p-8 sm:p-10 bg-gradient-to-r from-blue-950 via-[#0a1435] to-cyan-950 border border-blue-500/40 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="space-y-2 max-w-xl text-center md:text-left">
+          <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">LET'S BUILD TOGETHER</span>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">
+            Bạn có ý tưởng. <span className="gradient-title-cyan">Chúng tôi giúp hiện thực hóa.</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Dù là một bài tập, dự án cá nhân hay dự án cho câu lạc bộ – 4YouTech luôn sẵn sàng đồng hành cùng bạn.
+          </p>
+        </div>
+
+        <div className="space-y-2 text-center shrink-0">
+          <button
+            onClick={() => {
+              if (currentUser.role === "guest") setAuthModalOpen(true);
+              else onSwitchToWorkspace();
+            }}
+            className="px-8 py-4 rounded-full gradient-btn font-extrabold text-sm shadow-xl shadow-cyan-500/30 hover:scale-105 transition"
+          >
+            Trao đổi cùng 4YouTech →
+          </button>
+          <div className="text-[11px] text-slate-400 font-medium">Tư vấn miễn phí • Phản hồi nhanh chóng</div>
         </div>
       </section>
 
@@ -938,7 +1472,7 @@ export function GuestView({
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="student@edu.vn"
-                        className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                       />
                     </div>
                   </div>
@@ -967,7 +1501,7 @@ export function GuestView({
                         value={loginPass}
                         onChange={(e) => setLoginPass(e.target.value)}
                         placeholder="Mật khẩu của bạn"
-                        className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                        className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                       />
                     </div>
                   </div>
@@ -1034,7 +1568,7 @@ export function GuestView({
                     value={regForm.name}
                     onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
                     placeholder="Nguyễn Văn A"
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                 </div>
 
@@ -1046,7 +1580,7 @@ export function GuestView({
                     value={regForm.email}
                     onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
                     placeholder="student@edu.vn"
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                 </div>
 
@@ -1058,7 +1592,7 @@ export function GuestView({
                     value={regForm.phone}
                     onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
                     placeholder="0912345678"
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                 </div>
 
@@ -1070,7 +1604,7 @@ export function GuestView({
                     value={regForm.password}
                     onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
                     placeholder="Mật khẩu bảo mật"
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                 </div>
 
@@ -1082,7 +1616,7 @@ export function GuestView({
                     value={regForm.confirmPassword}
                     onChange={(e) => setRegForm({ ...regForm, confirmPassword: e.target.value })}
                     placeholder="Nhập lại mật khẩu"
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                   />
                 </div>
 
@@ -1130,7 +1664,7 @@ export function GuestView({
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value)}
                     placeholder="123456"
-                    className="w-full px-4 py-3 border-2 border-sky-500 rounded-xl text-center font-mono font-black text-xl tracking-widest outline-none"
+                    className="w-full px-4 py-3 border-2 border-sky-500 rounded-xl text-center font-mono font-black text-xl tracking-widest outline-none font-bold text-slate-900 bg-white"
                   />
                 </div>
 
@@ -1188,7 +1722,7 @@ export function GuestView({
                         value={forgotEmail}
                         onChange={(e) => setForgotEmail(e.target.value)}
                         placeholder="student@edu.vn"
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                       />
                     </div>
                     <button type="submit" className="w-full py-3 rounded-xl gradient-btn font-bold text-xs shadow-md">
@@ -1213,7 +1747,7 @@ export function GuestView({
                           onClick={() => setForgotOtpInput(forgotSimulatedOtp)}
                           className="mt-1 px-3 py-1 bg-cyan-400 text-slate-950 font-bold text-[10px] rounded-xl hover:bg-cyan-300 transition flex items-center gap-1"
                         >
-                          <Sparkles className="w-3 h-3" /> Tự Động Điền OTP ({forgotSimulatedOtp})
+                          <Sparkles className="w-3.5 h-3.5" /> Tự Động Điền OTP ({forgotSimulatedOtp})
                         </button>
                       </div>
                     )}
@@ -1229,7 +1763,7 @@ export function GuestView({
                         value={forgotOtpInput}
                         onChange={(e) => setForgotOtpInput(e.target.value)}
                         placeholder="123456"
-                        className="w-full px-4 py-2.5 border-2 border-sky-500 rounded-xl text-center font-mono font-black text-lg tracking-widest outline-none"
+                        className="w-full px-4 py-2.5 border-2 border-sky-500 rounded-xl text-center font-mono font-black text-lg tracking-widest outline-none font-bold text-slate-900 bg-white"
                       />
                     </div>
 
@@ -1250,7 +1784,7 @@ export function GuestView({
                         value={forgotNewPass}
                         onChange={(e) => setForgotNewPass(e.target.value)}
                         placeholder="Mật khẩu mới"
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                       />
                     </div>
 
@@ -1262,7 +1796,7 @@ export function GuestView({
                         value={forgotConfirmPass}
                         onChange={(e) => setForgotConfirmPass(e.target.value)}
                         placeholder="Nhập lại mật khẩu mới"
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
                       />
                     </div>
 

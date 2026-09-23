@@ -14,9 +14,9 @@ import { Sparkles, Heart, ShieldCheck, Mail, Phone, MapPin, Lock, LogOut } from 
 function MainAppContent() {
   const { currentUser, logout, switchRole } = useApp();
   const [activeTab, setActiveTab] = useState<"catalog" | "projects" | "about" | "workspace" | "auth">("catalog");
-  const [preselectedBookingServiceId, setPreselectedBookingServiceId] = useState<string | undefined>(undefined);
+  const [preselectedBookingServiceId, setPreselectedBookingServiceId] = useState<string | string[] | undefined>(undefined);
 
-  const handleSelectServiceToBook = (serviceId: string) => {
+  const handleSelectServiceToBook = (serviceId: string | string[]) => {
     setPreselectedBookingServiceId(serviceId);
     if (currentUser.role === "guest") {
       switchRole("customer");
@@ -29,7 +29,7 @@ function MainAppContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#0f172a] via-[#1e3a8a] to-[#0f172a] selection:bg-sky-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100 selection:bg-cyan-500 selection:text-white">
       {/* Header Navigation */}
       <Header
         activeTab={activeTab === "catalog" || activeTab === "projects" || activeTab === "about" || activeTab === "workspace" ? activeTab : "catalog"}
@@ -39,7 +39,7 @@ function MainAppContent() {
       />
 
       {/* Main Content Router */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
         
         {/* Unified Auth Page (Single Login Portal for Customer, Staff & Admin) */}
         {activeTab === "auth" && (
@@ -95,47 +95,92 @@ function MainAppContent() {
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white mt-16 py-12 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-3">
-            <div className="font-extrabold text-slate-900 text-base flex items-center gap-1.5">
-              4YouTech Platform
-              <Sparkles className="w-4 h-4 text-sky-500 fill-sky-500" />
+      {/* Dark Futuristic Footer */}
+      <footer className="border-t border-blue-500/20 bg-[#060b1e]/90 backdrop-blur-xl mt-20 pt-14 pb-8 text-xs text-slate-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            
+            {/* Column 1: Brand & Social */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl gradient-btn flex items-center justify-center font-black text-lg shadow-md">
+                  4Y
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-black text-lg text-white tracking-tight leading-none">4YouTech</span>
+                  <span className="text-[10px] text-cyan-400 font-bold leading-tight mt-0.5">Ideas for a better tomorrow</span>
+                </div>
+              </div>
+
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Giải pháp IT & Design cho ý tưởng của bạn. Hệ thống hỗ trợ sinh viên, cá nhân và CLB toàn diện.
+              </p>
+
+              <div className="flex items-center gap-3 text-slate-300 pt-1">
+                <a href="#" className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700/80 flex items-center justify-center hover:text-cyan-400 hover:border-cyan-500 transition">
+                  <span className="font-bold text-xs">f</span>
+                </a>
+                <a href="#" className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700/80 flex items-center justify-center hover:text-cyan-400 hover:border-cyan-500 transition">
+                  <span className="font-bold text-xs">🌐</span>
+                </a>
+                <a href="#" className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700/80 flex items-center justify-center hover:text-cyan-400 hover:border-cyan-500 transition">
+                  <span className="font-bold text-xs">🎵</span>
+                </a>
+                <a href="mailto:support@4youtech.com" className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700/80 flex items-center justify-center hover:text-cyan-400 hover:border-cyan-500 transition">
+                  <Mail className="w-3.5 h-3.5" />
+                </a>
+              </div>
             </div>
-            <p className="leading-relaxed">
-              Hệ thống cung cấp dịch vụ IT, lập trình web portfolio, phân tích hệ thống, CSDL ERD và thiết kế nhận diện thương hiệu dành riêng cho Sinh viên & CLB.
-            </p>
+
+            {/* Column 2: Dịch vụ */}
+            <div className="space-y-3">
+              <div className="font-bold text-white uppercase tracking-wider text-xs">Dịch vụ</div>
+              <ul className="space-y-2 text-slate-400 font-medium">
+                <li><a href="#catalog" className="hover:text-cyan-400 transition">Website & Portfolio</a></li>
+                <li><a href="#catalog" className="hover:text-cyan-400 transition">UI/UX Design</a></li>
+                <li><a href="#catalog" className="hover:text-cyan-400 transition">Thiết kế đồ họa</a></li>
+                <li><a href="#catalog" className="hover:text-cyan-400 transition">Video & Motion</a></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Khám phá */}
+            <div className="space-y-3">
+              <div className="font-bold text-white uppercase tracking-wider text-xs">Khám phá</div>
+              <ul className="space-y-2 text-slate-400 font-medium">
+                <li><button onClick={() => setActiveTab("about")} className="hover:text-cyan-400 transition">Về chúng tôi</button></li>
+                <li><button onClick={() => setActiveTab("projects")} className="hover:text-cyan-400 transition">Sản phẩm mẫu</button></li>
+                <li><a href="#catalog" className="hover:text-cyan-400 transition">Quy trình làm việc</a></li>
+                <li><button onClick={() => setActiveTab("about")} className="hover:text-cyan-400 transition">Câu hỏi thường gặp</button></li>
+              </ul>
+            </div>
+
+            {/* Column 4: Kết nối */}
+            <div className="space-y-4">
+              <div className="font-bold text-white uppercase tracking-wider text-xs">Kết nối với chúng tôi</div>
+              <button
+                onClick={() => setActiveTab("auth")}
+                className="w-full py-3 px-4 rounded-xl gradient-btn font-bold text-xs flex items-center justify-center gap-2 shadow-lg"
+              >
+                Tư vấn dự án <span className="text-sm">→</span>
+              </button>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Sẵn sàng đồng hành cùng bạn trên mọi hành trình số hóa.
+              </p>
+            </div>
+
           </div>
 
-          <div>
-            <div className="font-bold text-slate-900 mb-3 uppercase tracking-wider">Hỗ Trợ Dịch Vụ</div>
-            <ul className="space-y-2">
-              <li className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-sky-500" /> Hotline: 0999.888.777</li>
-              <li className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-sky-500" /> Email: support@4youtech.com</li>
-              <li className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-sky-500" /> Khu Công Nghệ Cao, TP. HCM</li>
-            </ul>
+          {/* Bottom Copyright line */}
+          <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+            <div>© 2026 4YouTech. All rights reserved.</div>
+            <div className="flex items-center gap-6">
+              <a href="#" className="hover:text-slate-300 transition">Điều khoản sử dụng</a>
+              <span>|</span>
+              <a href="#" className="hover:text-slate-300 transition">Chính sách bảo mật</a>
+            </div>
           </div>
 
-          <div>
-            <div className="font-bold text-slate-900 mb-3 uppercase tracking-wider">Cổng Đăng Nhập Hệ Thống</div>
-            <ul className="space-y-2">
-              <li>
-                <button onClick={() => setActiveTab("auth")} className="hover:text-sky-600 underline font-medium">
-                  🔑 Cổng Đăng nhập Dùng chung (Khách hàng, Staff & Admin)
-                </button>
-              </li>
-              <li>✓ Bàn giao đúng hẹn 100%</li>
-              <li>✓ Bảo mật tuyệt đối thông tin khách hàng</li>
-            </ul>
-          </div>
-
-          <div>
-            <div className="font-bold text-slate-900 mb-3 uppercase tracking-wider">Bản Quyền</div>
-            <p className="leading-relaxed">
-              © 2026 4YouTech. Đã đăng ký bản quyền. Phát triển bởi Đội ngũ IT & Design 4YouTech.
-            </p>
-          </div>
         </div>
       </footer>
     </div>
