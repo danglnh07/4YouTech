@@ -247,7 +247,6 @@ export function GuestView({
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedSupportType, setSelectedSupportType] = useState<string>("all");
   const [activeDetailService, setActiveDetailService] = useState<ServiceItem | null>(null);
 
   // Horizontal Scroll ref & helpers for Services Catalog
@@ -397,11 +396,9 @@ export function GuestView({
         srv.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory =
         selectedCategory === "all" || srv.category === selectedCategory;
-      const matchesSupport =
-        selectedSupportType === "all" || srv.supportType === selectedSupportType;
-      return matchesSearch && matchesCategory && matchesSupport;
+      return matchesSearch && matchesCategory;
     });
-  }, [services, searchTerm, selectedCategory, selectedSupportType]);
+  }, [services, searchTerm, selectedCategory]);
 
   const categoryBadgeClass = (cat: ServiceCategory) => {
     if (cat === "IT") return "badge-it";
@@ -720,18 +717,6 @@ export function GuestView({
                 </button>
               ))}
             </div>
-
-            {/* Support Type Filter */}
-            <select
-              value={selectedSupportType}
-              onChange={(e) => setSelectedSupportType(e.target.value)}
-              className="bg-[#091026] border border-blue-500/30 text-xs font-bold text-white rounded-full px-3.5 py-2 outline-none cursor-pointer focus:ring-2 focus:ring-cyan-400 transition hover:border-cyan-400/50"
-            >
-              <option value="all" className="bg-[#0b132e] text-white font-medium py-1">Hình thức: Tất cả</option>
-              <option value="Online" className="bg-[#0b132e] text-white font-medium py-1">Hỗ trợ Online</option>
-              <option value="Direct" className="bg-[#0b132e] text-white font-medium py-1">Trực tiếp</option>
-              <option value="Hybrid" className="bg-[#0b132e] text-white font-medium py-1">Kết hợp Hybrid</option>
-            </select>
           </div>
         </div>
 
