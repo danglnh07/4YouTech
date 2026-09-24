@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       custom_smtp_pass
     } = body;
 
-    const smtpUser = custom_smtp_user || process.env.SMTP_USER || process.env.NEXT_PUBLIC_ADMIN_EMAIL || "";
+    const smtpUser = custom_smtp_user || process.env.SMTP_USER || process.env.NEXT_PUBLIC_ADMIN_EMAIL || "danglenguyenhai2907@gmail.com";
     const smtpPass = custom_smtp_pass || process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
     const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
     const smtpPort = Number(process.env.SMTP_PORT) || 465;

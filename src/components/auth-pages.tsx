@@ -212,10 +212,10 @@ export function UnifiedAuthPage({
   };
 
   const handleResendActivationOtp = () => {
-    const newCode = sendOtp(activationEmail, "activation");
+    const newCode = sendOtp(activationEmail, "activation", regForm.name);
     setSimulatedOtpCode(newCode);
     setOtpTimer(60);
-    alert(`📧 Đã phát mã OTP kích hoạt mới đến hòm thư ${activationEmail}!`);
+    alert(`📧 Đã phát mã OTP 6 chữ số kích hoạt mới gửi đến hòm thư ${activationEmail}!`);
   };
 
   // Forgot Password Steps
@@ -234,7 +234,7 @@ export function UnifiedAuthPage({
       return;
     }
 
-    const code = sendOtp(cleanEmail, "reset_password");
+    const code = sendOtp(cleanEmail, "reset_password", targetUser.name);
     setForgotSimulatedOtp(code);
     setForgotTimer(60);
     setForgotStep(2);

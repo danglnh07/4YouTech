@@ -24,6 +24,7 @@ import {
   QuotationDetails,
   WorkEstimate,
   CartItem,
+  OrderStatus,
   hashPassword
 } from "./store";
 import { sendOtpEmail } from "./email";
@@ -55,7 +56,7 @@ interface AppContextType {
   // Auth & OTP Session Methods
   login: (email: string, pass: string, roleFilter?: Role) => { success: boolean; message: string; user?: User };
   logout: () => void;
-  sendOtp: (email: string, type: "activation" | "reset_password") => string;
+  sendOtp: (email: string, type: "activation" | "reset_password", customerName?: string) => string;
   verifyOtp: (email: string, code: string, type: "activation" | "reset_password") => boolean;
   registerCustomerWithOtp: (data: { name: string; email: string; phone: string; password: string }) => { user: User; otpCode: string };
   activateAccountWithOtp: (email: string, code: string) => { success: boolean; message: string };
@@ -157,6 +158,55 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // SQL Server Sync Helpers
+  const syncUserToDb = (u: User) => {
+    fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(u)
+    }).catch((err) => console.warn("SQL Server user sync warning:", err));
+  };
+
+  const syncServiceToDb = (s: ServiceItem) => {
+    fetch("/api/services", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(s)
+    }).catch((err) => console.warn("SQL Server service sync warning:", err));
+  };
+
+  const syncProjectToDb = (p: SampleProject) => {
+    fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(p)
+    }).catch((err) => console.warn("SQL Server project sync warning:", err));
+  };
+
+  const syncOrderToDb = (o: ServiceOrder) => {
+    fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(o)
+    }).catch((err) => console.warn("SQL Server order sync warning:", err));
+  };
+
+  const syncReviewToDb = (r: ServiceReview) => {
+    fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(r)
+    }).catch((err) => console.warn("SQL Server review sync warning:", err));
+  };
+
+  const syncTransactionToDb = (t: PaymentTransaction) => {
+    fetch("/api/transactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(t)
+    }).catch((err) => console.warn("SQL Server transaction sync warning:", err));
+  };
+
   // Load from localStorage on client side
   useEffect(() => {
     try {
@@ -197,6 +247,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("Initial load from storage failed", e);
     }
+
+    // Query Real Microsoft SQL Server Database APIs
+    Promise.all([
+      fetch("/api/users").then((r) => r.json()).catch(() => null),
+      fetch("/api/services").then((r) => r.json()).catch(() => null),
+      fetch("/api/orders").then((r) => r.json()).catch(() => null),
+      fetch("/api/projects").then((r) => r.json()).catch(() => null),
+      fetch("/api/reviews").then((r) => r.json()).catch(() => null),
+      fetch("/api/transactions").then((r) => r.json()).catch(() => null)
+    ]).then(([uRes, sRes, oRes, pRes, rRes, tRes]) => {
+      if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
+      if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
+      if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
+      if (pRes?.data && pRes.data.length > 0) setProjects(pRes.data);
+      if (rRes?.data && rRes.data.length > 0) setReviews(rRes.data);
+      if (tRes?.data && tRes.data.length > 0) setTransactions(tRes.data);
+      console.log("✅ State successfully loaded & synchronized with Microsoft SQL Server Database!");
+    }).catch((err) => {
+      console.warn("SQL Server initial fetch notice:", err);
+    });
+
     setIsLoaded(true);
   }, []);
 
@@ -313,7 +384,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(SEED_USERS[0]);
   };
 
-  const sendOtp = (email: string, type: "activation" | "reset_password"): string => {
+  const sendOtp = (email: string, type: "activation" | "reset_password", customerName?: string): string => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const newSession: OtpSession = {
       email,
@@ -327,6 +398,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Asynchronously dispatch real email / API request
     sendOtpEmail({
       to_email: email,
+      customer_name: customerName,
       otp_code: code,
       type
     }).then((res) => {
@@ -389,14 +461,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setUsers((prev) => [newUser, ...prev.filter(u => u.email.toLowerCase() !== cleanEmail)]);
     
-    // Sync newly registered user to SQL Server DB with status 'pending_otp'
+    // Sync newly registered user to Database with status 'pending_otp'
     fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newUser)
-    }).catch((err) => console.warn("Sync new user to SQL Server notice:", err));
+    }).catch((err) => console.warn("Sync new user to DB notice:", err));
 
-    const generatedOtp = sendOtp(data.email, "activation");
+    const generatedOtp = sendOtp(cleanEmail, "activation", cleanName);
     return { user: newUser, otpCode: generatedOtp };
   };
 
@@ -466,7 +538,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUserProfile = (userId: string, data: Partial<User>) => {
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...data } : u)));
+    setUsers((prev) => {
+      const next = prev.map((u) => (u.id === userId ? { ...u, ...data } : u));
+      const target = next.find((u) => u.id === userId);
+      if (target) syncUserToDb(target);
+      return next;
+    });
     if (currentUser.id === userId) {
       setCurrentUser((prev) => ({ ...prev, ...data }));
     }
@@ -475,27 +552,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addService = (serviceData: Omit<ServiceItem, "id">) => {
     const newService: ServiceItem = { ...serviceData, id: `srv-${Date.now()}` };
     setServices((prev) => [newService, ...prev]);
+    syncServiceToDb(newService);
   };
 
   const updateService = (id: string, serviceData: Partial<ServiceItem>) => {
-    setServices((prev) => prev.map((s) => (s.id === id ? { ...s, ...serviceData } : s)));
+    setServices((prev) => {
+      const next = prev.map((s) => (s.id === id ? { ...s, ...serviceData } : s));
+      const target = next.find((s) => s.id === id);
+      if (target) syncServiceToDb(target);
+      return next;
+    });
   };
 
   const toggleServiceHidden = (id: string) => {
-    setServices((prev) => prev.map((s) => (s.id === id ? { ...s, hidden: !s.hidden } : s)));
+    setServices((prev) => {
+      const next = prev.map((s) => (s.id === id ? { ...s, hidden: !s.hidden } : s));
+      const target = next.find((s) => s.id === id);
+      if (target) syncServiceToDb(target);
+      return next;
+    });
   };
 
   const addProject = (projectData: Omit<SampleProject, "id">) => {
     const newProject: SampleProject = { ...projectData, id: `proj-${Date.now()}` };
     setProjects((prev) => [newProject, ...prev]);
+    syncProjectToDb(newProject);
   };
 
   const updateProject = (id: string, projectData: Partial<SampleProject>) => {
-    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...projectData } : p)));
+    setProjects((prev) => {
+      const next = prev.map((p) => (p.id === id ? { ...p, ...projectData } : p));
+      const target = next.find((p) => p.id === id);
+      if (target) syncProjectToDb(target);
+      return next;
+    });
   };
 
   const deleteProject = (id: string) => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
+    fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", id })
+    }).catch((err) => console.warn("Delete project notice:", err));
   };
 
   const createServiceRequest = (data: {
@@ -544,13 +643,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     setOrders((prev) => [newOrder, ...prev]);
+    syncOrderToDb(newOrder);
     return newOrder;
   };
 
   const updateOrderRequirements = (orderId: string, requirements: string, attachments?: string[]) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
@@ -559,8 +659,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           status: o.status === "info_requested" ? "under_review" : o.status,
           updatedAt: now
         };
-      })
-    );
+      });
+      const target = next.find((o) => o.id === orderId);
+      if (target) syncOrderToDb(target);
+      return next;
+    });
   };
 
   const proposeWorkEstimate = (
@@ -568,8 +671,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     estimate: Omit<WorkEstimate, "proposedByStaffId" | "proposedByStaffName">
   ) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
@@ -581,13 +684,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           status: o.status === "submitted" ? "under_review" : o.status,
           updatedAt: now
         };
-      })
-    );
+      });
+      const target = next.find((o) => o.id === orderId);
+      if (target) syncOrderToDb(target);
+      return next;
+    });
   };
 
   const setOrderEditingState = (orderId: string, isEditing: boolean, editingNote?: string) => {
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
@@ -595,8 +701,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           editingNote: isEditing ? editingNote || "Admin đang chỉnh sửa báo giá / dịch vụ" : undefined,
           updatedAt: new Date().toISOString().replace("T", " ").substring(0, 16)
         };
-      })
-    );
+      });
+      const target = next.find((o) => o.id === orderId);
+      if (target) syncOrderToDb(target);
+      return next;
+    });
   };
 
   const issueQuotation = (orderId: string, quote: Omit<QuotationDetails, "issuedAt">) => {
@@ -613,8 +722,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
@@ -622,7 +731,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             ...quote,
             issuedAt: now
           },
-          status: "quoted",
+          status: "quoted" as OrderStatus,
           isBeingEdited: false,
           editingNote: undefined,
           updatedAt: now,
@@ -638,14 +747,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           ]
         };
-      })
-    );
+      });
+      const updated = next.find((o) => o.id === orderId);
+      if (updated) syncOrderToDb(updated);
+      return next;
+    });
   };
 
   const assignStaff = (orderId: string, staffId: string, staffName: string, collaborators?: string[]) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
@@ -654,8 +766,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           collaborators: collaborators || o.collaborators,
           updatedAt: now
         };
-      })
-    );
+      });
+      const target = next.find((o) => o.id === orderId);
+      if (target) syncOrderToDb(target);
+      return next;
+    });
   };
 
   const submitPaymentTransaction = (
@@ -694,14 +809,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     setTransactions((prev) => [newTxn, ...prev]);
+    syncTransactionToDb(newTxn);
 
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const currentVerifiedPaid = o.paymentInfo?.paymentStatus === "verified" ? (o.paymentInfo.amountPaid || 0) : 0;
         return {
           ...o,
-          status: "deposit_pending",
+          status: "deposit_pending" as OrderStatus,
           paymentInfo: {
             amountPaid: currentVerifiedPaid,
             receiptImage,
@@ -723,8 +839,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           ]
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
 
     return newTxn;
   };
@@ -769,17 +888,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const updatedTxns = [newTxn, ...transactions];
     setTransactions(updatedTxns);
+    syncTransactionToDb(newTxn);
 
     const totalVerifiedForOrder = updatedTxns
       .filter((t) => t.orderId === orderId && t.status === "verified")
       .reduce((sum, t) => sum + t.amount, 0);
 
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const quotedTotal = o.quotation?.amount || 0;
         const isFullySettled = (quotedTotal > 0 && totalVerifiedForOrder >= quotedTotal) || paymentType === "full" || (paymentType === "remaining" && o.status === "accepted");
-        const nextStatus = isFullySettled ? "completed" : "in_progress";
+        const nextStatus: OrderStatus = isFullySettled ? "completed" : "in_progress";
 
         return {
           ...o,
@@ -808,8 +928,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           ]
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
 
     return newTxn;
   };
@@ -821,17 +944,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const updatedTxns = transactions.map((t) => (t.id === transactionId ? { ...t, status: "verified" as const } : t));
     setTransactions(updatedTxns);
+    syncTransactionToDb({ ...txn, status: "verified" });
 
     const totalVerifiedForOrder = updatedTxns
       .filter((t) => t.orderId === txn.orderId && t.status === "verified")
       .reduce((sum, t) => sum + t.amount, 0);
 
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== txn.orderId) return o;
         const quotedTotal = o.quotation?.amount || 0;
         const isFullySettled = (quotedTotal > 0 && totalVerifiedForOrder >= quotedTotal) || txn.paymentType === "full" || (txn.paymentType === "remaining" && o.status === "accepted");
-        const nextStatus = isFullySettled ? "completed" : "in_progress";
+        const nextStatus: OrderStatus = isFullySettled ? "completed" : "in_progress";
 
         return {
           ...o,
@@ -860,8 +984,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           ]
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === txn.orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const rejectPaymentTransaction = (transactionId: string) => {
@@ -871,14 +998,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTransactions((prev) =>
       prev.map((t) => (t.id === transactionId ? { ...t, status: "rejected" } : t))
     );
+    if (txn) syncTransactionToDb({ ...txn, status: "rejected" });
 
     if (txn) {
-      setOrders((prev) =>
-        prev.map((o) => {
+      setOrders((prev) => {
+        const next: ServiceOrder[] = prev.map((o) => {
           if (o.id !== txn.orderId) return o;
+          const statusVal: OrderStatus = o.paymentInfo?.amountPaid ? "in_progress" : "quoted";
           return {
             ...o,
-            status: o.paymentInfo?.amountPaid ? "in_progress" : "quoted",
+            status: statusVal,
             paymentInfo: o.paymentInfo ? { ...o.paymentInfo, paymentStatus: "rejected" } : undefined,
             updatedAt: now,
             messages: [
@@ -893,8 +1022,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               }
             ]
           };
-        })
-      );
+        });
+        const targetOrder = next.find((o) => o.id === txn.orderId);
+        if (targetOrder) syncOrderToDb(targetOrder);
+        return next;
+      });
     }
   };
 
@@ -904,18 +1036,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Auto-verify any pending transaction linked to this order
     const updatedTxns = transactions.map((t) => (t.orderId === orderId && t.status === "pending" ? { ...t, status: "verified" as const } : t));
     setTransactions(updatedTxns);
+    updatedTxns.filter((t) => t.orderId === orderId && t.status === "verified").forEach(syncTransactionToDb);
 
     const totalVerifiedForOrder = updatedTxns
       .filter((t) => t.orderId === orderId && t.status === "verified")
       .reduce((sum, t) => sum + t.amount, 0);
 
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const quotedTotal = o.quotation?.amount || 0;
         const finalPaid = totalVerifiedForOrder > 0 ? totalVerifiedForOrder : (o.quotation?.amount ? Math.round(o.quotation.amount * 0.5) : 500000);
         const isFullySettled = (quotedTotal > 0 && finalPaid >= quotedTotal) || o.status === "accepted";
-        const nextStatus = isFullySettled ? "completed" : "in_progress";
+        const nextStatus: OrderStatus = isFullySettled ? "completed" : "in_progress";
 
         return {
           ...o,
@@ -926,14 +1059,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             : { amountPaid: finalPaid, paymentStatus: "verified", updatedAt: now },
           updatedAt: now
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const updateMilestones = (orderId: string, milestones: Milestone[]) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const completedCount = milestones.filter((m) => m.completed).length;
         const total = milestones.length || 1;
@@ -944,17 +1080,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           progressPercent: Math.max(o.progressPercent, calculatedPercent),
           updatedAt: now
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const updateProgressPercent = (orderId: string, percent: number) => {
     // Only Staff can manually update progress, max 90%. 100% occurs automatically on customer acceptance (Nghiệm thu).
     const clampedPercent = Math.min(90, Math.max(0, percent));
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, progressPercent: clampedPercent, updatedAt: now } : o))
-    );
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => (o.id === orderId ? { ...o, progressPercent: clampedPercent, updatedAt: now } : o));
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const uploadDeliverable = (
@@ -962,8 +1104,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deliverable: { title: string; fileLink: string; previewUrl?: string; notes: string }
   ) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const nextVersion = o.deliverables.length + 1;
         const newVersionItem: DeliverableVersion = {
@@ -978,7 +1120,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         };
         return {
           ...o,
-          status: "deliverable_sent",
+          status: "deliverable_sent" as OrderStatus,
           progressPercent: 90,
           deliverables: [newVersionItem, ...o.deliverables],
           updatedAt: now,
@@ -994,14 +1136,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           ]
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const requestRevision = (orderId: string, feedback: string) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const latestVersion = o.deliverables[0]?.version || 1;
         const newRev = {
@@ -1013,7 +1158,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         };
         return {
           ...o,
-          status: "revision_requested",
+          status: "revision_requested" as OrderStatus,
           revisions: [newRev, ...o.revisions],
           updatedAt: now,
           messages: [
@@ -1028,27 +1173,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           ]
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const acceptDeliverable = (orderId: string, deliverableId: string) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const quotedTotal = o.quotation?.amount || 0;
         const amountPaid = o.paymentInfo?.amountPaid || 0;
         const remaining = Math.max(0, quotedTotal - amountPaid);
         const isFullyPaid = quotedTotal > 0 && remaining <= 0;
-        const nextStatus = isFullyPaid ? "completed" : "accepted";
+        const nextStatus: OrderStatus = isFullyPaid ? "completed" : "accepted";
 
         return {
           ...o,
           status: nextStatus,
           progressPercent: 100,
           deliverables: o.deliverables.map((d) =>
-            d.id === deliverableId ? { ...d, status: "accepted" } : d
+            d.id === deliverableId ? { ...d, status: "accepted" as const } : d
           ),
           updatedAt: now,
           messages: [
@@ -1065,14 +1213,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           ]
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const sendOrderMessage = (orderId: string, text: string, attachmentUrl?: string) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
@@ -1090,8 +1241,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ],
           updatedAt: now
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const submitServiceReview = (orderId: string, rating: number, comment: string) => {
@@ -1112,25 +1266,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     setReviews((prev) => [newReview, ...prev]);
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === orderId ? { ...o, status: "completed", review: newReview, updatedAt: now } : o
-      )
-    );
+    syncReviewToDb(newReview);
+
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) =>
+        o.id === orderId ? { ...o, status: "completed" as OrderStatus, review: newReview, updatedAt: now } : o
+      );
+      const updatedOrder = next.find((o) => o.id === orderId);
+      if (updatedOrder) syncOrderToDb(updatedOrder);
+      return next;
+    });
   };
 
   const moderateReview = (reviewId: string, moderated: boolean) => {
-    setReviews((prev) =>
-      prev.map((r) => (r.id === reviewId ? { ...r, moderated } : r))
-    );
+    setReviews((prev) => {
+      const next = prev.map((r) => (r.id === reviewId ? { ...r, moderated } : r));
+      const target = next.find((r) => r.id === reviewId);
+      if (target) syncReviewToDb(target);
+      return next;
+    });
   };
 
   const replyToServiceReview = (reviewId: string, replyText: string) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
     const replierName = currentUser.name || (currentUser.role === "admin" ? "Quản trị viên 4YouTech" : "Nhân viên 4YouTech");
 
-    setReviews((prev) =>
-      prev.map((r) =>
+    setReviews((prev) => {
+      const next = prev.map((r) =>
         r.id === reviewId
           ? {
               ...r,
@@ -1139,11 +1301,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               repliedAt: now
             }
           : r
-      )
-    );
+      );
+      const target = next.find((r) => r.id === reviewId);
+      if (target) syncReviewToDb(target);
+      return next;
+    });
 
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next = prev.map((o) => {
         if (o.review && o.review.id === reviewId) {
           return {
             ...o,
@@ -1157,36 +1322,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           };
         }
         return o;
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.review?.id === reviewId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const requestCancellation = (orderId: string, reason: string) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
-          status: "cancel_requested",
+          status: "cancel_requested" as const,
           cancellation: {
             reason,
             requestedAt: now
           },
           updatedAt: now
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const handleCancellation = (orderId: string, decision: "approved" | "rejected", refundAmount?: number) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
-          status: decision === "approved" ? "cancelled" : "in_progress",
+          status: decision === "approved" ? ("cancelled" as const) : ("in_progress" as const),
           cancellation: o.cancellation
             ? {
                 ...o.cancellation,
@@ -1197,8 +1368,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             : null,
           updatedAt: now
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const submitSupportTicket = (
@@ -1208,8 +1382,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     type: "support" | "complaint"
   ) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const newTicket: SupportTicket = {
           id: `tkt-${Date.now()}`,
@@ -1227,13 +1401,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           supportTickets: [newTicket, ...o.supportTickets],
           updatedAt: now
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const resolveSupportTicket = (orderId: string, ticketId: string, response: string) => {
-    setOrders((prev) =>
-      prev.map((o) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         return {
           ...o,
@@ -1241,7 +1418,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             t.id === ticketId
               ? {
                   ...t,
-                  status: "resolved",
+                  status: "resolved" as const,
                   response,
                   assignedStaffId: currentUser.id,
                   assignedStaffName: currentUser.name
@@ -1249,8 +1426,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               : t
           )
         };
-      })
-    );
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
   };
 
   const updateStaffSkills = (userId: string, skills: string[]) => {
@@ -1357,6 +1537,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           });
 
           setOrders((prev) => [...createdOrders, ...prev]);
+          createdOrders.forEach(syncOrderToDb);
           setCart([]);
           return createdOrders;
         },
