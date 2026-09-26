@@ -248,30 +248,57 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.error("Initial load from storage failed", e);
     }
 
-    // Query Real Microsoft SQL Server Database APIs
-    Promise.all([
-      fetch("/api/users").then((r) => r.json()).catch(() => null),
-      fetch("/api/services").then((r) => r.json()).catch(() => null),
-      fetch("/api/orders").then((r) => r.json()).catch(() => null),
-      fetch("/api/projects").then((r) => r.json()).catch(() => null),
-      fetch("/api/reviews").then((r) => r.json()).catch(() => null),
-      fetch("/api/transactions").then((r) => r.json()).catch(() => null)
-    ]).then(([uRes, sRes, oRes, pRes, rRes, tRes]) => {
-      if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
-      if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
-      if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
-      if (pRes?.data && pRes.data.length > 0) setProjects(pRes.data);
-      if (rRes?.data && rRes.data.length > 0) setReviews(rRes.data);
-      if (tRes?.data && tRes.data.length > 0) setTransactions(tRes.data);
-      console.log("✅ State successfully loaded & synchronized with Microsoft SQL Server Database!");
-    }).catch((err) => {
-      console.warn("SQL Server initial fetch notice:", err);
-    });
+    // Query Real MySQL Database APIs
+    const fetchFromDb = () => {
+      Promise.all([
+        fetch("/api/users").then((r) => r.json()).catch(() => null),
+        fetch("/api/services").then((r) => r.json()).catch(() => null),
+        fetch("/api/orders").then((r) => r.json()).catch(() => null),
+        fetch("/api/projects").then((r) => r.json()).catch(() => null),
+        fetch("/api/reviews").then((r) => r.json()).catch(() => null),
+        fetch("/api/transactions").then((r) => r.json()).catch(() => null)
+      ]).then(([uRes, sRes, oRes, pRes, rRes, tRes]) => {
+        if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
+        if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
+        if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
+        if (pRes?.data && pRes.data.length > 0) setProjects(pRes.data);
+        if (rRes?.data && rRes.data.length > 0) setReviews(rRes.data);
+        if (tRes?.data && tRes.data.length > 0) setTransactions(tRes.data);
+      }).catch((err) => {
+        console.warn("MySQL DB fetch notice:", err);
+      });
+    };
 
+    fetchFromDb();
     setIsLoaded(true);
   }, []);
 
+  // Realtime Polling & Cross-Browser Sync Effect
+  useEffect(() => {
+    if (!isLoaded) return;
+    const intervalId = setInterval(() => {
+      Promise.all([
+        fetch("/api/users").then((r) => r.json()).catch(() => null),
+        fetch("/api/services").then((r) => r.json()).catch(() => null),
+        fetch("/api/orders").then((r) => r.json()).catch(() => null),
+        fetch("/api/projects").then((r) => r.json()).catch(() => null),
+        fetch("/api/reviews").then((r) => r.json()).catch(() => null),
+        fetch("/api/transactions").then((r) => r.json()).catch(() => null)
+      ]).then(([uRes, sRes, oRes, pRes, rRes, tRes]) => {
+        if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
+        if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
+        if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
+        if (pRes?.data && pRes.data.length > 0) setProjects(pRes.data);
+        if (rRes?.data && rRes.data.length > 0) setReviews(rRes.data);
+        if (tRes?.data && tRes.data.length > 0) setTransactions(tRes.data);
+      }).catch(() => {});
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, [isLoaded]);
+
   // Realtime Cross-Tab / Cross-Window Sync Effect
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
