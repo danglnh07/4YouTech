@@ -107,6 +107,7 @@ export interface SampleProject {
   image: string;
   description: string;
   link?: string;
+  designLink?: string;
   featured?: boolean;
 }
 
@@ -537,6 +538,27 @@ export const SEED_SERVICES: ServiceItem[] = [
 
 // Seed Sample Projects
 export const SEED_PROJECTS: SampleProject[] = [
+  {
+    id: "proj-mcropdiary",
+    name: "McropDiary - App & Giao Diện UI/UX Quản Lý Mùa Vụ Nông Nghiệp",
+    category: "Design",
+    subCategory: "UI/UX",
+    description: "Hệ thống Nhật ký & Giao diện UI/UX thông minh McropDiary dành cho quản lý mùa vụ nông nghiệp. Giúp chủ trang trại và nông dân theo dõi tiến độ gieo trồng, quản lý vật tư, theo dõi thời tiết, phân bón & thống kê sản lượng thu hoạch thời gian thực.",
+    image: "/images/mcropdiary-ui.jpg",
+    link: "https://www.figma.com/proto/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&p=f&t=RPGQ7V25bEgJuevk-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=91%3A6&show-proto-sidebar=1",
+    designLink: "https://www.figma.com/design/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&t=RPGQ7V25bEgJuevk-1",
+    featured: true
+  },
+  {
+    id: "proj-portfolio-trunghieu",
+    name: "Website Portfolio Cá Nhân Developer Pro - Nguyễn Trung Hiếu",
+    category: "IT",
+    subCategory: "Website",
+    description: "Website Personal Portfolio lập trình viên chuyên nghiệp xuất bản trực tiếp trên Netlify. Trình bày thông tin cá nhân, bộ sưu tập sản phẩm công nghệ, kỹ năng Fullstack & hồ sơ năng lực làm việc.",
+    image: "/images/portfolio-trunghieu.jpg",
+    link: "https://nguyen-trung-hieu.netlify.app/",
+    featured: true
+  },
   {
     id: "proj-logo-1",
     name: "Mẫu Thiết Kế Logo & Bộ Nhận Diện Thương Hiệu 4Tech",

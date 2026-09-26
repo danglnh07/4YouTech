@@ -87,6 +87,21 @@ export const SERVICES = [
 
 export const PROJECT_REFERENCES = [
   {
+    id: "mcropdiary-quan-ly-mua-vu",
+    name: "McropDiary — UI/UX App Quản Lý Mùa Vụ Nông Nghiệp",
+    category: "Design",
+    image: "/images/mcropdiary-ui.jpg",
+    link: "https://www.figma.com/proto/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&p=f&t=RPGQ7V25bEgJuevk-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=91%3A6&show-proto-sidebar=1",
+    designLink: "https://www.figma.com/design/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&t=RPGQ7V25bEgJuevk-1"
+  },
+  {
+    id: "portfolio-nguyen-trung-hieu",
+    name: "Website Portfolio Cá Nhân — Nguyễn Trung Hiếu",
+    category: "IT",
+    image: "/images/portfolio-trunghieu.jpg",
+    link: "https://nguyen-trung-hieu.netlify.app/"
+  },
+  {
     id: "portfolio-ca-nhan",
     name: "Lập trình Portfolio cá nhân",
     category: "IT",

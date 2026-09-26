@@ -38,11 +38,37 @@ import {
   Square
 } from "lucide-react";
 
+function formatDisplayUrl(url: string, maxLength = 24): string {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    const display = parsed.hostname + (parsed.pathname !== "/" ? parsed.pathname : "");
+    if (display.length > maxLength) {
+      return display.substring(0, maxLength) + "...";
+    }
+    return display;
+  } catch {
+    if (url.length > maxLength) {
+      return url.substring(0, maxLength) + "...";
+    }
+    return url;
+  }
+}
+
 function AnimatedShowcaseBanner() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   const slides = [
+    {
+      id: "mcropdiary-app",
+      title: "McropDiary UI/UX Mùa Vụ",
+      badge: "Figma UI & UX Prototype",
+      subTitle: "Smart Farming Platform",
+      desc: "Giao diện UI/UX App Quản Lý Mùa Vụ Nông Nghiệp McropDiary, theo dõi lịch gieo trồng & sản lượng.",
+      type: "banner",
+      image: "/images/mcropdiary-ui.jpg"
+    },
     {
       id: "web-portfolio",
       title: "Lập Trình Web & Portfolio",
@@ -1046,16 +1072,17 @@ export function GuestView({
                     Chi tiết <ChevronRight className="w-3.5 h-3.5" />
                   </button>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0 max-w-[55%]">
                     {proj.link && proj.link.startsWith("http") && (
                       <a
                         href={proj.link}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-2.5 py-1 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-extrabold text-[11px] hover:bg-cyan-900 transition flex items-center gap-1 shadow-sm"
-                        title="Mở link demo sản phẩm thực tế"
+                        className="max-w-[120px] px-2.5 py-1 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-extrabold text-[11px] hover:bg-cyan-900 transition flex items-center gap-1 shadow-sm overflow-hidden"
+                        title={proj.link}
                       >
-                        <ExternalLink className="w-3 h-3 text-cyan-400" /> Demo
+                        <ExternalLink className="w-3 h-3 text-cyan-400 shrink-0" />
+                        <span className="truncate">{formatDisplayUrl(proj.link, 18)}</span>
                       </a>
                     )}
                     <button
@@ -1252,17 +1279,35 @@ export function GuestView({
 
             <p className="text-slate-600 text-sm leading-relaxed">{previewProject.description}</p>
 
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              {previewProject.link ? (
-                <a
-                  href={previewProject.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl text-xs font-bold flex items-center gap-1.5"
-                >
-                  Xem Demo Trực Tiếp <ExternalLink className="w-4 h-4" />
-                </a>
-              ) : <div />}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-wrap items-center gap-2 max-w-full sm:max-w-[65%]">
+                {previewProject.link && (
+                  <a
+                    href={previewProject.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="max-w-full sm:max-w-[260px] px-3.5 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs overflow-hidden"
+                    title={previewProject.link}
+                  >
+                    <span className="shrink-0">📱 UX Proto:</span>
+                    <span className="truncate">{formatDisplayUrl(previewProject.link, 22)}</span>
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  </a>
+                )}
+                {previewProject.designLink && (
+                  <a
+                    href={previewProject.designLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="max-w-full sm:max-w-[260px] px-3.5 py-2 bg-pink-50 text-pink-700 hover:bg-pink-100 border border-pink-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs overflow-hidden"
+                    title={previewProject.designLink}
+                  >
+                    <span className="shrink-0">🎨 UI Design:</span>
+                    <span className="truncate">{formatDisplayUrl(previewProject.designLink, 22)}</span>
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  </a>
+                )}
+              </div>
 
               <div className="flex items-center gap-2">
                 <button

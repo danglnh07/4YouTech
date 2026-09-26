@@ -91,11 +91,41 @@ export async function queryDb<T = any>(sql: string, params: any[] = []): Promise
     const result = await pool.query(pgSql, params);
     return result.rows as T[];
   } else {
-    const pool = getMysqlPool();
-    // Convert "TableName" double-quotes to `TableName` backticks for MySQL
-    const mysqlSql = sql.replace(/"([A-Za-z0-9_]+)"/g, "`$1`");
-    const [rows] = await pool.query(mysqlSql, params);
-    return rows as T[];
+    try {
+      const pool = getMysqlPool();
+      // Convert "TableName" double-quotes to `TableName` backticks for MySQL
+      const mysqlSql = sql.replace(/"([A-Za-z0-9_]+)"/g, "`$1`");
+      const [rows] = await pool.query(mysqlSql, params);
+      return rows as T[];
+    } catch (error: any) {
+      // Handles ER_BAD_DB_ERROR (errno 1049: Unknown database) by attempting auto-creation
+      if (error && (error.code === "ER_BAD_DB_ERROR" || error.errno === 1049)) {
+        try {
+          const host = process.env.MYSQL_HOST || "localhost";
+          const port = parseInt(process.env.MYSQL_PORT || "3306", 10);
+          const user = process.env.MYSQL_USER || "root";
+          const password = process.env.MYSQL_PASSWORD || "";
+          const dbName = process.env.MYSQL_DATABASE || "4youtechdb";
+
+          const tempConn = await mysql.createConnection({ host, port, user, password });
+          await tempConn.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
+          await tempConn.end();
+
+          if (globalForDb.mysqlPool) {
+            await globalForDb.mysqlPool.end().catch(() => {});
+            globalForDb.mysqlPool = undefined;
+          }
+
+          const pool = getMysqlPool();
+          const mysqlSql = sql.replace(/"([A-Za-z0-9_]+)"/g, "`$1`");
+          const [rows] = await pool.query(mysqlSql, params);
+          return rows as T[];
+        } catch (createErr: any) {
+          throw new Error(`Database '${process.env.MYSQL_DATABASE || "4youtechdb"}' does not exist and could not be created automatically: ${createErr.message}`);
+        }
+      }
+      throw error;
+    }
   }
 }
 

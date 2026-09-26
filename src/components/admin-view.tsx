@@ -48,6 +48,23 @@ import {
   Lock
 } from "lucide-react";
 
+function formatDisplayUrl(url: string, maxLength = 30): string {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    const display = parsed.hostname + (parsed.pathname !== "/" ? parsed.pathname : "");
+    if (display.length > maxLength) {
+      return display.substring(0, maxLength) + "...";
+    }
+    return display;
+  } catch {
+    if (url.length > maxLength) {
+      return url.substring(0, maxLength) + "...";
+    }
+    return url;
+  }
+}
+
 function getWeekNumber(d: Date) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const dayNum = date.getUTCDay() || 7;
@@ -1487,13 +1504,34 @@ export function AdminView() {
                     <td className="py-3 px-4 whitespace-nowrap">
                       <img src={proj.image} alt={proj.name} className="w-16 h-12 rounded-xl object-cover border border-slate-200 shrink-0" />
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <div className="font-bold text-slate-900 text-sm whitespace-nowrap">{proj.name}</div>
-                      {proj.link && (
-                        <a href={proj.link} target="_blank" rel="noreferrer" className="text-sky-600 text-[11px] hover:underline inline-flex items-center gap-1 font-semibold mt-0.5 whitespace-nowrap">
-                          {proj.link} <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
+                    <td className="py-3 px-4 max-w-xs">
+                      <div className="font-bold text-slate-900 text-sm truncate max-w-[320px]" title={proj.name}>{proj.name}</div>
+                      <div className="flex flex-col gap-0.5 mt-0.5 max-w-[320px]">
+                        {proj.link && (
+                          <a
+                            href={proj.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sky-600 text-[11px] hover:underline inline-flex items-center gap-1 font-semibold max-w-full overflow-hidden"
+                            title={proj.link}
+                          >
+                            <span className="truncate">{formatDisplayUrl(proj.link, 32)}</span>
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                          </a>
+                        )}
+                        {proj.designLink && (
+                          <a
+                            href={proj.designLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-pink-600 text-[11px] hover:underline inline-flex items-center gap-1 font-semibold max-w-full overflow-hidden"
+                            title={proj.designLink}
+                          >
+                            <span className="truncate">🎨 {formatDisplayUrl(proj.designLink, 32)}</span>
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                          </a>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex flex-col gap-1 items-start whitespace-nowrap">

@@ -4,6 +4,23 @@ import { projectReferences, type ProjectReference } from "@/data/services";
 const categoryClass = (category: ProjectReference["category"]) =>
   category === "IT" ? "cat-IT" : category === "Design" ? "cat-Design" : "cat-mixed";
 
+function formatDisplayUrl(url: string, maxLength = 32): string {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    const display = parsed.hostname + (parsed.pathname !== "/" ? parsed.pathname : "");
+    if (display.length > maxLength) {
+      return display.substring(0, maxLength) + "...";
+    }
+    return display;
+  } catch {
+    if (url.length > maxLength) {
+      return url.substring(0, maxLength) + "...";
+    }
+    return url;
+  }
+}
+
 export default function ProjectReferencesPage() {
   return (
     <>
@@ -42,18 +59,34 @@ export default function ProjectReferencesPage() {
                       {project.category}
                     </span>
                     <h2>{project.name}</h2>
-                    {project.link ? (
-                      <a
-                        className="reference-link"
-                        href={project.link}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Xem dự án <span aria-hidden="true">↗</span>
-                      </a>
-                    ) : (
-                      <span className="reference-link reference-link-disabled">Dự án tham khảo</span>
-                    )}
+                    <div className="flex flex-col gap-1.5 mt-2">
+                      {project.link ? (
+                        <a
+                          className="reference-link max-w-full inline-flex items-center gap-1.5 overflow-hidden"
+                          href={project.link}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={project.link}
+                        >
+                          <span className="truncate text-xs font-bold">{formatDisplayUrl(project.link, 26)}</span>
+                          <span aria-hidden="true">↗</span>
+                        </a>
+                      ) : (
+                        <span className="reference-link reference-link-disabled">Dự án tham khảo</span>
+                      )}
+                      {(project as any).designLink && (
+                        <a
+                          className="reference-link reference-link-design max-w-full inline-flex items-center gap-1.5 overflow-hidden"
+                          href={(project as any).designLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={(project as any).designLink}
+                        >
+                          <span className="truncate text-xs font-bold text-pink-400">🎨 {formatDisplayUrl((project as any).designLink, 26)}</span>
+                          <span aria-hidden="true">↗</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </article>
               ))}
