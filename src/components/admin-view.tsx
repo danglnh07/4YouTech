@@ -408,9 +408,10 @@ export function AdminView() {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [projectForm, setProjectForm] = useState<Omit<SampleProject, "id">>({
     name: "",
-    category: "IT",
+    category: "Design",
+    subCategory: "Logo",
     description: "",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=80",
     link: "https://demo.4youtech.com/sample",
     featured: true
   });
@@ -1454,9 +1455,10 @@ export function AdminView() {
               onClick={() => {
                 setProjectForm({
                   name: "",
-                  category: "IT",
+                  category: "Design",
+                  subCategory: "Logo",
                   description: "",
-                  image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80",
+                  image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=80",
                   link: "https://demo.4youtech.com/sample",
                   featured: true
                 });
@@ -1474,7 +1476,7 @@ export function AdminView() {
                 <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider bg-slate-50 font-bold">
                   <th className="py-3.5 px-4 whitespace-nowrap">Hình Ảnh</th>
                   <th className="py-3.5 px-4 whitespace-nowrap">Tên Dự Án Mẫu</th>
-                  <th className="py-3.5 px-4 whitespace-nowrap">Phân Loại</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Phân Loại / Loại Hình</th>
                   <th className="py-3.5 px-4 whitespace-nowrap">Mô Tả Sản Phẩm</th>
                   <th className="py-3.5 px-4 text-right whitespace-nowrap">Thao Tác</th>
                 </tr>
@@ -1494,9 +1496,23 @@ export function AdminView() {
                       )}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200 whitespace-nowrap">
-                        {proj.category}
-                      </span>
+                      <div className="flex flex-col gap-1 items-start whitespace-nowrap">
+                        <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200 whitespace-nowrap">
+                          {proj.category}
+                        </span>
+                        {proj.subCategory && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                            {proj.subCategory === "Logo" && "🎨 Logo & Brand"}
+                            {proj.subCategory === "Banner" && "🖼️ Banner & Poster"}
+                            {proj.subCategory === "Poster" && "📜 Poster"}
+                            {proj.subCategory === "UI/UX" && "📱 App UI/UX"}
+                            {proj.subCategory === "Website" && "💻 Website"}
+                            {proj.subCategory === "Database" && "🗄️ Database"}
+                            {proj.subCategory === "Other" && "💡 Khác"}
+                            {!["Logo", "Banner", "Poster", "UI/UX", "Website", "Database", "Other"].includes(proj.subCategory) && proj.subCategory}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-slate-600 truncate max-w-xs whitespace-nowrap">{proj.description}</td>
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
@@ -1513,6 +1529,7 @@ export function AdminView() {
                             setProjectForm({
                               name: proj.name,
                               category: proj.category,
+                              subCategory: proj.subCategory || "Logo",
                               description: proj.description,
                               image: proj.image,
                               link: proj.link || "",
@@ -1996,51 +2013,133 @@ export function AdminView() {
       {/* Add Sample Project Modal */}
       {showProjectModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative animate-fade-in">
-            <button onClick={() => setShowProjectModal(false)} className="absolute top-4 right-4 text-slate-400">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 relative animate-fade-in">
+            <button onClick={() => setShowProjectModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="font-black text-slate-900 text-lg">Tạo Dự Án Mẫu Showcase</h3>
+            <h3 className="font-black text-slate-900 text-lg">
+              {editingProjectId ? "Sửa Dự Án Mẫu Showcase" : "Tạo Dự Án Mẫu Showcase Mới"}
+            </h3>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Tên dự án *</label>
+                <label className="block font-bold text-slate-700 mb-1">Tên dự án mẫu *</label>
                 <input
                   type="text"
+                  placeholder="Ví dụ: Logo Thương Hiệu Phin Coffee, Banner Quảng Cáo Y Tế..."
                   value={projectForm.name}
                   onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:border-blue-500 font-medium"
                 />
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Lĩnh vực chính (Category) *</label>
+                  <select
+                    value={projectForm.category}
+                    onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value as ServiceCategory })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none bg-white font-medium focus:border-blue-500"
+                  >
+                    <option value="Design">🎨 Design (Thiết Kế Đồ Họa)</option>
+                    <option value="IT">💻 IT (Lập Trình Web/App)</option>
+                    <option value="IT/Design">✨ IT & Design (Tổng Hợp)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Loại hình chi tiết (SubCategory) *</label>
+                  <select
+                    value={projectForm.subCategory || "Logo"}
+                    onChange={(e) => setProjectForm({ ...projectForm, subCategory: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none bg-white font-medium focus:border-blue-500"
+                  >
+                    <option value="Logo">🎨 Logo & Bộ Nhận Diện Thương Hiệu</option>
+                    <option value="Banner">🖼️ Banner Quảng Cáo & Poster</option>
+                    <option value="Poster">📜 Poster Sự Kiện & Quảng Cáo</option>
+                    <option value="UI/UX">📱 Thiết Kế UI/UX Web & Mobile App</option>
+                    <option value="Website">🌐 Website Portfolio / Landing Page</option>
+                    <option value="Database">🗄️ Thiết Kế ERD & Database SQL</option>
+                    <option value="Other">💡 Khác (Other Projects)</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Link Ảnh xem trước *</label>
+                <label className="block font-bold text-slate-700 mb-1">Link Ảnh xem trước (Demo Image URL) *</label>
                 <input
                   type="url"
+                  placeholder="https://..."
                   value={projectForm.image}
                   onChange={(e) => setProjectForm({ ...projectForm, image: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:border-blue-500"
                 />
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-slate-400 font-bold">Mẫu ảnh xem thử:</span>
+                  <button
+                    type="button"
+                    onClick={() => setProjectForm({ ...projectForm, image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=80", category: "Design", subCategory: "Logo" })}
+                    className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700 text-[10px] font-bold border border-slate-200 transition"
+                  >
+                    🎨 Mẫu Logo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProjectForm({ ...projectForm, image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&auto=format&fit=crop&q=80", category: "Design", subCategory: "Banner" })}
+                    className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700 text-[10px] font-bold border border-slate-200 transition"
+                  >
+                    🖼️ Mẫu Banner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProjectForm({ ...projectForm, image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80", category: "IT", subCategory: "UI/UX" })}
+                    className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700 text-[10px] font-bold border border-slate-200 transition"
+                  >
+                    📱 Mẫu UI/UX
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProjectForm({ ...projectForm, image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80", category: "IT", subCategory: "Website" })}
+                    className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700 text-[10px] font-bold border border-slate-200 transition"
+                  >
+                    💻 Mẫu Web
+                  </button>
+                </div>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Link xem trực tiếp demo</label>
+                <label className="block font-bold text-slate-700 mb-1">Link xem trực tiếp demo (Live Demo Link - tùy chọn)</label>
                 <input
                   type="url"
-                  value={projectForm.link}
+                  placeholder="https://..."
+                  value={projectForm.link || ""}
                   onChange={(e) => setProjectForm({ ...projectForm, link: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Mô tả ngắn</label>
+                <label className="block font-bold text-slate-700 mb-1">Mô tả chi tiết dự án mẫu</label>
                 <textarea
-                  rows={2}
+                  rows={3}
+                  placeholder="Nhập mô tả sản phẩm, phong cách thiết kế, công nghệ sử dụng..."
                   value={projectForm.description}
                   onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:border-blue-500 font-normal"
                 />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1 bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+                <input
+                  type="checkbox"
+                  id="project-featured-check"
+                  checked={Boolean(projectForm.featured)}
+                  onChange={(e) => setProjectForm({ ...projectForm, featured: e.target.checked })}
+                  className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="project-featured-check" className="font-bold text-slate-800 cursor-pointer text-xs">
+                  ⭐ Đánh dấu là Dự Án Nổi Bật (Showcase lên Trang Chủ)
+                </label>
               </div>
             </div>
 
@@ -2201,9 +2300,28 @@ export function AdminView() {
             </button>
             <img src={viewingProjectDetail.image} alt={viewingProjectDetail.name} className="w-full h-52 object-cover rounded-2xl border border-slate-200" />
             <div className="space-y-2">
-              <span className="px-3 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800">
-                {viewingProjectDetail.category}
-              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="px-3 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800">
+                  {viewingProjectDetail.category}
+                </span>
+                {viewingProjectDetail.subCategory && (
+                  <span className="px-3 py-1 rounded-md text-xs font-extrabold bg-blue-600 text-white">
+                    {viewingProjectDetail.subCategory === "Logo" && "🎨 Logo & Brand"}
+                    {viewingProjectDetail.subCategory === "Banner" && "🖼️ Banner & Poster"}
+                    {viewingProjectDetail.subCategory === "Poster" && "📜 Poster"}
+                    {viewingProjectDetail.subCategory === "UI/UX" && "📱 App UI/UX"}
+                    {viewingProjectDetail.subCategory === "Website" && "💻 Website"}
+                    {viewingProjectDetail.subCategory === "Database" && "🗄️ Database"}
+                    {viewingProjectDetail.subCategory === "Other" && "💡 Khác"}
+                    {!["Logo", "Banner", "Poster", "UI/UX", "Website", "Database", "Other"].includes(viewingProjectDetail.subCategory) && viewingProjectDetail.subCategory}
+                  </span>
+                )}
+                {viewingProjectDetail.featured && (
+                  <span className="px-3 py-1 rounded-md text-xs font-bold bg-amber-100 text-amber-800">
+                    ⭐ Tiêu Biểu
+                  </span>
+                )}
+              </div>
               <h3 className="text-xl font-black text-slate-900">{viewingProjectDetail.name}</h3>
               <p className="text-slate-600 text-xs leading-relaxed">{viewingProjectDetail.description}</p>
             </div>
