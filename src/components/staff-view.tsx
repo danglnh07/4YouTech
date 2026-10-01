@@ -22,8 +22,11 @@ import {
   ChevronRight,
   UserCheck,
   Star,
-  Eye
+  Eye,
+  Image as ImageIcon
 } from "lucide-react";
+import { DeliverableImage } from "@/components/deliverable-image";
+import { normalizeImageUrl, SAMPLE_DELIVERABLE_IMAGES } from "@/lib/image-utils";
 
 export function StaffView() {
   const {
@@ -61,6 +64,26 @@ export function StaffView() {
   // Upload Deliverable modal
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [delivForm, setDelivForm] = useState({ title: "", fileLink: "", previewUrl: "", notes: "" });
+
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      alert("Ảnh quá lớn (tối đa 8MB). Vui lòng chọn ảnh khác!");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setDelivForm((prev) => ({
+          ...prev,
+          previewUrl: reader.result as string,
+          fileLink: prev.fileLink || (reader.result as string)
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Milestones Manager state
   const [milestonesList, setMilestonesList] = useState<Milestone[]>(selectedOrder?.milestones || []);
@@ -208,7 +231,7 @@ export function StaffView() {
         {/* Right Column: Execution Hub */}
         <div className="lg:col-span-8">
           {selectedOrder ? (
-            <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-8 animate-fade-in">
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-8">
               
               {/* Header Info */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
@@ -398,19 +421,33 @@ export function StaffView() {
                 </div>
 
                 {selectedOrder.deliverables.map((del) => (
-                  <div key={del.id} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs flex items-center justify-between">
-                    <div>
-                      <div className="font-bold text-slate-800">v{del.version}: {del.title}</div>
-                      <div className="text-slate-500 text-[11px] mt-0.5">{del.notes}</div>
+                  <div key={del.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-slate-800">v{del.version}: {del.title}</div>
+                        <div className="text-slate-500 text-[11px] mt-0.5">{del.notes} • {del.timestamp}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {del.status === "accepted" && (
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md font-bold text-[10px]">Đã nghiệm thu</span>
+                        )}
+                        <a
+                          href={del.fileLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 transition inline-flex items-center gap-1 shadow-2xs"
+                        >
+                          Link <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     </div>
-                    <a
-                      href={del.fileLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 transition inline-flex items-center gap-1"
-                    >
-                      Link <ExternalLink className="w-3 h-3" />
-                    </a>
+
+                    <DeliverableImage
+                      previewUrl={del.previewUrl}
+                      fileLink={del.fileLink}
+                      title={`v${del.version}: ${del.title}`}
+                      className="h-36 w-full object-cover rounded-xl border border-slate-200"
+                    />
                   </div>
                 ))}
               </div>
@@ -638,13 +675,13 @@ export function StaffView() {
       {/* Upload Deliverable Modal */}
       {showUploadModal && selectedOrder && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto p-6 space-y-4 relative">
             <button onClick={() => setShowUploadModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
               <X className="w-5 h-5" />
             </button>
             <h3 className="font-black text-slate-900 text-lg">Gửi Sản Phẩm Bàn Giao / Bản Thử</h3>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3.5 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Tiêu đề sản phẩm bàn giao *</label>
                 <input
@@ -664,26 +701,85 @@ export function StaffView() {
                   required
                   placeholder="https://drive.google.com/file/..."
                   value={delivForm.fileLink}
-                  onChange={(e) => setDelivForm({ ...delivForm, fileLink: e.target.value })}
+                  onChange={(e) => {
+                    const norm = normalizeImageUrl(e.target.value);
+                    setDelivForm({
+                      ...delivForm,
+                      fileLink: e.target.value,
+                      previewUrl: delivForm.previewUrl || (norm.includes("lh3.") || norm.match(/\.(png|jpg|jpeg|webp)/i) ? norm : "")
+                    });
+                  }}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Link Ảnh xem trước (Preview Image URL)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700">Ảnh xem trước (Preview Image)</label>
+                  <label className="cursor-pointer text-sky-600 hover:text-sky-700 font-bold text-[11px] flex items-center gap-1">
+                    <Upload className="w-3.5 h-3.5" /> Tải ảnh từ máy tính
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageFileUpload}
+                    />
+                  </label>
+                </div>
                 <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/..."
+                  type="text"
+                  placeholder="Dán link ảnh hoặc link Google Drive, Unsplash..."
                   value={delivForm.previewUrl}
-                  onChange={(e) => setDelivForm({ ...delivForm, previewUrl: e.target.value })}
+                  onChange={(e) => setDelivForm({ ...delivForm, previewUrl: normalizeImageUrl(e.target.value) })}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
                 />
+
+                {/* Sample demo image selector pills */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-2">
+                  <span className="text-[10px] text-slate-400 font-semibold">Gợi ý mẫu:</span>
+                  {SAMPLE_DELIVERABLE_IMAGES.map((img) => (
+                    <button
+                      key={img.name}
+                      type="button"
+                      onClick={() => setDelivForm({ ...delivForm, previewUrl: img.url, fileLink: delivForm.fileLink || img.url })}
+                      className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-sky-50 hover:text-sky-600 text-slate-600 text-[10px] font-semibold border border-slate-200 transition"
+                    >
+                      + {img.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Live Preview Box */}
+                {delivForm.previewUrl && (
+                  <div className="mt-2.5 p-2 bg-slate-50 border border-slate-200 rounded-2xl relative space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] px-1 font-bold text-emerald-700">
+                      <span className="flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Xem trước ảnh hợp lệ (Khách sẽ thấy ảnh này)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDelivForm({ ...delivForm, previewUrl: "" })}
+                        className="text-slate-400 hover:text-rose-600 flex items-center gap-0.5"
+                      >
+                        <Trash2 className="w-3 h-3" /> Xóa ảnh
+                      </button>
+                    </div>
+                    <img
+                      src={normalizeImageUrl(delivForm.previewUrl)}
+                      alt="preview"
+                      className="h-32 w-full object-cover rounded-xl border border-slate-200"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Ghi chú cho khách hàng</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={delivForm.notes}
                   onChange={(e) => setDelivForm({ ...delivForm, notes: e.target.value })}
                   placeholder="Những điểm đã sửa hoặc lưu ý nghiệm thu..."
@@ -694,12 +790,19 @@ export function StaffView() {
 
             <button
               onClick={() => {
-                if (!delivForm.title || !delivForm.fileLink) return;
-                uploadDeliverable(selectedOrder.id, delivForm);
+                if (!delivForm.title || !delivForm.fileLink) {
+                  alert("Vui lòng nhập tiêu đề và link file bàn giao!");
+                  return;
+                }
+                const normalizedPreview = normalizeImageUrl(delivForm.previewUrl) || (delivForm.fileLink.match(/\.(png|jpe?g|webp|gif|svg)/i) ? delivForm.fileLink : "");
+                uploadDeliverable(selectedOrder.id, {
+                  ...delivForm,
+                  previewUrl: normalizedPreview
+                });
                 setShowUploadModal(false);
-                alert("Đã cập nhật bản bàn giao cho khách hàng!");
+                alert("Đã cập nhật bản bàn giao cho khách hàng thành công!");
               }}
-              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs"
+              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs shadow-md"
             >
               Gửi Sản Phẩm Ngay
             </button>

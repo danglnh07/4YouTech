@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useApp } from "@/lib/app-context";
 import { ServiceOrder, hashPassword, addDaysToDate, formatVNShortDate, formatDaysRange, formatPriceRange } from "@/lib/store";
 import { PaymentCheckoutModal } from "@/components/payment-checkout-modal";
+import { DeliverableImage } from "@/components/deliverable-image";
 import {
   PlusCircle,
   Clock,
@@ -874,7 +875,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
               const isPendingFinalPayment = selectedOrder.status === "accepted" && selectedRemaining > 0;
 
               return (
-              <div className="dark-glass-card rounded-3xl border border-blue-500/30 p-6 sm:p-8 shadow-2xl space-y-8 animate-fade-in select-none cursor-default text-slate-100">
+              <div className="dark-glass-card rounded-3xl border border-blue-500/30 p-6 sm:p-8 shadow-2xl space-y-8 select-none cursor-default text-slate-100">
                 
                 {/* Header Summary */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
@@ -893,9 +894,9 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                     {["quoted", "deposit_pending"].includes(selectedOrder.status) && (
                       <button
                         onClick={() => setActiveCheckoutOrder(selectedOrder)}
-                        className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md"
+                        className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md hover:opacity-95 transition"
                       >
-                        <QrCode className="w-4 h-4" /> Quét Mã VietQR Thanh Toán
+                        <CreditCard className="w-4 h-4" /> Thanh Toán Đặt Cọc 50% ({Math.round(selectedQuotedAmount * 0.5).toLocaleString("vi-VN")} ₫)
                       </button>
                     )}
 
@@ -904,7 +905,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                         onClick={() => setActiveCheckoutOrder(selectedOrder)}
                         className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 animate-bounce"
                       >
-                        <QrCode className="w-4 h-4" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
+                        <CreditCard className="w-4 h-4" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
                       </button>
                     )}
 
@@ -918,14 +919,17 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                         </button>
                         <button
                           onClick={() => {
-                            if (selectedOrder.deliverables[0]) {
-                              acceptDeliverable(selectedOrder.id, selectedOrder.deliverables[0].id);
-                              alert("Đã nghiệm thu kết quả bàn giao thành công!");
-                            }
+                            const latestDel =
+                              selectedOrder.deliverables && selectedOrder.deliverables.length > 0
+                                ? selectedOrder.deliverables[selectedOrder.deliverables.length - 1]
+                                : null;
+                            const targetDelId = latestDel ? latestDel.id : "del-latest";
+                            acceptDeliverable(selectedOrder.id, targetDelId);
+                            alert("🎉 Đã nghiệm thu sản phẩm bàn giao thành công! Vui lòng thanh toán 50% số tiền còn lại để nhận bàn giao mã nguồn & file chính thức.");
                           }}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition"
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
                         >
-                          Nghiệm Thu Sản Phẩm
+                          <CheckCircle2 className="w-4 h-4" /> Nghiệm Thu Sản Phẩm
                         </button>
                       </div>
                     )}
@@ -1144,13 +1148,16 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                             <span className="text-[10px] text-slate-400">{del.timestamp}</span>
                           </div>
 
-                          {del.previewUrl && (
-                            <img src={del.previewUrl} alt="preview" className="h-40 w-full object-cover rounded-xl border border-slate-800" />
-                          )}
+                          <DeliverableImage
+                            previewUrl={del.previewUrl}
+                            fileLink={del.fileLink}
+                            title={`v${del.version}: ${del.title}`}
+                            className="h-48 w-full object-cover rounded-xl border border-slate-800"
+                          />
 
                           <div className="text-xs text-slate-300 font-medium">{del.notes}</div>
 
-                          <div className="flex items-center gap-3 pt-1">
+                          <div className="flex flex-wrap items-center gap-2.5 pt-1">
                             <a
                               href={del.fileLink}
                               target="_blank"
@@ -1159,6 +1166,25 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                             >
                               <Download className="w-3.5 h-3.5" /> Tải về / Xem Link
                             </a>
+
+                            {selectedOrder.status === "deliverable_sent" && del.status !== "accepted" && (
+                              <button
+                                onClick={() => {
+                                  acceptDeliverable(selectedOrder.id, del.id);
+                                  alert("🎉 Đã nghiệm thu sản phẩm bàn giao thành công! Vui lòng thanh toán 50% số tiền còn lại để nhận bàn giao chính thức.");
+                                }}
+                                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs inline-flex items-center gap-1 shadow-sm transition"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Nghiệm Thu Bản Này
+                              </button>
+                            )}
+
+                            {del.status === "accepted" && (
+                              <span className="px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-bold text-[11px] inline-flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> Đã nghiệm thu
+                              </span>
+                            )}
+
                             {isPendingFinalPayment && (
                               <span className="text-[11px] font-semibold text-amber-300">
                                 ⚠️ Cần thanh toán nốt 50% để nhận bàn giao chính thức

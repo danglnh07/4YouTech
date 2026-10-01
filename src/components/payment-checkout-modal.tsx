@@ -34,7 +34,9 @@ export function PaymentCheckoutModal({
   const remainingBalance = Math.max(0, totalQuotedAmount - amountAlreadyPaid);
   const deposit50 = Math.round(totalQuotedAmount * 0.5);
 
-  const isSecondPayment = amountAlreadyPaid > 0 && remainingBalance > 0;
+  const isSecondPayment =
+    (amountAlreadyPaid > 0 && remainingBalance > 0) ||
+    (order.status === "accepted" && remainingBalance > 0);
 
   const [method, setMethod] = useState<"vnpay" | "vietqr">("vnpay");
   const [paymentType, setPaymentType] = useState<"deposit" | "full" | "remaining">(
@@ -96,10 +98,18 @@ export function PaymentCheckoutModal({
       try {
         submitVNPaySandboxPayment(order.id, payAmount, paymentType, vnpBank);
         setIsSubmitting(false);
+        const isCompletedNow =
+          paymentType === "remaining" ||
+          isSecondPayment ||
+          paymentType === "full";
         alert(
-          `💳 [VNPay Sandbox Success] Thanh toán ${payAmount.toLocaleString(
-            "vi-VN"
-          )} ₫ thành công qua ngân hàng ${vnpBank}! Mã phản hồi 00. Đơn hàng đã tự động chuyển sang trạng thái Đang thực hiện.`
+          isCompletedNow
+            ? `💳 [VNPay Sandbox Success] Thanh toán 50% còn lại (${payAmount.toLocaleString(
+                "vi-VN"
+              )} ₫) thành công qua ngân hàng ${vnpBank}! Mã phản hồi 00. Đơn hàng đã chính thức HOÀN TẤT 100%! Bạn có thể tải toàn bộ mã nguồn / file gốc và để lại đánh giá.`
+            : `💳 [VNPay Sandbox Success] Thanh toán đặt cọc 50% (${payAmount.toLocaleString(
+                "vi-VN"
+              )} ₫) qua VNPay Sandbox thành công qua ngân hàng ${vnpBank}! Mã phản hồi 00. Đơn hàng đã tự động chuyển sang trạng thái Đang thực hiện!`
         );
         onClose();
       } catch (err: any) {
@@ -312,7 +322,8 @@ export function PaymentCheckoutModal({
                       type="text"
                       value={cardNumber}
                       onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full bg-slate-950/70 border border-white/20 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-blue-400"
+                      className="w-full bg-slate-900 border border-blue-400/50 rounded-xl px-3 py-2 text-xs !text-cyan-300 font-mono font-bold outline-none focus:border-cyan-400 dark-input"
+                      style={{ color: "#67e8f9", backgroundColor: "#020617" }}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -322,7 +333,8 @@ export function PaymentCheckoutModal({
                         type="text"
                         value={cardHolder}
                         onChange={(e) => setCardHolder(e.target.value)}
-                        className="w-full bg-slate-950/70 border border-white/20 rounded-xl px-3 py-2 text-xs text-white font-mono uppercase outline-none focus:border-blue-400"
+                        className="w-full bg-slate-900 border border-blue-400/50 rounded-xl px-3 py-2 text-xs !text-white font-mono font-bold uppercase outline-none focus:border-cyan-400 dark-input"
+                        style={{ color: "#ffffff", backgroundColor: "#020617" }}
                       />
                     </div>
                     <div>
@@ -331,7 +343,8 @@ export function PaymentCheckoutModal({
                         type="text"
                         value={cardExpiry}
                         onChange={(e) => setCardExpiry(e.target.value)}
-                        className="w-full bg-slate-950/70 border border-white/20 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-blue-400"
+                        className="w-full bg-slate-900 border border-blue-400/50 rounded-xl px-3 py-2 text-xs !text-white font-mono font-bold outline-none focus:border-cyan-400 dark-input"
+                        style={{ color: "#ffffff", backgroundColor: "#020617" }}
                       />
                     </div>
                   </div>
@@ -374,7 +387,8 @@ export function PaymentCheckoutModal({
                     maxLength={6}
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-blue-500/50 rounded-xl px-4 py-3 text-center text-lg tracking-[0.4em] font-mono font-bold text-cyan-300 outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full bg-slate-900 border-2 border-cyan-400 rounded-xl px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono font-black !text-cyan-300 outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner dark-input"
+                    style={{ color: "#67e8f9", backgroundColor: "#020617" }}
                   />
                 </div>
 

@@ -13,6 +13,7 @@ import {
   formatPriceRange,
   formatDaysRange
 } from "@/lib/store";
+import { DeliverableImage } from "@/components/deliverable-image";
 import {
   ShieldCheck,
   Users,
@@ -2655,21 +2656,30 @@ export function AdminView() {
                 <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-cyan-600" /> Phiên Bản Sản Phẩm Bàn Giao ({selectedOrder.deliverables.length})
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {selectedOrder.deliverables.map((del) => (
-                    <div key={del.id} className="p-3 bg-white rounded-2xl border border-slate-200 flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-slate-900">Phiên bản v{del.version}: {del.title}</div>
-                        <div className="text-slate-500 text-[11px]">{del.notes} • {del.timestamp}</div>
+                    <div key={del.id} className="p-3.5 bg-white rounded-2xl border border-slate-200 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-slate-900">Phiên bản v{del.version}: {del.title}</div>
+                          <div className="text-slate-500 text-[11px]">{del.notes} • {del.timestamp}</div>
+                        </div>
+                        <a
+                          href={del.fileLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1 bg-cyan-50 text-cyan-800 font-bold rounded-lg hover:underline flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" /> Xem Bàn Giao
+                        </a>
                       </div>
-                      <a
-                        href={del.fileLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-1 bg-cyan-50 text-cyan-800 font-bold rounded-lg hover:underline flex items-center gap-1"
-                      >
-                        <ExternalLink className="w-3 h-3" /> Xem Bàn Giao
-                      </a>
+
+                      <DeliverableImage
+                        previewUrl={del.previewUrl}
+                        fileLink={del.fileLink}
+                        title={`v${del.version}: ${del.title}`}
+                        className="h-32 w-full object-cover rounded-xl border border-slate-200"
+                      />
                     </div>
                   ))}
                 </div>

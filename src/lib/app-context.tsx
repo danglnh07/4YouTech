@@ -273,26 +273,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  // Realtime Polling & Cross-Browser Sync Effect
+  // Realtime Polling & Cross-Browser Sync Effect (Diff-checked to prevent screen flickering)
+  const ordersRef = React.useRef(orders);
+  const transactionsRef = React.useRef(transactions);
+  const reviewsRef = React.useRef(reviews);
+
+  useEffect(() => {
+    ordersRef.current = orders;
+  }, [orders]);
+
+  useEffect(() => {
+    transactionsRef.current = transactions;
+  }, [transactions]);
+
+  useEffect(() => {
+    reviewsRef.current = reviews;
+  }, [reviews]);
+
   useEffect(() => {
     if (!isLoaded) return;
     const intervalId = setInterval(() => {
+      // Skip polling if tab is currently in background / hidden
+      if (typeof document !== "undefined" && document.hidden) return;
+
       Promise.all([
-        fetch("/api/users").then((r) => r.json()).catch(() => null),
-        fetch("/api/services").then((r) => r.json()).catch(() => null),
         fetch("/api/orders").then((r) => r.json()).catch(() => null),
-        fetch("/api/projects").then((r) => r.json()).catch(() => null),
-        fetch("/api/reviews").then((r) => r.json()).catch(() => null),
-        fetch("/api/transactions").then((r) => r.json()).catch(() => null)
-      ]).then(([uRes, sRes, oRes, pRes, rRes, tRes]) => {
-        if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
-        if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
-        if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
-        if (pRes?.data && pRes.data.length > 0) setProjects(pRes.data);
-        if (rRes?.data && rRes.data.length > 0) setReviews(rRes.data);
-        if (tRes?.data && tRes.data.length > 0) setTransactions(tRes.data);
+        fetch("/api/transactions").then((r) => r.json()).catch(() => null),
+        fetch("/api/reviews").then((r) => r.json()).catch(() => null)
+      ]).then(([oRes, tRes, rRes]) => {
+        // Only trigger React state updates if the server data actually changed
+        if (oRes?.data && JSON.stringify(oRes.data) !== JSON.stringify(ordersRef.current)) {
+          setOrders(oRes.data);
+        }
+        if (tRes?.data && JSON.stringify(tRes.data) !== JSON.stringify(transactionsRef.current)) {
+          setTransactions(tRes.data);
+        }
+        if (rRes?.data && JSON.stringify(rRes.data) !== JSON.stringify(reviewsRef.current)) {
+          setReviews(rRes.data);
+        }
       }).catch(() => {});
-    }, 4000);
+    }, 6000);
 
     return () => clearInterval(intervalId);
   }, [isLoaded]);
@@ -1222,8 +1242,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ...o,
           status: nextStatus,
           progressPercent: 100,
-          deliverables: o.deliverables.map((d) =>
-            d.id === deliverableId ? { ...d, status: "accepted" as const } : d
+          deliverables: o.deliverables.map((d, idx) =>
+            d.id === deliverableId ||
+            deliverableId === "del-latest" ||
+            idx === o.deliverables.length - 1
+              ? { ...d, status: "accepted" as const }
+              : d
           ),
           updatedAt: now,
           messages: [
