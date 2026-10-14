@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { queryDb } from "@/lib/db";
 import { SEED_REVIEWS } from "@/lib/store";
+import { notifyDataChange } from "@/lib/realtime-bus";
 
 export async function GET() {
   try {
@@ -76,6 +77,9 @@ export async function POST(request: Request) {
         ]
       );
     }
+
+    // Broadcast real-time change to all connected browsers
+    notifyDataChange("reviews", "update", rev.id);
 
     return NextResponse.json({
       success: true,

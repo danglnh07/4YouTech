@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { DeliverableImage } from "@/components/deliverable-image";
 import { normalizeImageUrl, SAMPLE_DELIVERABLE_IMAGES } from "@/lib/image-utils";
+import { SupportTicketsManagement } from "@/components/support-tickets-management";
 
 export function StaffView() {
   const {
@@ -34,6 +35,7 @@ export function StaffView() {
     orders,
     reviews,
     proposeWorkEstimate,
+    acceptStaffTask,
     updateMilestones,
     updateProgressPercent,
     uploadDeliverable,
@@ -43,19 +45,33 @@ export function StaffView() {
     sendOrderMessage: updateReqInfo
   } = useApp();
 
-  const [activeStaffTab, setActiveStaffTab] = useState<"tasks" | "reviews">("tasks");
+  const [activeStaffTab, setActiveStaffTab] = useState<"tasks" | "tickets" | "reviews">("tasks");
 
   // Review Inspection & Reply Modal state
   const [viewingReviewDetail, setViewingReviewDetail] = useState<ServiceReview | null>(null);
   const [replyInputText, setReplyInputText] = useState("");
+  const [taskFilter, setTaskFilter] = useState<"all" | "in_progress" | "revision" | "completed">("all");
 
   // Staff sees orders assigned to them or unassigned pending evaluation
   const assignedOrders = orders.filter(
     (o) => o.assignedStaffId === currentUser.id || !o.assignedStaffId || o.collaborators?.includes(currentUser.name)
   );
 
+  const staffTickets = assignedOrders.flatMap((o) => o.supportTickets || []);
+
+  const filteredAssignedOrders = assignedOrders.filter((ord) => {
+    if (taskFilter === "in_progress") return ["in_progress", "deposit_pending", "under_review", "deliverable_sent"].includes(ord.status);
+    if (taskFilter === "revision") return ord.status === "revision_requested";
+    if (taskFilter === "completed") return ["completed", "accepted"].includes(ord.status);
+    return true;
+  });
+
+  const inProgressCount = assignedOrders.filter((o) => ["in_progress", "deposit_pending", "under_review", "deliverable_sent"].includes(o.status)).length;
+  const revisionCount = assignedOrders.filter((o) => o.status === "revision_requested").length;
+  const completedCount = assignedOrders.filter((o) => ["completed", "accepted"].includes(o.status)).length;
+
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(assignedOrders[0]?.id || null);
-  const selectedOrder = orders.find((o) => o.id === selectedOrderId) || assignedOrders[0];
+  const selectedOrder = orders.find((o) => o.id === selectedOrderId) || filteredAssignedOrders[0] || assignedOrders[0];
 
   // Work Estimate form modal
   const [showEstimateModal, setShowEstimateModal] = useState(false);
@@ -169,6 +185,14 @@ export function StaffView() {
           <Wrench className="w-4 h-4" /> Nhiệm Vụ Phân Công ({assignedOrders.length})
         </button>
         <button
+          onClick={() => setActiveStaffTab("tickets")}
+          className={`flex-1 sm:flex-none px-6 py-3 font-bold text-xs border-b-2 transition flex items-center justify-center gap-2 ${
+            activeStaffTab === "tickets" ? "border-purple-600 text-purple-600" : "border-transparent text-slate-400 hover:text-slate-600"
+          }`}
+        >
+          <HelpCircle className="w-4 h-4 text-cyan-600" /> Hỗ Trợ & Khiếu Nại ({staffTickets.length})
+        </button>
+        <button
           onClick={() => setActiveStaffTab("reviews")}
           className={`flex-1 sm:flex-none px-6 py-3 font-bold text-xs border-b-2 transition flex items-center justify-center gap-2 ${
             activeStaffTab === "reviews" ? "border-purple-600 text-purple-600" : "border-transparent text-slate-400 hover:text-slate-600"
@@ -184,16 +208,58 @@ export function StaffView() {
           
           {/* Left Column: Assigned Tasks List */}
           <div className="lg:col-span-4 space-y-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đơn Hàng Phân Công ({assignedOrders.length})</span>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đơn Hàng Phân Công ({assignedOrders.length})</span>
+            </div>
+
+            {/* Status Filter Pills */}
+            <div className="flex flex-wrap gap-1.5 pb-1">
+              <button
+                onClick={() => setTaskFilter("all")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                  taskFilter === "all" ? "bg-purple-600 text-white shadow-xs" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Tất cả ({assignedOrders.length})
+              </button>
+              <button
+                onClick={() => setTaskFilter("in_progress")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                  taskFilter === "in_progress" ? "bg-sky-600 text-white shadow-xs" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Đang làm ({inProgressCount})
+              </button>
+              {revisionCount > 0 && (
+                <button
+                  onClick={() => setTaskFilter("revision")}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                    taskFilter === "revision" ? "bg-rose-600 text-white shadow-xs" : "bg-white border border-rose-200 text-rose-600 hover:bg-rose-50"
+                  }`}
+                >
+                  Cần sửa ({revisionCount})
+                </button>
+              )}
+              <button
+                onClick={() => setTaskFilter("completed")}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                  taskFilter === "completed" ? "bg-emerald-600 text-white shadow-xs" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Hoàn thành ({completedCount})
+              </button>
+            </div>
           
-          {assignedOrders.length === 0 ? (
+          {filteredAssignedOrders.length === 0 ? (
             <div className="p-8 bg-white rounded-2xl border border-slate-200 text-center text-xs text-slate-400">
-              Hiện chưa có nhiệm vụ nào được phân công.
+              Không có đơn hàng nào trong mục này.
             </div>
           ) : (
-            assignedOrders.map((ord) => {
+            filteredAssignedOrders.map((ord) => {
               const isSelected = selectedOrder?.id === ord.id;
               const hasRevision = ord.status === "revision_requested";
+              const isCompleted = ord.status === "completed";
+              const isAccepted = ord.status === "accepted";
               return (
                 <div
                   key={ord.id}
@@ -209,18 +275,32 @@ export function StaffView() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-extrabold text-slate-900">{ord.id}</span>
-                    {hasRevision && (
+                    {hasRevision ? (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 animate-pulse">
                         Cần sửa đổi!
                       </span>
-                    )}
+                    ) : isCompleted ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                        ✅ Hoàn thành 100%
+                      </span>
+                    ) : isAccepted ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                        🎉 Đã nghiệm thu
+                      </span>
+                    ) : ord.status === "under_review" ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">
+                        Mới phân công
+                      </span>
+                    ) : null}
                   </div>
 
                   <div className="text-xs font-bold text-slate-800 line-clamp-1">{ord.serviceName}</div>
 
                   <div className="flex items-center justify-between text-[11px] text-slate-400">
-                    <span>Khách: {ord.customerName}</span>
-                    <span className="font-semibold text-purple-600">{ord.progressPercent}%</span>
+                    <span>Khách: <strong className="text-slate-700">{ord.customerName}</strong></span>
+                    <span className={`font-bold ${isCompleted ? "text-emerald-600" : "text-purple-600"}`}>
+                      {ord.progressPercent}%
+                    </span>
                   </div>
                 </div>
               );
@@ -238,15 +318,49 @@ export function StaffView() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-slate-400">{selectedOrder.id}</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
-                      {selectedOrder.status}
-                    </span>
+                    {selectedOrder.status === "completed" ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                        ✅ HOÀN THÀNH 100%
+                      </span>
+                    ) : selectedOrder.status === "accepted" ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                        🎉 ĐÃ NGHIỆM THU (CHỜ THU NỐT)
+                      </span>
+                    ) : selectedOrder.status === "revision_requested" ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                        ⚠️ CẦN CHỈNH SỬA
+                      </span>
+                    ) : selectedOrder.status === "deliverable_sent" ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-cyan-100 text-cyan-800 border border-cyan-300">
+                        📦 ĐÃ GỬI BẢN THỬ
+                      </span>
+                    ) : selectedOrder.status === "in_progress" ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-sky-100 text-sky-800 border border-sky-300">
+                        🚀 ĐANG THỰC HIỆN
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-100 text-purple-800 border border-purple-300">
+                        👤 ĐÃ PHÂN CÔNG (KHẢO SÁT)
+                      </span>
+                    )}
                   </div>
                   <h2 className="text-xl font-black text-slate-900 mt-1">{selectedOrder.serviceName}</h2>
                 </div>
 
                 {/* Toolbar Actions */}
                 <div className="flex flex-wrap items-center gap-2">
+                  {["submitted", "under_review", "in_progress"].includes(selectedOrder.status) && (
+                    <button
+                      onClick={() => {
+                        acceptStaffTask(selectedOrder.id);
+                        alert("Đã xác nhận tiếp nhận công việc! Đơn hàng đã chuyển sang trạng thái đang triển khai.");
+                      }}
+                      className="px-3.5 py-2 rounded-xl border border-purple-300 bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-xs transition flex items-center gap-1.5 shadow-xs"
+                    >
+                      <UserCheck className="w-3.5 h-3.5 text-purple-600" /> Xác Nhận Nhận Việc
+                    </button>
+                  )}
+
                   <button
                     onClick={() => setShowInfoModal(true)}
                     className="px-3.5 py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100 font-bold text-xs transition flex items-center gap-1"
@@ -279,6 +393,87 @@ export function StaffView() {
                   </button>
                 </div>
               </div>
+
+              {/* SECTION: Completed Order Celebration & Customer Review in Staff View */}
+              {selectedOrder.status === "completed" && (
+                <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-300 text-emerald-950 space-y-4 shadow-xs animate-fade-in">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-sm">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                        🎉 ĐƠN HÀNG ĐÃ HOÀN TẤT BÀN GIAO 100%!
+                      </div>
+                      <p className="text-xs text-emerald-700">
+                        Khách hàng đã nghiệm thu sản phẩm và thanh toán 100% chi phí. Nhiệm vụ của bạn đã hoàn thành xuất sắc!
+                      </p>
+                    </div>
+                    <div className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-black text-xs shadow-xs flex items-center gap-1.5 shrink-0">
+                      <CheckSquare className="w-4 h-4" /> Tiến độ 100%
+                    </div>
+                  </div>
+
+                  {/* Customer Review Card */}
+                  {(() => {
+                    const staffReview = selectedOrder.review || reviews.find((r) => r.orderId === selectedOrder.id);
+                    if (!staffReview) {
+                      return (
+                        <div className="text-xs text-emerald-700 bg-white/70 p-3 rounded-xl border border-emerald-200 flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-emerald-600" /> Đang chờ khách hàng gửi đánh giá chất lượng dịch vụ...
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="p-4 bg-white rounded-xl border border-emerald-200 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-800">Đánh giá từ khách hàng:</span>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-3.5 h-3.5 ${
+                                    star <= staffReview.rating
+                                      ? "fill-amber-400 text-amber-400"
+                                      : "text-slate-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs font-black text-amber-600 ml-1">
+                              {staffReview.rating}/5 sao
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-400">{staffReview.createdAt}</span>
+                        </div>
+
+                        <div className="text-xs text-slate-700 italic bg-slate-50 p-3 rounded-lg border border-slate-200">
+                          "{staffReview.comment || "Khách hàng không để lại nhận xét bằng lời."}"
+                        </div>
+
+                        {staffReview.replyText ? (
+                          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-xs space-y-1">
+                            <div className="font-bold text-purple-900 flex items-center gap-1">
+                              <MessageSquare className="w-3.5 h-3.5 text-purple-600" /> Phản hồi từ {staffReview.repliedBy || "4YouTech"}:
+                            </div>
+                            <div className="text-slate-700">{staffReview.replyText}</div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setViewingReviewDetail(staffReview);
+                              setReplyInputText("");
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1 shadow-xs"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" /> Trả lời đánh giá này
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Requirements & Scope Inspector */}
               <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-100">
@@ -531,6 +726,13 @@ export function StaffView() {
         </div>
 
       </div>
+      )}
+
+      {/* TAB: SUPPORT & COMPLAINT TICKETS FOR STAFF (GÓP Ý 1 - MINH CHỨNG M4) */}
+      {activeStaffTab === "tickets" && (
+        <div className="space-y-6 animate-fade-in">
+          <SupportTicketsManagement orders={assignedOrders} currentUserRole="staff" />
+        </div>
       )}
 
       {/* TAB 2: REVIEWS LIST FOR STAFF */}

@@ -22,7 +22,8 @@ import {
   KeyRound,
   CheckCircle2,
   AlertCircle,
-  EyeOff
+  EyeOff,
+  Menu
 } from "lucide-react";
 import { CartDrawerModal } from "@/components/cart-drawer-modal";
 
@@ -30,18 +31,21 @@ export function Header({
   activeTab,
   setActiveTab,
   onOpenAuth,
-  onSelectServiceToBook
+  onSelectServiceToBook,
+  onOpenPolicy
 }: {
   activeTab: "catalog" | "projects" | "about" | "workspace";
   setActiveTab: (tab: "catalog" | "projects" | "about" | "workspace") => void;
   onOpenAuth?: () => void;
   onSelectServiceToBook?: (serviceId: string | string[]) => void;
+  onOpenPolicy?: () => void;
 }) {
   const { currentUser, logout, resetToDefaultSeed, orders, cart } = useApp();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -96,37 +100,40 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 glass-header border-b border-blue-500/20 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+    <header className="sticky top-0 z-40 glass-header border-b border-blue-500/20 shadow-lg backdrop-blur-xl bg-[#030712]/90">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
           
           {/* Brand Logo */}
           <div 
             className="flex items-center gap-2.5 cursor-pointer group select-none shrink-0" 
             onClick={() => {
               setActiveTab("catalog");
+              setMobileMenuOpen(false);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             title="Nhấp để về Trang chủ"
           >
-            <div className="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center font-black text-xl shadow-lg shadow-cyan-500/30 group-hover:scale-105 transition-transform shrink-0">
-              4Y
-            </div>
+            <img 
+              src="/images/logo-4youtech-badge.png" 
+              alt="4YouTech Logo" 
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform shrink-0" 
+            />
             <div className="flex flex-col justify-center min-w-0">
-              <div className="flex items-center gap-1.5 font-black text-base sm:text-lg tracking-tight text-white leading-tight group-hover:text-cyan-400 transition-colors whitespace-nowrap">
-                4YouTech <Sparkles className="w-4 h-4 text-cyan-400 fill-cyan-400 animate-pulse shrink-0" />
+              <div className="flex items-center gap-1.5 font-black text-sm sm:text-base tracking-tight text-white leading-tight group-hover:text-cyan-400 transition-colors whitespace-nowrap">
+                4YouTech <Sparkles className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400 animate-pulse shrink-0" />
               </div>
-              <div className="text-[10px] sm:text-[11px] font-bold text-cyan-400 tracking-wide whitespace-nowrap leading-none mt-0.5">
-                Ideas for a better tomorrow
+              <div className="text-[10px] sm:text-[11px] font-bold text-cyan-400/90 tracking-wide whitespace-nowrap leading-none mt-0.5">
+                Your Tech&Design Partner
               </div>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-950/70 p-1.5 rounded-full border border-blue-500/20 backdrop-blur-md">
+          {/* Navigation Links - Centered Pill Capsule */}
+          <nav className="hidden lg:flex items-center gap-1 bg-slate-950/80 p-1 rounded-full border border-blue-500/25 shadow-inner backdrop-blur-md shrink-0">
             <button
               onClick={() => setActiveTab("catalog")}
-              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
                 activeTab === "catalog"
                   ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/30 font-bold"
                   : "text-slate-300 hover:text-white hover:bg-white/5"
@@ -137,7 +144,7 @@ export function Header({
 
             <button
               onClick={() => setActiveTab("projects")}
-              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
                 activeTab === "projects"
                   ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/30 font-bold"
                   : "text-slate-300 hover:text-white hover:bg-white/5"
@@ -148,7 +155,7 @@ export function Header({
 
             <button
               onClick={() => setActiveTab("about")}
-              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
                 activeTab === "about"
                   ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/30 font-bold"
                   : "text-slate-300 hover:text-white hover:bg-white/5"
@@ -159,20 +166,52 @@ export function Header({
 
             <button
               onClick={() => setActiveTab("workspace")}
-              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                 activeTab === "workspace"
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30 font-bold"
                   : "text-slate-300 hover:text-cyan-400 hover:bg-white/5"
               }`}
             >
-              <Layers className="w-4 h-4" />
-              Dashboard {isAuthenticated && `(${roleLabels[currentUser.role].badge})`}
+              <Layers className="w-3.5 h-3.5 shrink-0" />
+              <span>Dashboard</span>
             </button>
           </nav>
 
           {/* Right User Toolbar */}
-          <div className="flex items-center gap-3">
-            
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Customer Protection Policy Button (Minh chứng M1) */}
+            {onOpenPolicy && (
+              <button
+                onClick={onOpenPolicy}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-900/60 transition shadow-xs whitespace-nowrap shrink-0"
+                title="Chính sách bảo vệ quyền lợi người tiêu dùng (Luật 19/2023/QH15 & ISO 10002)"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <span>Chính Sách KH</span>
+              </button>
+            )}
+
+            {/* Cart Button (Visible ONLY for Guest and Customer) */}
+            {(currentUser.role === "guest" || currentUser.role === "customer") && (
+              <button
+                onClick={() => setShowCartModal(true)}
+                className={`px-3 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition border backdrop-blur-md whitespace-nowrap shrink-0 ${
+                  cart.length > 0
+                    ? "bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border-rose-500/40 shadow-[0_0_12px_rgba(244,63,94,0.3)]"
+                    : "bg-blue-950/60 hover:bg-blue-900/80 text-cyan-300 border-blue-500/30"
+                }`}
+                title="Xem Giỏ hàng dịch vụ của bạn"
+              >
+                <ShoppingBag className={`w-3.5 h-3.5 shrink-0 ${cart.length > 0 ? "text-rose-400" : "text-cyan-400"}`} />
+                <span className="hidden md:inline">Giỏ Hàng</span>
+                {cart.length > 0 && (
+                  <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full min-w-4 text-center leading-none animate-pulse shrink-0">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Reset Seed Button */}
             <button
               onClick={() => {
@@ -182,47 +221,14 @@ export function Header({
                 }
               }}
               title="Khôi phục dữ liệu mẫu ban đầu"
-              className="p-2 text-slate-400 hover:text-cyan-400 rounded-xl hover:bg-slate-800/60 transition"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-cyan-400 rounded-full hover:bg-slate-800/60 transition shrink-0"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
 
-            {/* Cart Button (Visible ONLY for Guest and Customer) */}
-            {(currentUser.role === "guest" || currentUser.role === "customer") && (
-              <button
-                onClick={() => setShowCartModal(true)}
-                className={`px-3.5 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition border backdrop-blur-md ${
-                  cart.length > 0
-                    ? "bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.3)]"
-                    : "bg-blue-950/60 hover:bg-blue-900/80 text-cyan-300 border-blue-500/30"
-                }`}
-                title="Xem Giỏ hàng dịch vụ của bạn"
-              >
-                <ShoppingBag className={`w-4 h-4 ${cart.length > 0 ? "text-rose-400" : "text-cyan-400"}`} />
-                <span className="hidden sm:inline">Giỏ Hàng</span>
-                {cart.length > 0 && (
-                  <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full min-w-4 text-center shadow-xs animate-pulse">
-                    {cart.length}
-                  </span>
-                )}
-              </button>
-            )}
-
-            {/* Realtime Status Indicator Badge */}
-            <div
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs font-bold cursor-help"
-              title="Hệ thống đang hoạt động ở chế độ Real-time (Đồng bộ tức thì)."
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-              </span>
-              Realtime Sync Active
-            </div>
-
             {/* Notification Bell */}
             {isAuthenticated && (
-              <div ref={notificationRef} className="relative">
+              <div ref={notificationRef} className="relative shrink-0">
                 <button
                   onClick={() => {
                     const nextState = !showNotification;
@@ -231,12 +237,12 @@ export function Header({
                       setHasUnreadNotification(false);
                     }
                   }}
-                  className="p-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-800/60 rounded-full relative transition"
+                  className="p-1.5 sm:p-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-800/60 rounded-full relative transition shrink-0"
                   title="Thông báo đơn hàng"
                 >
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                   {hasUnreadNotification && userOrders.length > 0 && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-slate-950 animate-pulse"></span>
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-slate-950 animate-pulse"></span>
                   )}
                 </button>
 
@@ -283,20 +289,20 @@ export function Header({
 
             {/* Authenticated User Menu or Unauthenticated Login Links */}
             {isAuthenticated ? (
-              <div ref={profileRef} className="relative">
+              <div ref={profileRef} className="relative shrink-0">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold shadow-xs transition ${
+                  className={`flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full border text-xs font-bold shadow-xs transition whitespace-nowrap shrink-0 ${
                     roleColors[currentUser.role]
                   }`}
                 >
                   <img
                     src={currentUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"}
                     alt="avatar"
-                    className="w-5 h-5 rounded-full object-cover border border-cyan-400/40"
+                    className="w-5 h-5 rounded-full object-cover border border-cyan-400/40 shrink-0"
                   />
-                  <span className="hidden sm:inline">{currentUser.name}</span>
-                  <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                  <span className="hidden sm:inline max-w-[110px] truncate">{currentUser.name}</span>
+                  <ChevronDown className="w-3 h-3 opacity-70 shrink-0" />
                 </button>
 
                 {/* Profile Menu Dropdown */}
@@ -386,16 +392,75 @@ export function Header({
             ) : (
               <button
                 onClick={() => onOpenAuth && onOpenAuth()}
-                className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs shadow-md transition flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-full gradient-btn font-bold text-xs shadow-md transition flex items-center gap-1.5 whitespace-nowrap shrink-0 hover:scale-[1.02]"
               >
-                <LogIn className="w-3.5 h-3.5" /> Đăng Nhập / Đăng Ký
+                <LogIn className="w-3.5 h-3.5 shrink-0" /> <span className="hidden sm:inline">Đăng Nhập / Đăng Ký</span><span className="sm:hidden">Đăng Nhập</span>
               </button>
             )}
+
+            {/* Mobile Hamburger Menu Toggle Button (Visible on screens < lg) */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-1.5 sm:p-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-800/60 rounded-xl transition shrink-0 ml-1"
+              title="Menu điều hướng"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-cyan-400" /> : <Menu className="w-5 h-5" />}
+            </button>
 
           </div>
 
         </div>
       </div>
+
+      {/* Mobile Drawer Menu (Visible on screens < lg when opened) */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-[#070e28]/95 border-b border-blue-500/20 backdrop-blur-xl px-4 py-3 space-y-2 animate-fade-in shadow-2xl">
+          <div className="grid grid-cols-2 gap-2 pb-2 border-b border-slate-800">
+            <button
+              onClick={() => { setActiveTab("catalog"); setMobileMenuOpen(false); }}
+              className={`p-2.5 rounded-xl text-xs font-bold transition text-left flex items-center gap-2 ${
+                activeTab === "catalog" ? "bg-blue-600 text-white" : "bg-slate-900/80 text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              Danh sách Dịch vụ
+            </button>
+            <button
+              onClick={() => { setActiveTab("projects"); setMobileMenuOpen(false); }}
+              className={`p-2.5 rounded-xl text-xs font-bold transition text-left flex items-center gap-2 ${
+                activeTab === "projects" ? "bg-blue-600 text-white" : "bg-slate-900/80 text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              Sản phẩm Mẫu
+            </button>
+            <button
+              onClick={() => { setActiveTab("about"); setMobileMenuOpen(false); }}
+              className={`p-2.5 rounded-xl text-xs font-bold transition text-left flex items-center gap-2 ${
+                activeTab === "about" ? "bg-blue-600 text-white" : "bg-slate-900/80 text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              Về Chúng Tôi
+            </button>
+            <button
+              onClick={() => { setActiveTab("workspace"); setMobileMenuOpen(false); }}
+              className={`p-2.5 rounded-xl text-xs font-bold transition text-left flex items-center gap-2 ${
+                activeTab === "workspace" ? "bg-indigo-600 text-white" : "bg-slate-900/80 text-cyan-300 hover:bg-slate-800"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" /> Dashboard
+            </button>
+          </div>
+          {onOpenPolicy && (
+            <button
+              onClick={() => { onOpenPolicy(); setMobileMenuOpen(false); }}
+              className="w-full p-2.5 rounded-xl text-xs font-bold bg-cyan-950/40 text-cyan-300 border border-cyan-500/30 flex items-center justify-center gap-2 hover:bg-cyan-900/50 transition"
+            >
+              <ShieldCheck className="w-4 h-4 text-cyan-400" />
+              Chính Sách Bảo Vệ Khách Hàng (Luật 19/2023)
+            </button>
+          )}
+        </div>
+      )}
+
 
       {/* Cart Modal Drawer (Visible ONLY for Guest and Customer) */}
       {showCartModal && (currentUser.role === "guest" || currentUser.role === "customer") && (

@@ -21,10 +21,18 @@ import {
   Milestone,
   ChatMessage,
   SupportTicket,
+  TicketCategory,
+  TicketPriority,
+  RemedyType,
   QuotationDetails,
   WorkEstimate,
   CartItem,
   OrderStatus,
+  UatCheckItem,
+  UatFormSubmission,
+  TransferSession,
+  PostServiceSurvey,
+  calculatePilotKpiMetrics,
   hashPassword
 } from "./store";
 import { sendOtpEmail } from "./email";
@@ -90,7 +98,8 @@ interface AppContextType {
   proposeWorkEstimate: (orderId: string, estimate: Omit<WorkEstimate, "proposedByStaffId" | "proposedByStaffName">) => void;
   issueQuotation: (orderId: string, quote: Omit<QuotationDetails, "issuedAt">) => void;
   setOrderEditingState: (orderId: string, isEditing: boolean, editingNote?: string) => void;
-  assignStaff: (orderId: string, staffId: string, staffName: string, collaborators?: string[]) => void;
+  assignStaff: (orderId: string, staffId: string, staffName: string, collaborators?: string[], assignmentNote?: string) => void;
+  acceptStaffTask: (orderId: string) => void;
   
   // Payments (VietQR + VNPay Sandbox)
   submitPaymentTransaction: (
@@ -124,8 +133,37 @@ interface AppContextType {
   replyToServiceReview: (reviewId: string, replyText: string) => void;
   requestCancellation: (orderId: string, reason: string) => void;
   handleCancellation: (orderId: string, decision: "approved" | "rejected", refundAmount?: number) => void;
-  submitSupportTicket: (orderId: string, subject: string, content: string, type: "support" | "complaint") => void;
+  // Support & Complaint Flow (Luật BVQLNTD Điều 31 & 36, ISO 10002:2018)
+  submitSupportTicket: (
+    orderId: string,
+    subject: string,
+    content: string,
+    type: "support" | "complaint",
+    category?: TicketCategory,
+    priority?: TicketPriority
+  ) => void;
+  acknowledgeSupportTicket: (orderId: string, ticketId: string, staffName?: string) => void;
+  applyTicketRemedy: (
+    orderId: string,
+    ticketId: string,
+    remedyType: RemedyType,
+    remedyDetails: string,
+    response: string
+  ) => void;
   resolveSupportTicket: (orderId: string, ticketId: string, response: string) => void;
+  rateComplaintResolution: (orderId: string, ticketId: string, rating: number) => void;
+
+  // UAT & Acceptance Flow (Form M3 - Góp ý 1.2 & 2.3)
+  submitUatChecklist: (orderId: string, items: UatCheckItem[], notes?: string) => void;
+  signoffAcceptance: (orderId: string, signedName: string, rating: number, comment?: string) => void;
+  confirmTransferSession: (orderId: string, meetLink?: string, docsUrl?: string) => void;
+
+  // Post-Service Evaluation & Survey (ISO 10004:2018 & SUS - Góp ý 2.4)
+  submitPostServiceSurvey: (
+    orderId: string,
+    survey: Omit<PostServiceSurvey, "id" | "orderId" | "customerName" | "submittedAt">
+  ) => void;
+
   updateStaffSkills: (userId: string, skills: string[]) => void;
   
   // Reset
@@ -135,14 +173,14 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 const STORAGE_KEYS = {
-  USERS: "4youtech_users_v4",
+  USERS: "4youtech_users_v5",
   SERVICES: "4youtech_services_v6",
   PROJECTS: "4youtech_projects_v15",
-  ORDERS: "4youtech_orders_v4",
+  ORDERS: "4youtech_orders_v5",
   REVIEWS: "4youtech_reviews_v4",
   TRANSACTIONS: "4youtech_transactions_v4",
   OTP_SESSION: "4youtech_otp_session_v4",
-  CURRENT_USER_ID: "4youtech_current_user_v4",
+  CURRENT_USER_ID: "4youtech_current_user_v5",
   CART: "4youtech_cart_v4"
 };
 
@@ -207,6 +245,74 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }).catch((err) => console.warn("SQL Server transaction sync warning:", err));
   };
 
+  // Normalized signature helpers to prevent false-positive re-renders and eliminate UI stutter/jitter
+  const getOrdersSignature = (list: ServiceOrder[]): string => {
+    if (!list || !list.length) return "none";
+    return list
+      .map((o) => {
+        const msgCount = o.messages?.length || 0;
+        const lastMsg = msgCount > 0 ? o.messages[msgCount - 1] : null;
+        return [
+          o.id,
+          o.status,
+          o.progressPercent,
+          o.quotation?.amount || 0,
+          o.quotation?.issuedAt || "",
+          o.paymentInfo?.paymentStatus || "",
+          o.paymentInfo?.amountPaid || 0,
+          o.deliverables?.length || 0,
+          o.revisions?.length || 0,
+          msgCount,
+          lastMsg?.id || "",
+          lastMsg?.text || "",
+          o.assignedStaffId || "",
+          o.review?.id || "",
+          o.review?.rating || "",
+          o.isBeingEdited ? 1 : 0,
+          o.updatedAt || ""
+        ].join(":");
+      })
+      .join("|");
+  };
+
+  const getTxnsSignature = (list: PaymentTransaction[]): string => {
+    if (!list || !list.length) return "none";
+    return list.map((t) => `${t.id}:${t.status}:${t.amount}:${t.paymentType}`).join("|");
+  };
+
+  const getReviewsSignature = (list: ServiceReview[]): string => {
+    if (!list || !list.length) return "none";
+    return list.map((r) => `${r.id}:${r.rating}:${r.moderated}:${r.replyText || ""}`).join("|");
+  };
+
+  // Unique Tab ID to prevent BroadcastChannel self-echo & infinite feedback loops
+  const tabIdRef = React.useRef<string>("");
+  if (!tabIdRef.current) {
+    tabIdRef.current = typeof window !== "undefined"
+      ? `tab_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`
+      : "ssr";
+  }
+
+  // Ref flag indicating current state was received from external source (SSE / other tab)
+  const isRemoteSyncingRef = React.useRef(false);
+
+  // Latest refs for comparison
+  const ordersRef = React.useRef(orders);
+  const transactionsRef = React.useRef(transactions);
+  const reviewsRef = React.useRef(reviews);
+
+  useEffect(() => {
+    ordersRef.current = orders;
+  }, [orders]);
+
+  useEffect(() => {
+    transactionsRef.current = transactions;
+  }, [transactions]);
+
+  useEffect(() => {
+    reviewsRef.current = reviews;
+  }, [reviews]);
+
   // Load from localStorage on client side
   useEffect(() => {
     try {
@@ -217,8 +323,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const savedReviews = localStorage.getItem(STORAGE_KEYS.REVIEWS);
       const savedTxns = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
       const savedOtp = localStorage.getItem(STORAGE_KEYS.OTP_SESSION);
-      const savedCurUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
       const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
+
+      // Prioritize sessionStorage for currentUser to allow multiple tabs with different roles
+      const savedCurUserId =
+        (typeof window !== "undefined" && sessionStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID)) ||
+        localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
       if (savedUsers) setUsers(JSON.parse(savedUsers));
       if (savedServices) setServices(JSON.parse(savedServices));
@@ -248,134 +358,169 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.error("Initial load from storage failed", e);
     }
 
-    // Query Real MySQL Database APIs
-    const fetchFromDb = () => {
-      Promise.all([
-        fetch("/api/users").then((r) => r.json()).catch(() => null),
-        fetch("/api/services").then((r) => r.json()).catch(() => null),
-        fetch("/api/orders").then((r) => r.json()).catch(() => null),
-        fetch("/api/projects").then((r) => r.json()).catch(() => null),
-        fetch("/api/reviews").then((r) => r.json()).catch(() => null),
-        fetch("/api/transactions").then((r) => r.json()).catch(() => null)
-      ]).then(([uRes, sRes, oRes, pRes, rRes, tRes]) => {
-        if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
-        if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
-        if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
-        if (pRes?.data && pRes.data.length > 0) setProjects(pRes.data);
-        if (rRes?.data && rRes.data.length > 0) setReviews(rRes.data);
-        if (tRes?.data && tRes.data.length > 0) setTransactions(tRes.data);
-      }).catch((err) => {
-        console.warn("MySQL DB fetch notice:", err);
-      });
-    };
-
-    fetchFromDb();
-    setIsLoaded(true);
+    // Query Real MySQL Database APIs on startup
+    Promise.all([
+      fetch("/api/users").then((r) => r.json()).catch(() => null),
+      fetch("/api/services").then((r) => r.json()).catch(() => null),
+      fetch("/api/orders").then((r) => r.json()).catch(() => null),
+      fetch("/api/projects").then((r) => r.json()).catch(() => null),
+      fetch("/api/reviews").then((r) => r.json()).catch(() => null),
+      fetch("/api/transactions").then((r) => r.json()).catch(() => null)
+    ]).then(([uRes, sRes, oRes, pRes, rRes, tRes]) => {
+      isRemoteSyncingRef.current = true;
+      if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
+      if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
+      if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
+      if (pRes?.data && pRes.data.length > 0) setProjects(pRes.data);
+      if (rRes?.data && rRes.data.length > 0) setReviews(rRes.data);
+      if (tRes?.data && tRes.data.length > 0) setTransactions(tRes.data);
+    }).catch((err) => {
+      console.warn("MySQL DB fetch notice:", err);
+    }).finally(() => {
+      setIsLoaded(true);
+    });
   }, []);
 
-  // Realtime Polling & Cross-Browser Sync Effect (Diff-checked to prevent screen flickering)
-  const ordersRef = React.useRef(orders);
-  const transactionsRef = React.useRef(transactions);
-  const reviewsRef = React.useRef(reviews);
-
-  useEffect(() => {
-    ordersRef.current = orders;
-  }, [orders]);
-
-  useEffect(() => {
-    transactionsRef.current = transactions;
-  }, [transactions]);
-
-  useEffect(() => {
-    reviewsRef.current = reviews;
-  }, [reviews]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    const intervalId = setInterval(() => {
-      // Skip polling if tab is currently in background / hidden
-      if (typeof document !== "undefined" && document.hidden) return;
-
-      Promise.all([
-        fetch("/api/orders").then((r) => r.json()).catch(() => null),
-        fetch("/api/transactions").then((r) => r.json()).catch(() => null),
-        fetch("/api/reviews").then((r) => r.json()).catch(() => null)
-      ]).then(([oRes, tRes, rRes]) => {
-        // Only trigger React state updates if the server data actually changed
-        if (oRes?.data && JSON.stringify(oRes.data) !== JSON.stringify(ordersRef.current)) {
-          setOrders(oRes.data);
+  // Data refresh callbacks using smart signature diffs
+  const refreshOrders = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/orders");
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json?.data && Array.isArray(json.data)) {
+        if (getOrdersSignature(json.data) !== getOrdersSignature(ordersRef.current)) {
+          isRemoteSyncingRef.current = true;
+          setOrders(json.data);
         }
-        if (tRes?.data && JSON.stringify(tRes.data) !== JSON.stringify(transactionsRef.current)) {
-          setTransactions(tRes.data);
+      }
+    } catch {}
+  }, []);
+
+  const refreshTransactions = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/transactions");
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json?.data && Array.isArray(json.data)) {
+        if (getTxnsSignature(json.data) !== getTxnsSignature(transactionsRef.current)) {
+          isRemoteSyncingRef.current = true;
+          setTransactions(json.data);
         }
-        if (rRes?.data && JSON.stringify(rRes.data) !== JSON.stringify(reviewsRef.current)) {
-          setReviews(rRes.data);
+      }
+    } catch {}
+  }, []);
+
+  const refreshReviews = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/reviews");
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json?.data && Array.isArray(json.data)) {
+        if (getReviewsSignature(json.data) !== getReviewsSignature(reviewsRef.current)) {
+          isRemoteSyncingRef.current = true;
+          setReviews(json.data);
         }
-      }).catch(() => {});
-    }, 6000);
+      }
+    } catch {}
+  }, []);
 
-    return () => clearInterval(intervalId);
-  }, [isLoaded]);
+  // Real-time Server-Sent Events (SSE) across different browsers (Chrome, Edge, Firefox, Incognito)
+  useEffect(() => {
+    if (typeof window === "undefined" || !isLoaded) return;
 
-  // Realtime Cross-Tab / Cross-Window Sync Effect
+    let eventSource: EventSource | null = null;
+    let reconnectTimeout: any = null;
 
+    const connectSSE = () => {
+      try {
+        eventSource = new EventSource("/api/realtime");
+
+        eventSource.addEventListener("data_changed", (event) => {
+          try {
+            const payload = JSON.parse(event.data);
+            if (payload.entity === "orders") {
+              refreshOrders();
+            } else if (payload.entity === "transactions") {
+              refreshTransactions();
+              refreshOrders();
+            } else if (payload.entity === "reviews") {
+              refreshReviews();
+            }
+          } catch {}
+        });
+
+        eventSource.onerror = () => {
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          if (!reconnectTimeout) {
+            reconnectTimeout = setTimeout(() => {
+              reconnectTimeout = null;
+              connectSSE();
+            }, 4000);
+          }
+        };
+      } catch (e) {
+        console.warn("Realtime SSE connection notice, fallback active:", e);
+      }
+    };
+
+    connectSSE();
+
+    // Gentle polling fallback every 3.5s - with smart signatures, has 0% UI lag and never causes jitter
+    const pollInterval = setInterval(() => {
+      refreshOrders();
+      refreshTransactions();
+      refreshReviews();
+    }, 3500);
+
+    return () => {
+      if (eventSource) eventSource.close();
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      clearInterval(pollInterval);
+    };
+  }, [isLoaded, refreshOrders, refreshTransactions, refreshReviews]);
+
+  // Fast local BroadcastChannel for same-browser tabs (without echo, without storage event storm)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const syncStateFromStorage = () => {
-      try {
-        const savedUsers = localStorage.getItem(STORAGE_KEYS.USERS);
-        const savedServices = localStorage.getItem(STORAGE_KEYS.SERVICES);
-        const savedProjects = localStorage.getItem(STORAGE_KEYS.PROJECTS);
-        const savedOrders = localStorage.getItem(STORAGE_KEYS.ORDERS);
-        const savedReviews = localStorage.getItem(STORAGE_KEYS.REVIEWS);
-        const savedTxns = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-
-        if (savedUsers) setUsers(JSON.parse(savedUsers));
-        if (savedServices) setServices(JSON.parse(savedServices));
-        if (savedProjects) {
-          const parsed: SampleProject[] = JSON.parse(savedProjects);
-          const updated = parsed.map((p) => {
-            const seed = SEED_PROJECTS.find((s) => s.id === p.id);
-            return seed ? { ...p, description: seed.description } : p;
-          });
-          const missingSeed = SEED_PROJECTS.filter((sp) => !updated.some((p) => p.id === sp.id));
-          setProjects([...updated, ...missingSeed]);
-        }
-        if (savedOrders) setOrders(JSON.parse(savedOrders));
-        if (savedReviews) setReviews(JSON.parse(savedReviews));
-        if (savedTxns) setTransactions(JSON.parse(savedTxns));
-        const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
-        if (savedCart) setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Realtime sync load failed", e);
-      }
-    };
-
     let channel: BroadcastChannel | null = null;
     if ("BroadcastChannel" in window) {
-      channel = new BroadcastChannel("4youtech_realtime_channel");
-      channel.onmessage = (event) => {
-        if (event.data?.type === "4YOUTECH_REALTIME_SYNC") {
-          syncStateFromStorage();
-        }
-      };
-    }
+      try {
+        channel = new BroadcastChannel("4youtech_realtime_channel");
+        channel.onmessage = (event) => {
+          const msg = event.data;
+          // Ignore messages originating from our own tab
+          if (!msg || msg.sourceTabId === tabIdRef.current) return;
 
-    const handleStorageEvent = (e: StorageEvent) => {
-      if (e.key && Object.values(STORAGE_KEYS).includes(e.key)) {
-        syncStateFromStorage();
-      }
-    };
-    window.addEventListener("storage", handleStorageEvent);
+          if (msg.type === "4YOUTECH_DATA_SYNC") {
+            isRemoteSyncingRef.current = true;
+            if (msg.entity === "orders" && msg.data) {
+              if (getOrdersSignature(msg.data) !== getOrdersSignature(ordersRef.current)) {
+                setOrders(msg.data);
+              }
+            } else if (msg.entity === "transactions" && msg.data) {
+              if (getTxnsSignature(msg.data) !== getTxnsSignature(transactionsRef.current)) {
+                setTransactions(msg.data);
+              }
+            } else if (msg.entity === "reviews" && msg.data) {
+              if (getReviewsSignature(msg.data) !== getReviewsSignature(reviewsRef.current)) {
+                setReviews(msg.data);
+              }
+            }
+          }
+        };
+      } catch (e) {}
+    }
 
     return () => {
       if (channel) channel.close();
-      window.removeEventListener("storage", handleStorageEvent);
     };
   }, []);
 
-  // Save changes to localStorage & broadcast realtime update
+  // Save changes to localStorage & broadcast locally only when changes originate from THIS tab
   useEffect(() => {
     if (!isLoaded) return;
     try {
@@ -386,18 +531,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
       localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
       if (activeOtpSession) localStorage.setItem(STORAGE_KEYS.OTP_SESSION, JSON.stringify(activeOtpSession));
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
       localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
-
-      if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-        const channel = new BroadcastChannel("4youtech_realtime_channel");
-        channel.postMessage({ type: "4YOUTECH_REALTIME_SYNC", timestamp: Date.now() });
-        channel.close();
-      }
     } catch (e) {
       console.error("Failed to save state to localStorage", e);
     }
-  }, [users, services, projects, orders, reviews, transactions, activeOtpSession, currentUser, cart, isLoaded]);
+
+    // If change came from remote/other tab, do not re-broadcast
+    if (isRemoteSyncingRef.current) {
+      isRemoteSyncingRef.current = false;
+      return;
+    }
+
+    // Broadcast update to other tabs of the SAME browser
+    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      try {
+        const channel = new BroadcastChannel("4youtech_realtime_channel");
+        channel.postMessage({
+          type: "4YOUTECH_DATA_SYNC",
+          sourceTabId: tabIdRef.current,
+          entity: "orders",
+          data: orders
+        });
+        channel.close();
+      } catch {}
+    }
+  }, [users, services, projects, orders, reviews, transactions, activeOtpSession, cart, isLoaded]);
+
+  // Persist currentUser in sessionStorage per tab so different tabs can have different roles (e.g. Admin & Customer)
+  useEffect(() => {
+    if (!isLoaded || !currentUser) return;
+    try {
+      sessionStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
+    } catch {}
+  }, [currentUser, isLoaded]);
 
   const login = (email: string, pass: string, roleFilter?: Role) => {
     const cleanEmail = email.trim().toLowerCase();
@@ -801,17 +968,69 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const assignStaff = (orderId: string, staffId: string, staffName: string, collaborators?: string[]) => {
+  const assignStaff = (
+    orderId: string,
+    staffId: string,
+    staffName: string,
+    collaborators?: string[],
+    assignmentNote?: string
+  ) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
     setOrders((prev) => {
       const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
+        const nextStatus = o.status === "submitted" ? "under_review" : o.status;
+        const collabText = collaborators && collaborators.length > 0 ? ` (Cộng sự: ${collaborators.join(", ")})` : "";
+        const noteText = assignmentNote?.trim() ? `\n📝 Ghi chú chỉ đạo: "${assignmentNote.trim()}"` : "";
         return {
           ...o,
+          status: nextStatus,
           assignedStaffId: staffId,
           assignedStaffName: staffName,
           collaborators: collaborators || o.collaborators,
-          updatedAt: now
+          updatedAt: now,
+          messages: [
+            ...o.messages,
+            {
+              id: `msg-${Date.now()}`,
+              senderId: currentUser.id,
+              senderName: currentUser.name || "Admin",
+              senderRole: "admin",
+              text: `👤 Admin đã phân công nhân sự phụ trách: ${staffName}${collabText}.${noteText} Nhân sự sẽ tiếp nhận và tiến hành thực hiện yêu cầu!`,
+              createdAt: now
+            }
+          ]
+        };
+      });
+      const target = next.find((o) => o.id === orderId);
+      if (target) syncOrderToDb(target);
+      return next;
+    });
+  };
+
+  const acceptStaffTask = (orderId: string) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
+        if (o.id !== orderId) return o;
+        const nextStatus: OrderStatus = ["submitted", "under_review"].includes(o.status) ? "in_progress" : o.status;
+        const nextProgress = Math.max(o.progressPercent, 20);
+        return {
+          ...o,
+          status: nextStatus,
+          progressPercent: nextProgress,
+          updatedAt: now,
+          messages: [
+            ...o.messages,
+            {
+              id: `msg-${Date.now()}`,
+              senderId: currentUser.id,
+              senderName: currentUser.name,
+              senderRole: "staff",
+              text: `🚀 [Xác Nhận Nhận Việc]: Nhân sự ${currentUser.name} đã tiếp nhận nhiệm vụ và bắt đầu triển khai đơn hàng #${o.id}!`,
+              createdAt: now
+            }
+          ]
         };
       });
       const target = next.find((o) => o.id === orderId);
@@ -945,13 +1164,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
         const quotedTotal = o.quotation?.amount || 0;
-        const isFullySettled = (quotedTotal > 0 && totalVerifiedForOrder >= quotedTotal) || paymentType === "full" || (paymentType === "remaining" && o.status === "accepted");
-        const nextStatus: OrderStatus = isFullySettled ? "completed" : "in_progress";
+        const hasAcceptedDeliv = o.status === "accepted" || o.deliverables?.some((d) => d.status === "accepted");
+        const isFullySettled = (quotedTotal > 0 && totalVerifiedForOrder >= quotedTotal) || paymentType === "full" || paymentType === "remaining";
+        const isCompleted = isFullySettled && hasAcceptedDeliv;
+        const nextStatus: OrderStatus = isCompleted ? "completed" : "in_progress";
+        const nextProgress = isCompleted ? 100 : Math.max(o.progressPercent, 50);
 
         return {
           ...o,
           status: nextStatus,
-          progressPercent: isFullySettled ? 100 : Math.max(o.progressPercent, 25),
+          progressPercent: nextProgress,
+          milestones: isCompleted ? o.milestones.map((m) => ({ ...m, completed: true })) : o.milestones,
           paymentInfo: {
             amountPaid: totalVerifiedForOrder,
             paymentMethod: "VNPay",
@@ -968,8 +1191,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderId: currentUser.id,
               senderName: currentUser.name,
               senderRole: "customer",
-              text: isFullySettled
-                ? `💳 [VNPAY SUCCESS]: Thanh toán ${amount.toLocaleString("vi-VN")} ₫ qua VNPay thành công! Đơn hàng chính thức HOÀN THÀNH 100%.`
+              text: isCompleted
+                ? `💳 [VNPAY SUCCESS]: Đã hoàn tất thanh toán ${amount.toLocaleString("vi-VN")} ₫ qua VNPay! Đơn hàng đã hoàn thành nghiệm thu & thanh toán 100% (HOÀN TẤT BÀN GIAO).`
+                : isFullySettled
+                ? `💳 [VNPAY SUCCESS]: Thanh toán ${amount.toLocaleString("vi-VN")} ₫ qua VNPay thành công (Đã thanh toán đủ 100%)!`
                 : `💳 [VNPAY GATEWAY SUCCESS]: Thanh toán đặt cọc 50% (${amount.toLocaleString("vi-VN")} ₫) qua VNPay Sandbox thành công! (Ngân hàng: ${bankCode}, Ref: ${txnRef}, Status: 00). Đơn hàng tự động khởi chạy!`,
               createdAt: now
             }
@@ -1001,13 +1226,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== txn.orderId) return o;
         const quotedTotal = o.quotation?.amount || 0;
-        const isFullySettled = (quotedTotal > 0 && totalVerifiedForOrder >= quotedTotal) || txn.paymentType === "full" || (txn.paymentType === "remaining" && o.status === "accepted");
-        const nextStatus: OrderStatus = isFullySettled ? "completed" : "in_progress";
+        const hasAcceptedDeliv = o.status === "accepted" || o.deliverables?.some((d) => d.status === "accepted");
+        const isFullySettled = (quotedTotal > 0 && totalVerifiedForOrder >= quotedTotal) || txn.paymentType === "full" || txn.paymentType === "remaining";
+        const isCompleted = isFullySettled && hasAcceptedDeliv;
+        const nextStatus: OrderStatus = isCompleted ? "completed" : "in_progress";
+        const nextProgress = isCompleted ? 100 : Math.max(o.progressPercent, 50);
 
         return {
           ...o,
           status: nextStatus,
-          progressPercent: isFullySettled ? 100 : Math.max(o.progressPercent, 25),
+          progressPercent: nextProgress,
+          milestones: isCompleted ? o.milestones.map((m) => ({ ...m, completed: true })) : o.milestones,
           paymentInfo: {
             amountPaid: totalVerifiedForOrder,
             receiptImage: txn.receiptImage || o.paymentInfo?.receiptImage || "",
@@ -1024,8 +1253,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderId: currentUser.id,
               senderName: currentUser.name,
               senderRole: "admin",
-              text: isFullySettled
-                ? `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Đơn hàng đã hoàn tất 100% thanh toán và chuyển sang Hoàn Thành!`
+              text: isCompleted
+                ? `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫). Đơn hàng đã hoàn tất nghiệm thu và thanh toán 100%, chuyển sang HOÀN THÀNH!`
+                : isFullySettled
+                ? `✅ Admin đã duyệt thanh toán giao dịch ${txn.id} (${txn.amount.toLocaleString("vi-VN")} ₫, 100% chi phí). Đơn hàng đang được thực hiện!`
                 : `✅ Admin đã duyệt thanh toán đặt cọc 50% (${txn.amount.toLocaleString("vi-VN")} ₫, Mã GD: ${txn.id}). Đơn hàng chính thức đi vào sản xuất!`,
               createdAt: now
             }
@@ -1235,13 +1466,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const quotedTotal = o.quotation?.amount || 0;
         const amountPaid = o.paymentInfo?.amountPaid || 0;
         const remaining = Math.max(0, quotedTotal - amountPaid);
-        const isFullyPaid = quotedTotal > 0 && remaining <= 0;
+        const isFullyPaid = (quotedTotal > 0 && amountPaid >= quotedTotal) || (o.paymentInfo?.paymentStatus === "verified" && remaining <= 0);
         const nextStatus: OrderStatus = isFullyPaid ? "completed" : "accepted";
+        const nextProgress = isFullyPaid ? 100 : 90;
 
         return {
           ...o,
           status: nextStatus,
-          progressPercent: 100,
+          progressPercent: nextProgress,
+          milestones: isFullyPaid ? o.milestones.map((m) => ({ ...m, completed: true })) : o.milestones,
           deliverables: o.deliverables.map((d, idx) =>
             d.id === deliverableId ||
             deliverableId === "del-latest" ||
@@ -1258,7 +1491,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               senderName: currentUser.name,
               senderRole: currentUser.role,
               text: isFullyPaid
-                ? "🎉 Khách hàng đã chấp nhận kết quả bàn giao và hoàn tất nghiệm thu đơn hàng (Đã thanh toán 100%)!"
+                ? "🎉 Khách hàng đã chấp nhận kết quả bàn giao và hoàn tất đơn hàng 100% (Đã thanh toán đủ)!"
                 : `🎉 Khách hàng đã nghiệm thu sản phẩm bàn giao thành công! Vui lòng thanh toán 50% số tiền còn lại (${remaining.toLocaleString("vi-VN")} ₫) để hoàn tất bàn giao chính thức.`,
               createdAt: now
             }
@@ -1321,7 +1554,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setOrders((prev) => {
       const next: ServiceOrder[] = prev.map((o) =>
-        o.id === orderId ? { ...o, status: "completed" as OrderStatus, review: newReview, updatedAt: now } : o
+        o.id === orderId
+          ? {
+              ...o,
+              status: "completed" as OrderStatus,
+              progressPercent: 100,
+              milestones: o.milestones.map((m) => ({ ...m, completed: true })),
+              review: newReview,
+              updatedAt: now
+            }
+          : o
       );
       const updatedOrder = next.find((o) => o.id === orderId);
       if (updatedOrder) syncOrderToDb(updatedOrder);
@@ -1426,13 +1668,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // --- Support & Complaint Handling Flow (Luật BVQLNTD Điều 31 & Điều 36, ISO 10002:2018) ---
   const submitSupportTicket = (
     orderId: string,
     subject: string,
     content: string,
-    type: "support" | "complaint"
+    type: "support" | "complaint",
+    category?: TicketCategory,
+    priority?: TicketPriority
   ) => {
     const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    // SLA cam kết thông báo việc tiếp nhận trong vòng 03 ngày làm việc (Điều 31 Luật BVQLNTD)
+    const deadlineDate = new Date();
+    deadlineDate.setDate(deadlineDate.getDate() + 3);
+    const slaDeadline = deadlineDate.toISOString().replace("T", " ").substring(0, 16);
+
     setOrders((prev) => {
       const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
@@ -1444,7 +1694,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           subject,
           content,
           type,
+          category: category || (type === "complaint" ? "quality_issue" : "post_handover"),
+          priority: priority || "medium",
           status: "open",
+          slaAcknowledgeDeadline: slaDeadline,
           createdAt: now
         };
         return {
@@ -1459,7 +1712,71 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const acknowledgeSupportTicket = (orderId: string, ticketId: string, staffName?: string) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
+        if (o.id !== orderId) return o;
+        return {
+          ...o,
+          supportTickets: o.supportTickets.map((t) =>
+            t.id === ticketId
+              ? {
+                  ...t,
+                  status: "acknowledged" as const,
+                  acknowledgedAt: now,
+                  assignedStaffId: currentUser.id,
+                  assignedStaffName: staffName || currentUser.name
+                }
+              : t
+          ),
+          updatedAt: now
+        };
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
+  };
+
+  const applyTicketRemedy = (
+    orderId: string,
+    ticketId: string,
+    remedyType: RemedyType,
+    remedyDetails: string,
+    response: string
+  ) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
+        if (o.id !== orderId) return o;
+        return {
+          ...o,
+          supportTickets: o.supportTickets.map((t) =>
+            t.id === ticketId
+              ? {
+                  ...t,
+                  status: "resolved" as const,
+                  remedyType,
+                  remedyDetails,
+                  response,
+                  resolvedAt: now,
+                  assignedStaffId: currentUser.id,
+                  assignedStaffName: currentUser.name
+                }
+              : t
+          ),
+          updatedAt: now
+        };
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
+  };
+
   const resolveSupportTicket = (orderId: string, ticketId: string, response: string) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
     setOrders((prev) => {
       const next: ServiceOrder[] = prev.map((o) => {
         if (o.id !== orderId) return o;
@@ -1471,11 +1788,169 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                   ...t,
                   status: "resolved" as const,
                   response,
+                  resolvedAt: now,
                   assignedStaffId: currentUser.id,
                   assignedStaffName: currentUser.name
                 }
               : t
+          ),
+          updatedAt: now
+        };
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
+  };
+
+  const rateComplaintResolution = (orderId: string, ticketId: string, rating: number) => {
+    setOrders((prev) => {
+      const next: ServiceOrder[] = prev.map((o) => {
+        if (o.id !== orderId) return o;
+        return {
+          ...o,
+          supportTickets: o.supportTickets.map((t) =>
+            t.id === ticketId
+              ? {
+                  ...t,
+                  customerSatisfactionRating: rating
+                }
+              : t
           )
+        };
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
+  };
+
+  // --- UAT & Acceptance Form Flow (Mẫu M3 - Góp ý 1.2 & 2.3) ---
+  const submitUatChecklist = (orderId: string, items: UatCheckItem[], notes?: string) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    const allPassed = items.length > 0 && items.every((i) => i.passed);
+    setOrders((prev) => {
+      const next = prev.map((o) => {
+        if (o.id !== orderId) return o;
+        const currentSubmission: UatFormSubmission = {
+          status: allPassed ? "passed" : "rejected",
+          items,
+          testerName: currentUser.name || o.customerName,
+          submittedAt: now,
+          feedbackNotes: notes,
+          acceptanceSignoff: o.uatSubmission?.acceptanceSignoff
+        };
+        return {
+          ...o,
+          uatSubmission: currentSubmission,
+          updatedAt: now
+        };
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
+  };
+
+  const signoffAcceptance = (orderId: string, signedName: string, rating: number, comment?: string) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    setOrders((prev) => {
+      const next = prev.map((o) => {
+        if (o.id !== orderId) return o;
+        const existingItems = o.uatSubmission?.items || [
+          { id: "u1", category: "functional" as const, criteria: "Chức năng đáp ứng cam kết SOW", passed: true },
+          { id: "u2", category: "visual" as const, criteria: "Mỹ thuật & Thiết kế đạt chuẩn", passed: true },
+          { id: "u3", category: "compatibility" as const, criteria: "Tương thích thiết bị / định dạng file", passed: true },
+          { id: "u4", category: "documentation" as const, criteria: "Tài liệu & Hướng dẫn đầy đủ", passed: true }
+        ];
+        const updatedUat: UatFormSubmission = {
+          status: "passed",
+          items: existingItems,
+          testerName: signedName,
+          submittedAt: now,
+          acceptanceSignoff: {
+            confirmed: true,
+            signedName,
+            signedAt: now,
+            ratingSatisfaction: rating,
+            comment
+          }
+        };
+        return {
+          ...o,
+          status: "accepted" as const,
+          acceptedAt: now,
+          uatSubmission: updatedUat,
+          isFirstPassAcceptance: (o.revisions?.length || 0) === 0,
+          deliverables: o.deliverables.map(d => ({ ...d, status: "accepted" as const })),
+          updatedAt: now
+        };
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
+  };
+
+  const confirmTransferSession = (orderId: string, meetLink?: string, docsUrl?: string) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    setOrders((prev) => {
+      const next = prev.map((o) => {
+        if (o.id !== orderId) return o;
+        const updatedTransfer: TransferSession = {
+          isCompleted: true,
+          sessionDate: now,
+          meetLink: meetLink || o.transferSession?.meetLink || "https://meet.google.com/4youtech-transfer",
+          videoRecordingUrl: o.transferSession?.videoRecordingUrl || "https://drive.google.com/transfer-recording",
+          docsUrl: docsUrl || o.transferSession?.docsUrl || "https://docs.4youtech.com/handover-guide",
+          completedAt: now,
+          customerConfirmed: true
+        };
+        return {
+          ...o,
+          transferSession: updatedTransfer,
+          updatedAt: now
+        };
+      });
+      const targetOrder = next.find((o) => o.id === orderId);
+      if (targetOrder) syncOrderToDb(targetOrder);
+      return next;
+    });
+  };
+
+  // --- Post-Service Evaluation & Survey Flow (ISO 10004:2018 & SUS - Góp ý 2.4) ---
+  const submitPostServiceSurvey = (
+    orderId: string,
+    survey: Omit<PostServiceSurvey, "id" | "orderId" | "customerName" | "submittedAt">
+  ) => {
+    const now = new Date().toISOString().replace("T", " ").substring(0, 16);
+    const surveyId = `srv-${Date.now()}`;
+    setOrders((prev) => {
+      const next = prev.map((o) => {
+        if (o.id !== orderId) return o;
+        const newSurvey: PostServiceSurvey = {
+          id: surveyId,
+          orderId,
+          customerName: o.customerName,
+          submittedAt: now,
+          ...survey
+        };
+        const autoReview: ServiceReview = {
+          id: `rev-${Date.now()}`,
+          orderId,
+          serviceId: o.serviceId,
+          serviceName: o.serviceName,
+          customerName: o.customerName,
+          rating: survey.q6_overallSatisfaction || 5,
+          comment: survey.bestPoint || "Dịch vụ chuyên nghiệp, hỗ trợ tận tâm!",
+          createdAt: now,
+          moderated: true
+        };
+        return {
+          ...o,
+          postServiceSurvey: newSurvey,
+          review: o.review || autoReview,
+          updatedAt: now
         };
       });
       const targetOrder = next.find((o) => o.id === orderId);
@@ -1606,6 +2081,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         issueQuotation,
         setOrderEditingState,
         assignStaff,
+        acceptStaffTask,
         submitPaymentTransaction,
         submitVNPaySandboxPayment,
         approvePaymentTransaction,
@@ -1623,7 +2099,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         requestCancellation,
         handleCancellation,
         submitSupportTicket,
+        acknowledgeSupportTicket,
+        applyTicketRemedy,
         resolveSupportTicket,
+        rateComplaintResolution,
+        submitUatChecklist,
+        signoffAcceptance,
+        confirmTransferSession,
+        submitPostServiceSurvey,
         updateStaffSkills,
         resetToDefaultSeed
       }}

@@ -9,12 +9,14 @@ import { StaffView } from "@/components/staff-view";
 import { AdminView } from "@/components/admin-view";
 import { UnifiedAuthPage } from "@/components/auth-pages";
 import { AboutView } from "@/components/about-view";
+import { CustomerProtectionPolicyModal } from "@/components/customer-protection-policy-modal";
 import { Sparkles, Heart, ShieldCheck, Mail, Phone, MapPin, Lock, LogOut } from "lucide-react";
 
 function MainAppContent() {
   const { currentUser, logout, switchRole } = useApp();
   const [activeTab, setActiveTab] = useState<"catalog" | "projects" | "about" | "workspace" | "auth">("catalog");
   const [preselectedBookingServiceId, setPreselectedBookingServiceId] = useState<string | string[] | undefined>(undefined);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
 
   const handleSelectServiceToBook = (serviceId: string | string[]) => {
     setPreselectedBookingServiceId(serviceId);
@@ -36,6 +38,7 @@ function MainAppContent() {
         setActiveTab={(t) => setActiveTab(t)}
         onOpenAuth={handleOpenAuth}
         onSelectServiceToBook={handleSelectServiceToBook}
+        onOpenPolicy={() => setShowPolicyModal(true)}
       />
 
       {/* Main Content Router */}
@@ -53,6 +56,7 @@ function MainAppContent() {
           <GuestView
             onSelectServiceToBook={handleSelectServiceToBook}
             onSwitchToWorkspace={() => setActiveTab("workspace")}
+            onOpenPolicy={() => setShowPolicyModal(true)}
             activeTab="catalog"
           />
         )}
@@ -62,6 +66,7 @@ function MainAppContent() {
           <GuestView
             onSelectServiceToBook={handleSelectServiceToBook}
             onSwitchToWorkspace={() => setActiveTab("workspace")}
+            onOpenPolicy={() => setShowPolicyModal(true)}
             activeTab="projects"
           />
         )}
@@ -104,12 +109,14 @@ function MainAppContent() {
             {/* Column 1: Brand & Social */}
             <div className="space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl gradient-btn flex items-center justify-center font-black text-lg shadow-md">
-                  4Y
-                </div>
+                <img 
+                  src="/images/logo-4youtech-badge.png" 
+                  alt="4YouTech Logo" 
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-md"
+                />
                 <div className="flex flex-col">
                   <span className="font-black text-lg text-white tracking-tight leading-none">4YouTech</span>
-                  <span className="text-[10px] text-cyan-400 font-bold leading-tight mt-0.5">Ideas for a better tomorrow</span>
+                  <span className="text-[10px] text-cyan-400 font-bold leading-tight mt-0.5">Your Tech&Design Partner</span>
                 </div>
               </div>
 
@@ -151,6 +158,15 @@ function MainAppContent() {
                 <li><button onClick={() => setActiveTab("about")} className="hover:text-cyan-400 transition">Về chúng tôi</button></li>
                 <li><button onClick={() => setActiveTab("projects")} className="hover:text-cyan-400 transition">Sản phẩm mẫu</button></li>
                 <li><a href="#catalog" className="hover:text-cyan-400 transition">Quy trình làm việc</a></li>
+                <li>
+                  <button
+                    onClick={() => setShowPolicyModal(true)}
+                    className="text-cyan-400 hover:text-cyan-300 font-bold transition flex items-center gap-1.5"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                    Chính sách bảo vệ KH (M1)
+                  </button>
+                </li>
                 <li><button onClick={() => setActiveTab("about")} className="hover:text-cyan-400 transition">Câu hỏi thường gặp</button></li>
               </ul>
             </div>
@@ -174,15 +190,29 @@ function MainAppContent() {
           {/* Bottom Copyright line */}
           <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
             <div>© 2026 4YouTech. All rights reserved.</div>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <a href="#" className="hover:text-slate-300 transition">Điều khoản sử dụng</a>
               <span>|</span>
               <a href="#" className="hover:text-slate-300 transition">Chính sách bảo mật</a>
+              <span>|</span>
+              <button
+                onClick={() => setShowPolicyModal(true)}
+                className="text-cyan-400 hover:text-cyan-300 font-bold transition flex items-center gap-1"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Chính sách bảo vệ quyền lợi KH (Luật 19/2023/QH15 & ISO 10002)
+              </button>
             </div>
           </div>
 
         </div>
       </footer>
+
+      {/* Customer Protection Policy Modal (Minh chứng M1) */}
+      <CustomerProtectionPolicyModal
+        isOpen={showPolicyModal}
+        onClose={() => setShowPolicyModal(false)}
+      />
     </div>
   );
 }

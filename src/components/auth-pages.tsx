@@ -332,9 +332,11 @@ export function UnifiedAuthPage({
           <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
           <div className="space-y-4 relative z-10">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-2xl">
-              4Y
-            </div>
+            <img 
+              src="/images/logo-4youtech-badge.png" 
+              alt="4YouTech Logo" 
+              className="w-12 h-12 rounded-2xl object-contain shadow-lg shadow-black/40"
+            />
             <h2 className="text-2xl font-black tracking-tight leading-tight">
               Cổng Đăng Nhập <br />
               <span className="text-cyan-300">Dùng Chung Hệ Thống</span>

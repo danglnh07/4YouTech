@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { queryDb } from "@/lib/db";
 import { SEED_TRANSACTIONS } from "@/lib/store";
+import { notifyDataChange } from "@/lib/realtime-bus";
 
 export async function GET() {
   try {
@@ -34,6 +35,25 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const txn = await request.json();
+
+    // Ensure customer user exists in Users table to avoid FK violations
+    if (txn.customerId) {
+      try {
+        const userExist = await queryDb<any>(
+          `SELECT 1 FROM "Users" WHERE "UserId" = ?`,
+          [txn.customerId]
+        );
+        if (!userExist || userExist.length === 0) {
+          await queryDb(
+            `INSERT INTO "Users" ("UserId", "Name", "Email", "Phone", "Role", "Status")
+             VALUES (?, ?, ?, ?, 'customer', 'active')`,
+            [txn.customerId, txn.customerName || "Khách hàng", "", ""]
+          );
+        }
+      } catch (uErr) {
+        console.warn("User auto-provisioning warning:", uErr);
+      }
+    }
 
     const existing = await queryDb<any>(
       `SELECT 1 FROM "PaymentTransactions" WHERE "TransactionId" = ?`,
@@ -86,6 +106,12 @@ export async function POST(request: Request) {
           txn.vnpResponseCode || null
         ]
       );
+    }
+
+    // Broadcast real-time change to all connected browsers
+    notifyDataChange("transactions", "update", txn.id);
+    if (txn.orderId) {
+      notifyDataChange("orders", "update", txn.orderId);
     }
 
     return NextResponse.json({

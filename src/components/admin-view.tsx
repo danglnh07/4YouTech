@@ -14,6 +14,8 @@ import {
   formatDaysRange
 } from "@/lib/store";
 import { DeliverableImage } from "@/components/deliverable-image";
+import { PilotKpiDashboard } from "@/components/pilot-kpi-dashboard";
+import { SupportTicketsManagement } from "@/components/support-tickets-management";
 import {
   ShieldCheck,
   Users,
@@ -374,8 +376,10 @@ export function AdminView() {
     updateStaffSkills
   } = useApp();
 
+  const allTickets = useMemo(() => orders.flatMap((o) => o.supportTickets || []), [orders]);
+
   const [activeAdminTab, setActiveAdminTab] = useState<
-    "overview" | "requests" | "payments" | "users" | "services" | "projects" | "reviews"
+    "overview" | "requests" | "payments" | "pilot_kpi" | "tickets" | "users" | "services" | "projects" | "reviews"
   >("overview");
 
   // Selected Order for Detail Inspection Modal or Split View
@@ -404,7 +408,7 @@ export function AdminView() {
 
   // Assign Staff Modal state
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [assignForm, setAssignForm] = useState({ staffId: "", collaborators: "" });
+  const [assignForm, setAssignForm] = useState({ staffId: "", collaborators: "", note: "" });
 
   // Add/Edit Service Modal state
   const [showServiceModal, setShowServiceModal] = useState(false);
@@ -582,6 +586,8 @@ export function AdminView() {
             { id: "overview", label: "Báo Cáo Tổng Quan" },
             { id: "requests", label: `Đơn Hàng (${orders.length})` },
             { id: "payments", label: `Duyệt Thanh Toán (${pendingTxns.length})` },
+            { id: "pilot_kpi", label: "KPI Pilot 10 Khách (Góp ý 2)" },
+            { id: "tickets", label: `Khiếu Nại & Hỗ Trợ (${allTickets.length})` },
             { id: "users", label: `Tài Khoản & Staff (${users.length})` },
             { id: "services", label: `Gói Dịch Vụ (${services.length})` },
             { id: "projects", label: `Dự Án Mẫu (${projects.length})` },
@@ -978,7 +984,8 @@ export function AdminView() {
                             if (isFinished) return;
                             setAssignForm({
                               staffId: selectedOrder.assignedStaffId || staffList[0]?.id || "",
-                              collaborators: selectedOrder.collaborators?.join(", ") || ""
+                              collaborators: selectedOrder.collaborators?.join(", ") || "",
+                              note: ""
                             });
                             setShowAssignModal(true);
                           }}
@@ -1069,6 +1076,92 @@ export function AdminView() {
                       </div>
                     </div>
                   )}
+
+                  {/* Order Completed Celebration & Customer Review in Admin Desk */}
+                  {selectedOrder.status === "completed" && (
+                    <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs space-y-2 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <div className="font-black text-emerald-900 flex items-center gap-2 text-sm">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          🎉 ĐƠN HÀNG HOÀN THÀNH 100%
+                        </div>
+                        <span className="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-full text-[10px]">
+                          Hoàn tất bàn giao
+                        </span>
+                      </div>
+                      <p className="text-emerald-800 text-[11px] leading-relaxed">
+                        Sản phẩm đã được khách hàng nghiệm thu thành công và chi phí đã được thanh toán/quyết toán đủ 100%.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Customer Review Card in Admin Desk */}
+                  {(() => {
+                    const ordRev = selectedOrder.review || reviews.find((r) => r.orderId === selectedOrder.id);
+                    if (!ordRev) {
+                      if (selectedOrder.status === "completed") {
+                        return (
+                          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-500 italic text-center">
+                            Khách hàng chưa gửi đánh giá sao hoặc phản hồi bằng lời cho đơn hàng này.
+                          </div>
+                        );
+                      }
+                      return null;
+                    }
+
+                    return (
+                      <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                            <span>Đánh giá từ khách hàng:</span>
+                            <span className="bg-amber-100 text-amber-900 px-2 py-0.2 rounded-md font-black text-xs">
+                              {ordRev.rating}/5 ★
+                            </span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            ordRev.moderated ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                          }`}>
+                            {ordRev.moderated ? "Công khai" : "Đã ẩn"}
+                          </span>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-xl border border-amber-100 text-slate-800 italic leading-relaxed">
+                          "{ordRev.comment || "Khách hàng không để lại nhận xét bằng lời."}"
+                        </div>
+
+                        {ordRev.replyText && (
+                          <div className="bg-sky-50 p-3 rounded-xl border border-sky-100 space-y-1">
+                            <div className="font-bold text-sky-900 flex items-center justify-between text-[11px]">
+                              <span>💬 Phản hồi từ {ordRev.repliedBy}:</span>
+                              <span className="text-[10px] text-slate-400 font-normal">{ordRev.repliedAt}</span>
+                            </div>
+                            <div className="text-sky-950 font-medium italic">"{ordRev.replyText}"</div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-end gap-2 pt-1 border-t border-amber-200/60">
+                          <button
+                            onClick={() => moderateReview(ordRev.id, !ordRev.moderated)}
+                            className={`px-3 py-1 rounded-lg text-[11px] font-bold transition ${
+                              ordRev.moderated ? "bg-slate-200 text-slate-700 hover:bg-slate-300" : "bg-emerald-600 text-white hover:bg-emerald-700"
+                            }`}
+                          >
+                            {ordRev.moderated ? "Ẩn khỏi web" : "Công khai lại"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setViewingReviewDetail(ordRev);
+                              setReplyInputText(ordRev.replyText || "");
+                            }}
+                            className="px-3.5 py-1 rounded-lg gradient-btn font-bold text-[11px] flex items-center gap-1 shadow-xs"
+                          >
+                            <MessageSquare className="w-3 h-3" /> {ordRev.replyText ? "Sửa phản hồi" : "Phản hồi đánh giá"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                 </div>
               ) : null}
@@ -1212,6 +1305,20 @@ export function AdminView() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* TAB: KPI PILOT 10 KHÁCH HÀNG ĐẦU TIÊN (GÓP Ý 2) */}
+      {activeAdminTab === "pilot_kpi" && (
+        <div className="space-y-6 animate-fade-in">
+          <PilotKpiDashboard orders={orders} />
+        </div>
+      )}
+
+      {/* TAB: KHIẾU NẠI & HỖ TRỢ THEO LUẬT 19/2023 & ISO 10002 (GÓP Ý 1 - M4) */}
+      {activeAdminTab === "tickets" && (
+        <div className="space-y-6 animate-fade-in">
+          <SupportTicketsManagement orders={orders} currentUserRole="admin" />
         </div>
       )}
 
@@ -1778,37 +1885,97 @@ export function AdminView() {
       {/* Assign Staff Modal */}
       {showAssignModal && selectedOrder && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative animate-fade-in">
-            <button onClick={() => setShowAssignModal(false)} className="absolute top-4 right-4 text-slate-400">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-4 relative animate-fade-in shadow-2xl">
+            <button onClick={() => setShowAssignModal(false)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-700">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="font-black text-slate-900 text-lg">Phân Công Nhân Viên Phụ Trách</h3>
+            <div className="space-y-1">
+              <span className="text-[11px] font-extrabold text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-md uppercase">
+                Phân Công Nhân Sự
+              </span>
+              <h3 className="font-black text-slate-900 text-lg">Chỉ Định Staff Cho Đơn #{selectedOrder.id}</h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Khách hàng: <strong className="text-slate-800">{selectedOrder.customerName}</strong> • Dịch vụ: <strong className="text-slate-800">{selectedOrder.serviceName}</strong>
+              </p>
+            </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Chọn Staff phụ trách chính *</label>
+                <label className="block font-bold text-slate-800 mb-1">Chọn Nhân Sự Phụ Trách Chính *</label>
                 <select
                   value={assignForm.staffId}
                   onChange={(e) => setAssignForm({ ...assignForm, staffId: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none font-bold"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl outline-none font-bold text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-sky-500"
                 >
                   {staffList.map((st) => (
                     <option key={st.id} value={st.id}>
-                      {st.name} ({st.skills?.join(", ")})
+                      👤 {st.name} — ({st.skills?.join(", ") || "Chung"})
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Tên người phối hợp (Collaborators)</label>
+                <label className="block font-bold text-slate-800 mb-1">
+                  Chọn Nhanh Cộng Sự Phối Hợp (Collaborators)
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {staffList
+                    .filter((st) => st.id !== assignForm.staffId)
+                    .map((st) => {
+                      const currentCollabs = assignForm.collaborators
+                        ? assignForm.collaborators.split(",").map((s) => s.trim())
+                        : [];
+                      const isChecked = currentCollabs.includes(st.name);
+
+                      return (
+                        <button
+                          key={st.id}
+                          type="button"
+                          onClick={() => {
+                            let next: string[];
+                            if (isChecked) {
+                              next = currentCollabs.filter((name) => name !== st.name);
+                            } else {
+                              next = [...currentCollabs, st.name];
+                            }
+                            setAssignForm({ ...assignForm, collaborators: next.join(", ") });
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
+                            isChecked
+                              ? "bg-purple-100 text-purple-900 border-purple-300"
+                              : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          {isChecked ? <CheckCircle2 className="w-3.5 h-3.5 text-purple-700" /> : <Plus className="w-3.5 h-3.5 text-slate-400" />}
+                          {st.name}
+                        </button>
+                      );
+                    })}
+                </div>
                 <input
                   type="text"
-                  placeholder="Ví dụ: Phạm Hà Design, Nguyễn IT"
+                  placeholder="Hoặc gõ thêm cộng sự: Nguyễn IT, Phạm Hà..."
                   value={assignForm.collaborators}
                   onChange={(e) => setAssignForm({ ...assignForm, collaborators: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none"
+                  className="w-full px-3.5 py-2 border border-slate-200 rounded-xl outline-none text-slate-800"
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">
+                  Ghi Chú Chỉ Đạo & Yêu Cầu Cho Staff (Tùy chọn)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Ví dụ: Ưu tiên phong cách tối giản, hoàn thành bản thử v1 trước ngày 15..."
+                  value={assignForm.note}
+                  onChange={(e) => setAssignForm({ ...assignForm, note: e.target.value })}
+                  className="w-full px-3.5 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 resize-none"
+                />
+                <span className="text-[10px] text-slate-400 italic block mt-0.5">
+                  Ghi chú này sẽ được gửi trực tiếp vào phòng trao đổi đơn hàng để nhân sự nắm bắt yêu cầu.
+                </span>
               </div>
             </div>
 
@@ -1823,16 +1990,17 @@ export function AdminView() {
                     selectedOrder.id,
                     targetStaff.id,
                     targetStaff.name,
-                    assignForm.collaborators ? assignForm.collaborators.split(",").map((s) => s.trim()) : []
+                    assignForm.collaborators ? assignForm.collaborators.split(",").map((s) => s.trim()).filter(Boolean) : [],
+                    assignForm.note
                   );
                   setShowAssignModal(false);
                   setTimeout(() => setAdminSubmitting(false), 500);
-                  alert(`Đã phân công ${targetStaff.name} làm nhiệm vụ!`);
+                  alert(`Đã phân công ${targetStaff.name} làm nhiệm vụ thành công!`);
                 }
               }}
-              className="w-full py-3 rounded-xl bg-sky-600 text-white font-bold text-xs disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs shadow-md transition disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
-              {adminSubmitting ? "Đang phân công..." : "Xác Nhận Phân Công"}
+              {adminSubmitting ? "Đang phân công..." : "Xác Nhận Phân Công & Thông Báo"}
             </button>
           </div>
         </div>
@@ -2686,6 +2854,79 @@ export function AdminView() {
               </div>
             )}
 
+            {/* Grid Section 5: Completed Status & Customer Review in Modal */}
+            {(() => {
+              const modalReview = selectedOrder.review || reviews.find((r) => r.orderId === selectedOrder.id);
+              if (!modalReview && selectedOrder.status !== "completed") return null;
+
+              return (
+                <div className="bg-amber-50/70 p-5 rounded-3xl border border-amber-200/80 space-y-3 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                      <Star className="w-4 h-4 fill-amber-500 text-amber-500" /> Đánh Giá Dịch Vụ Từ Khách Hàng
+                    </div>
+                    {modalReview && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full text-xs">
+                          {modalReview.rating} / 5 ★
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          modalReview.moderated ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                        }`}>
+                          {modalReview.moderated ? "Công khai" : "Đã ẩn"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {modalReview ? (
+                    <>
+                      <div className="text-slate-800 font-medium bg-white p-3.5 rounded-2xl border border-amber-100 italic leading-relaxed">
+                        "{modalReview.comment || "Khách hàng không để lại nhận xét bằng lời."}"
+                      </div>
+
+                      {modalReview.replyText && (
+                        <div className="bg-sky-50 p-3.5 rounded-2xl border border-sky-100 space-y-1">
+                          <div className="font-bold text-sky-900 flex items-center justify-between text-[11px]">
+                            <span>💬 Phản hồi từ {modalReview.repliedBy}:</span>
+                            <span className="text-[10px] text-slate-400 font-normal">{modalReview.repliedAt}</span>
+                          </div>
+                          <div className="text-sky-950 font-medium italic">"{modalReview.replyText}"</div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-end gap-2 pt-1 border-t border-amber-200/60">
+                        <button
+                          onClick={() => {
+                            moderateReview(modalReview.id, !modalReview.moderated);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                            modalReview.moderated ? "bg-slate-200 text-slate-700 hover:bg-slate-300" : "bg-emerald-600 text-white hover:bg-emerald-700"
+                          }`}
+                        >
+                          {modalReview.moderated ? "Ẩn khỏi web" : "Công khai lại"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowOrderDetailModal(false);
+                            setViewingReviewDetail(modalReview);
+                            setReplyInputText(modalReview.replyText || "");
+                          }}
+                          className="px-4 py-1.5 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-xs"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" /> {modalReview.replyText ? "Sửa phản hồi" : "Phản hồi đánh giá này"}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-slate-500 italic p-3 bg-white rounded-xl border border-amber-100 text-center">
+                      Đơn hàng đã hoàn thành nhưng khách hàng chưa để lại nhận xét bằng lời.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Footer Action Buttons */}
             <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
               <button
@@ -2737,7 +2978,8 @@ export function AdminView() {
                   setShowOrderDetailModal(false);
                   setAssignForm({
                     staffId: selectedOrder.assignedStaffId || staffList[0]?.id || "",
-                    collaborators: selectedOrder.collaborators?.join(", ") || ""
+                    collaborators: selectedOrder.collaborators?.join(", ") || "",
+                    note: ""
                   });
                   setShowAssignModal(true);
                 }}

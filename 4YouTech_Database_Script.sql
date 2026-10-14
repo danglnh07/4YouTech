@@ -21,6 +21,7 @@ GO
 
 -- 2. XÓA BẢNG NẾU ĐÃ TỒN TẠI (Theo thứ tự ngược lại của khóa ngoại)
 IF OBJECT_ID('dbo.PaymentTransactions', 'U') IS NOT NULL DROP TABLE dbo.PaymentTransactions;
+IF OBJECT_ID('dbo.PostServiceSurveys', 'U') IS NOT NULL DROP TABLE dbo.PostServiceSurveys;
 IF OBJECT_ID('dbo.SupportTickets', 'U') IS NOT NULL DROP TABLE dbo.SupportTickets;
 IF OBJECT_ID('dbo.ServiceReviews', 'U') IS NOT NULL DROP TABLE dbo.ServiceReviews;
 IF OBJECT_ID('dbo.OrderMessages', 'U') IS NOT NULL DROP TABLE dbo.OrderMessages;
@@ -199,21 +200,49 @@ CREATE TABLE dbo.ServiceReviews (
 );
 GO
 
--- Bảng 10: Ticket Hỗ trợ & Khiếu nại (SupportTickets)
+-- Bảng 10: Ticket Hỗ trợ & Khiếu nại (SupportTickets) - Tuân thủ Luật BVNTD 19/2023/QH15 & ISO 10002:2018
 CREATE TABLE dbo.SupportTickets (
-    TicketId            NVARCHAR(50) NOT NULL PRIMARY KEY,
-    OrderId             NVARCHAR(50) NOT NULL CONSTRAINT FK_Tickets_Orders REFERENCES dbo.ServiceOrders(OrderId) ON DELETE CASCADE,
-    CustomerId          NVARCHAR(50) NOT NULL CONSTRAINT FK_Tickets_Customers REFERENCES dbo.Users(UserId),
-    CustomerName        NVARCHAR(150) NOT NULL,
-    CustomerEmail       NVARCHAR(150) NOT NULL,
-    Subject             NVARCHAR(255) NOT NULL,
-    Content             NVARCHAR(MAX) NOT NULL,
-    Type                NVARCHAR(20) NOT NULL CONSTRAINT CHK_Tickets_Type CHECK (Type IN ('support', 'complaint')),
-    Status              NVARCHAR(20) NOT NULL DEFAULT 'open' CONSTRAINT CHK_Tickets_Status CHECK (Status IN ('open', 'processing', 'resolved')),
-    AssignedStaffId     NVARCHAR(50) NULL CONSTRAINT FK_Tickets_Staff REFERENCES dbo.Users(UserId),
-    AssignedStaffName   NVARCHAR(150) NULL,
-    Response            NVARCHAR(MAX) NULL,
-    CreatedAt           DATETIME2 NOT NULL DEFAULT GETDATE()
+    TicketId                NVARCHAR(50) NOT NULL PRIMARY KEY,
+    OrderId                 NVARCHAR(50) NOT NULL CONSTRAINT FK_Tickets_Orders REFERENCES dbo.ServiceOrders(OrderId) ON DELETE CASCADE,
+    CustomerId              NVARCHAR(50) NOT NULL CONSTRAINT FK_Tickets_Customers REFERENCES dbo.Users(UserId),
+    CustomerName            NVARCHAR(150) NOT NULL,
+    CustomerEmail           NVARCHAR(150) NOT NULL,
+    Subject                 NVARCHAR(255) NOT NULL,
+    Content                 NVARCHAR(MAX) NOT NULL,
+    Type                    NVARCHAR(20) NOT NULL CONSTRAINT CHK_Tickets_Type CHECK (Type IN ('support', 'complaint')),
+    Category                NVARCHAR(50) NOT NULL DEFAULT 'other' CONSTRAINT CHK_Tickets_Category CHECK (Category IN ('scope_issue', 'deadline_delay', 'quality_defect', 'warranty_support', 'technical_bug', 'other')),
+    Priority                NVARCHAR(20) NOT NULL DEFAULT 'medium' CONSTRAINT CHK_Tickets_Priority CHECK (Priority IN ('low', 'medium', 'high', 'urgent')),
+    Status                  NVARCHAR(20) NOT NULL DEFAULT 'open' CONSTRAINT CHK_Tickets_Status CHECK (Status IN ('open', 'acknowledged', 'processing', 'resolved', 'closed')),
+    SlaAcknowledgeDeadline  DATETIME2 NOT NULL, -- SLA cam kết tiếp nhận <= 3 ngày làm việc (Điều 31 Luật BVNTD 19/2023/QH15)
+    AcknowledgedAt          DATETIME2 NULL,
+    AcknowledgedBy          NVARCHAR(150) NULL,
+    AssignedStaffId         NVARCHAR(50) NULL CONSTRAINT FK_Tickets_Staff REFERENCES dbo.Users(UserId),
+    AssignedStaffName       NVARCHAR(150) NULL,
+    Response                NVARCHAR(MAX) NULL,
+    RemedyType              NVARCHAR(50) NULL CONSTRAINT CHK_Tickets_Remedy CHECK (RemedyType IN ('free_fix', 'partial_refund', 'full_refund_termination', 'scope_extension', 'custom_agreement')), -- Biện pháp khắc phục (Điều 36)
+    RemedyDetails           NVARCHAR(MAX) NULL,
+    ResolvedAt              DATETIME2 NULL,
+    CustomerRating          INT NULL CONSTRAINT CHK_Tickets_CustRating CHECK (CustomerRating BETWEEN 1 AND 5),
+    CreatedAt               DATETIME2 NOT NULL DEFAULT GETDATE()
+);
+GO
+
+-- Bảng 10b: Khảo sát Hài lòng Khách hàng Sau Bàn Giao (PostServiceSurveys) - ISO 10004:2018 & SUS Brooke 1996
+CREATE TABLE dbo.PostServiceSurveys (
+    SurveyId                NVARCHAR(50) NOT NULL PRIMARY KEY,
+    OrderId                 NVARCHAR(50) NOT NULL UNIQUE CONSTRAINT FK_Surveys_Orders REFERENCES dbo.ServiceOrders(OrderId) ON DELETE CASCADE,
+    CustomerName            NVARCHAR(150) NOT NULL,
+    Q1_ScopeClarity         INT NOT NULL CONSTRAINT CHK_Surveys_Q1 CHECK (Q1_ScopeClarity BETWEEN 1 AND 5),
+    Q2_ProgressUpdate       INT NOT NULL CONSTRAINT CHK_Surveys_Q2 CHECK (Q2_ProgressUpdate BETWEEN 1 AND 5),
+    Q3_DeliverableQuality   INT NOT NULL CONSTRAINT CHK_Surveys_Q3 CHECK (Q3_DeliverableQuality BETWEEN 1 AND 5),
+    Q4_RevisionHandling     INT NOT NULL CONSTRAINT CHK_Surveys_Q4 CHECK (Q4_RevisionHandling BETWEEN 1 AND 5),
+    Q5_TransferSession      INT NOT NULL CONSTRAINT CHK_Surveys_Q5 CHECK (Q5_TransferSession BETWEEN 1 AND 5),
+    Q6_OverallSatisfaction  INT NOT NULL CONSTRAINT CHK_Surveys_Q6 CHECK (Q6_OverallSatisfaction BETWEEN 1 AND 5), -- CSAT Core Score
+    RecommendIntent         BIT NOT NULL, -- Sẵn sàng giới thiệu (Có / Không)
+    BestPoint               NVARCHAR(MAX) NULL,
+    ImprovePoint            NVARCHAR(MAX) NULL,
+    SusScore                DECIMAL(5, 2) NULL, -- Điểm System Usability Scale 0-100 (Brooke, 1996)
+    SubmittedAt             DATETIME2 NOT NULL DEFAULT GETDATE()
 );
 GO
 

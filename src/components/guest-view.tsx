@@ -35,7 +35,11 @@ import {
   Maximize2,
   ChevronLeft,
   CheckSquare,
-  Square
+  Square,
+  FileText,
+  FileCheck,
+  Headphones,
+  HeartHandshake
 } from "lucide-react";
 
 function formatDisplayUrl(url: string, maxLength = 24): string {
@@ -251,10 +255,12 @@ function AnimatedShowcaseBanner() {
 export function GuestView({
   onSelectServiceToBook,
   onSwitchToWorkspace,
+  onOpenPolicy,
   activeTab
 }: {
   onSelectServiceToBook: (serviceId: string | string[]) => void;
   onSwitchToWorkspace: () => void;
+  onOpenPolicy?: () => void;
   activeTab?: string;
 }) {
   const {
@@ -1167,59 +1173,194 @@ export function GuestView({
         )}
       </section>
 
-      {/* Working Process Section ("Quy trình làm việc") */}
+      {/* 12-Stage Service Lifecycle Section & Customer Protection (Góp ý 1) */}
       <section className="space-y-8 pt-10 border-t border-blue-500/20">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest px-2.5 py-1 rounded bg-blue-950/80 border border-blue-500/30">QUY TRÌNH LÀM VIỆC</span>
-          <h2 className="text-2xl sm:text-3xl font-black text-white">Đơn giản nhưng hiệu quả</h2>
-          <p className="text-slate-400 text-xs">Chúng tôi tối ưu quy trình để mang lại trải nghiệm tốt nhất cho bạn.</p>
+        <div className="text-center max-w-3xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-bold shadow-sm">
+            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <span>QUY TRÌNH 12 BƯỚC CHUẨN HÓA & CHÍNH SÁCH BẢO VỆ KHÁCH HÀNG</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">
+            Quy Trình Dịch Vụ Minh Bạch Từ Tiếp Nhận Đến Hỗ Trợ Sau Bàn Giao
+          </h2>
+          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+            Tuân thủ <strong className="text-cyan-300">Luật Bảo vệ quyền lợi người tiêu dùng số 19/2023/QH15</strong> (Điều 31 & 36), tiêu chuẩn <strong className="text-cyan-300">ISO 10002:2018</strong> và đo lường sự hài lòng theo <strong className="text-cyan-300">ISO 10004:2018</strong>.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl dark-glass-card border border-blue-500/25 relative space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-3xl font-black text-cyan-400">01</span>
-              <div className="w-10 h-10 rounded-2xl bg-blue-900/60 border border-blue-500/30 flex items-center justify-center text-cyan-400">
-                <Mail className="w-5 h-5" />
-              </div>
+        {/* 4 Phases with 12 Stages Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Phase 1: Thẩm Định & Thiết Lập Scope */}
+          <div className="p-5 rounded-3xl dark-glass-card border border-blue-500/30 space-y-3 relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute top-0 right-0 px-3 py-1 bg-blue-900/40 text-blue-300 text-[10px] font-black rounded-bl-xl border-l border-b border-blue-500/20">
+              GIAI ĐOẠN 1
             </div>
-            <div>
-              <h3 className="font-extrabold text-base text-white">Chia sẻ ý tưởng</h3>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Trao đổi nhu cầu, mục tiêu và định hướng dự án để chốt phạm vi công việc.
+            <div className="space-y-2">
+              <div className="w-10 h-10 rounded-2xl bg-blue-900/60 border border-blue-500/30 flex items-center justify-center text-cyan-400">
+                <FileText className="w-5 h-5" />
+              </div>
+              <h3 className="font-extrabold text-sm text-white">1. Thẩm Định & Thiết Lập Scope</h3>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Minh bạch tiêu chí trước khi nhận cọc để bảo vệ quyền lợi 2 bên:
               </p>
+              <ul className="space-y-1.5 text-[11px] text-slate-300">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 font-bold">01.</span>
+                  <span><strong>Request:</strong> Gửi yêu cầu dự án.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 font-bold">02.</span>
+                  <span><strong>Requirement Check:</strong> Rà soát tính khả thi.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 font-bold">03.</span>
+                  <span><strong>Quotation / SOW (M2):</strong> Báo giá, deliverables, phạm vi loại trừ & acceptance criteria.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 font-bold">04.</span>
+                  <span><strong>Deposit 50%:</strong> Chỉ thu cọc 50% bắt đầu.</span>
+                </li>
+              </ul>
+            </div>
+            <div className="text-[10px] font-bold text-cyan-400/90 bg-blue-950/60 p-2 rounded-xl border border-blue-500/20">
+              🔒 Minh chứng M2: Bản SOW cam kết deadline & tiêu chuẩn
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl dark-glass-card border border-blue-500/25 relative space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-3xl font-black text-cyan-400">02</span>
+          {/* Phase 2: Triển Khai & Kiểm Soát */}
+          <div className="p-5 rounded-3xl dark-glass-card border border-cyan-500/30 space-y-3 relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute top-0 right-0 px-3 py-1 bg-cyan-900/40 text-cyan-300 text-[10px] font-black rounded-bl-xl border-l border-b border-cyan-500/20">
+              GIAI ĐOẠN 2
+            </div>
+            <div className="space-y-2">
               <div className="w-10 h-10 rounded-2xl bg-cyan-900/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
                 <Laptop className="w-5 h-5" />
               </div>
+              <h3 className="font-extrabold text-sm text-white">2. Triển Khai & Kiểm Thử UAT</h3>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Đồng hành kiểm thử thực tế trước khi nghiệm thu:
+              </p>
+              <ul className="space-y-1.5 text-[11px] text-slate-300">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 font-bold">05.</span>
+                  <span><strong>Production:</strong> Lập trình / thiết kế theo milestone.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 font-bold">06.</span>
+                  <span><strong>Internal QC:</strong> Kiểm định chất lượng nội bộ.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 font-bold">07.</span>
+                  <span><strong>Customer UAT (M3):</strong> Khách dùng thử, kiểm tra chức năng & giao diện.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 font-bold">08.</span>
+                  <span><strong>Revision:</strong> Chỉnh sửa trong scope (tối đa 3 vòng).</span>
+                </li>
+              </ul>
             </div>
-            <div>
-              <h3 className="font-extrabold text-base text-white">Thiết kế & phát triển</h3>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Lên ý tưởng, thiết kế, lập trình và thường xuyên cập nhật tiến độ cho bạn.
+            <div className="text-[10px] font-bold text-cyan-400/90 bg-cyan-950/60 p-2 rounded-xl border border-cyan-500/20">
+              🧪 ISO 9241-11: Usability qua trải nghiệm người dùng thực
+            </div>
+          </div>
+
+          {/* Phase 3: Nghiệm Thu & Chuyển Giao */}
+          <div className="p-5 rounded-3xl dark-glass-card border border-purple-500/30 space-y-3 relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute top-0 right-0 px-3 py-1 bg-purple-900/40 text-purple-300 text-[10px] font-black rounded-bl-xl border-l border-b border-purple-500/20">
+              GIAI ĐOẠN 3
+            </div>
+            <div className="space-y-2">
+              <div className="w-10 h-10 rounded-2xl bg-purple-900/60 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <FileCheck className="w-5 h-5" />
+              </div>
+              <h3 className="font-extrabold text-sm text-white">3. Nghiệm Thu & Chuyển Giao</h3>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Chỉ thanh toán 50% còn lại khi khách hàng hoàn toàn đồng thuận:
+              </p>
+              <ul className="space-y-1.5 text-[11px] text-slate-300">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-purple-400 font-bold">09.</span>
+                  <span><strong>Acceptance Sign-off:</strong> Ký số xác nhận nghiệm thu.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-purple-400 font-bold">10.</span>
+                  <span><strong>Final Payment:</strong> Thanh toán 50% còn lại & nhận full deliverable.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-purple-400 font-bold">11.</span>
+                  <span><strong>Transfer Session:</strong> Hướng dẫn bàn giao, source code, tài liệu và video demo.</span>
+                </li>
+              </ul>
+            </div>
+            <div className="text-[10px] font-bold text-purple-300 bg-purple-950/60 p-2 rounded-xl border border-purple-500/20">
+              📜 Minh chứng M3: Biên bản UAT & Ký nghiệm thu số hóa
+            </div>
+          </div>
+
+          {/* Phase 4: Bảo Vệ & Cơ Chế Remedy */}
+          <div className="p-5 rounded-3xl dark-glass-card border border-emerald-500/30 space-y-3 relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-900/40 text-emerald-300 text-[10px] font-black rounded-bl-xl border-l border-b border-emerald-500/20">
+              GIAI ĐOẠN 4
+            </div>
+            <div className="space-y-2">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-900/60 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <Headphones className="w-5 h-5" />
+              </div>
+              <h3 className="font-extrabold text-sm text-white">4. Bảo Vệ & Cơ Chế Remedy</h3>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Cam kết đồng hành và xử lý khiếu nại minh bạch (ISO 10002):
+              </p>
+              <ul className="space-y-1.5 text-[11px] text-slate-300">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 font-bold">12a.</span>
+                  <span><strong>Post-handover Support:</strong> Hỗ trợ kỹ thuật 14-30 ngày sau bàn giao.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 font-bold">12b.</span>
+                  <span><strong>SLA Khiếu Nại ≤ 3 ngày:</strong> Tuân thủ Điều 31 Luật BVNTD.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 font-bold">12c.</span>
+                  <span><strong>Remedy Rõ Ràng:</strong> Làm lại miễn phí, giảm phí, hoặc hoàn tiền nếu sai cam kết (Điều 36).</span>
+                </li>
+              </ul>
+            </div>
+            <div className="text-[10px] font-bold text-emerald-300 bg-emerald-950/60 p-2 rounded-xl border border-emerald-500/20">
+              🛡️ Minh chứng M4: Support & Complaint Log có SLA kiểm tra
+            </div>
+          </div>
+
+        </div>
+
+        {/* Customer Protection Policy Callout Card */}
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-blue-950/80 via-slate-900/90 to-cyan-950/80 border border-cyan-500/40 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="p-3 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 shrink-0">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-black text-sm sm:text-base text-white">
+                  Chính Sách Bảo Vệ Quyền Lợi Khách Hàng (Customer Protection Policy)
+                </h4>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                  Hiệu lực từ 01/07/2024
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
+                4YOUTECH thay thế hoàn toàn điều khoản "miễn trừ trách nhiệm sau bàn giao" bằng cơ chế Remedy khắc phục sai sót, cam kết tiếp nhận khiếu nại trong <strong>03 ngày làm việc</strong> và hỗ trợ kỹ thuật dài hạn.
               </p>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl dark-glass-card border border-blue-500/25 relative space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-3xl font-black text-cyan-400">03</span>
-              <div className="w-10 h-10 rounded-2xl bg-purple-900/60 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-            </div>
-            <div>
-              <h3 className="font-extrabold text-base text-white">Bàn giao & hỗ trợ</h3>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Hoàn thiện, bàn giao sản phẩm chính thức và đồng hành hỗ trợ sau dự án.
-              </p>
-            </div>
-          </div>
+          <button
+            onClick={onOpenPolicy}
+            className="px-5 py-2.5 rounded-xl gradient-btn font-bold text-xs flex items-center gap-2 shrink-0 shadow-lg hover:scale-105 transition"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Xem Toàn Văn Chính Sách (M1)
+          </button>
         </div>
       </section>
 

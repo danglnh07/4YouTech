@@ -5,6 +5,10 @@ import { useApp } from "@/lib/app-context";
 import { ServiceOrder, hashPassword, addDaysToDate, formatVNShortDate, formatDaysRange, formatPriceRange } from "@/lib/store";
 import { PaymentCheckoutModal } from "@/components/payment-checkout-modal";
 import { DeliverableImage } from "@/components/deliverable-image";
+import { SowModal } from "@/components/sow-modal";
+import { UatAcceptanceModal } from "@/components/uat-acceptance-modal";
+import { PostServiceSurveyModal } from "@/components/post-service-survey-modal";
+import { SupportTicketsManagement } from "@/components/support-tickets-management";
 import {
   PlusCircle,
   Clock,
@@ -33,7 +37,8 @@ import {
   KeyRound,
   Sparkles,
   CheckSquare,
-  Square
+  Square,
+  ExternalLink
 } from "lucide-react";
 
 export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: string | string[] }) {
@@ -41,6 +46,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
     currentUser,
     orders,
     services,
+    reviews,
     createServiceRequest,
     requestRevision,
     acceptDeliverable,
@@ -52,6 +58,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
   } = useApp();
 
   const myOrders = orders.filter((o) => o.customerId === currentUser.id || o.customerEmail === currentUser.email);
+  const mySupportTickets = myOrders.flatMap((o) => o.supportTickets || []);
   const activeServices = useMemo(() => services.filter((s) => !s.hidden), [services]);
 
   const initialSelectedIds = useMemo(() => {
@@ -63,7 +70,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
     return [preselectedServiceId];
   }, [preselectedServiceId, activeServices]);
 
-  const [activeTab, setActiveTab] = useState<"orders" | "new_request" | "profile">(
+  const [activeTab, setActiveTab] = useState<"orders" | "new_request" | "support" | "profile">(
     preselectedServiceId ? "new_request" : "orders"
   );
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(myOrders[0]?.id || null);
@@ -142,6 +149,11 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [rating, setRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
+
+  // Customer Protection & Evaluation Modals (Góp ý 1 & 2)
+  const [showSowModal, setShowSowModal] = useState(false);
+  const [showUatModal, setShowUatModal] = useState(false);
+  const [showSurveyModal, setShowSurveyModal] = useState(false);
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -319,10 +331,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
           <h1 className="text-2xl sm:text-3xl font-black text-white mt-1">Xin chào, {currentUser.name}!</h1>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-blue-500/20">
+        <div className="flex flex-wrap items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-blue-500/20">
           <button
             onClick={() => setActiveTab("orders")}
-            className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${
               activeTab === "orders"
                 ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -332,17 +344,32 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
           </button>
           <button
             onClick={() => setActiveTab("new_request")}
-            className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-2 ${
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 ${
               activeTab === "new_request"
                 ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
-            <PlusCircle className="w-4.5 h-4.5" /> Đặt Dịch Vụ Mới
+            <PlusCircle className="w-4 h-4" /> Đặt Dịch Vụ Mới
+          </button>
+          <button
+            onClick={() => setActiveTab("support")}
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 ${
+              activeTab === "support"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <LifeBuoy className="w-4 h-4" /> Khiếu Nại & Hỗ Trợ (M4)
+            {mySupportTickets.length > 0 && (
+              <span className="px-1.5 py-0.2 bg-cyan-500/30 text-cyan-300 text-[10px] rounded-full font-black">
+                {mySupportTickets.length}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("profile")}
-            className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${
               activeTab === "profile"
                 ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -873,6 +900,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
               const selectedAmountPaid = selectedOrder.paymentInfo?.amountPaid || 0;
               const selectedRemaining = Math.max(0, selectedQuotedAmount - selectedAmountPaid);
               const isPendingFinalPayment = selectedOrder.status === "accepted" && selectedRemaining > 0;
+              const selectedReview = selectedOrder.review || reviews.find((r) => r.orderId === selectedOrder.id);
 
               return (
               <div className="dark-glass-card rounded-3xl border border-blue-500/30 p-6 sm:p-8 shadow-2xl space-y-8 select-none cursor-default text-slate-100">
@@ -880,11 +908,25 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 {/* Header Summary */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-bold text-slate-400">{selectedOrder.id}</span>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${statusLabel(selectedOrder.status).color}`}>
                         {isPendingFinalPayment ? "Đã Nghiệm Thu (Chờ Thu 50% Còn Lại)" : statusLabel(selectedOrder.status).title}
                       </span>
+                      {selectedOrder.assignedStaffName ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-950/80 text-purple-300 border border-purple-500/40 flex items-center gap-1">
+                          <UserCheck className="w-3.5 h-3.5 text-purple-400" /> Phụ trách: {selectedOrder.assignedStaffName}
+                          {selectedOrder.collaborators && selectedOrder.collaborators.length > 0 && (
+                            <span className="text-[10px] text-purple-400/80">
+                              (+{selectedOrder.collaborators.length} cộng sự)
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-900 text-slate-400 border border-slate-700">
+                          ⏳ Đang chỉ định nhân sự
+                        </span>
+                      )}
                     </div>
                     <h2 className="text-xl font-black text-white mt-1">{selectedOrder.serviceName}</h2>
                   </div>
@@ -909,6 +951,16 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                       </button>
                     )}
 
+                    {selectedOrder.quotation && (
+                      <button
+                        onClick={() => setShowSowModal(true)}
+                        className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-bold text-xs flex items-center gap-1.5 transition"
+                        title="Xem chi tiết Scope of Work, Deliverables, Exclusions và Tiêu chí nghiệm thu"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-cyan-400" /> Xem SOW (M2)
+                      </button>
+                    )}
+
                     {selectedOrder.status === "deliverable_sent" && (
                       <div className="flex items-center gap-2">
                         <button
@@ -918,29 +970,40 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                           Yêu cầu sửa
                         </button>
                         <button
-                          onClick={() => {
-                            const latestDel =
-                              selectedOrder.deliverables && selectedOrder.deliverables.length > 0
-                                ? selectedOrder.deliverables[selectedOrder.deliverables.length - 1]
-                                : null;
-                            const targetDelId = latestDel ? latestDel.id : "del-latest";
-                            acceptDeliverable(selectedOrder.id, targetDelId);
-                            alert("🎉 Đã nghiệm thu sản phẩm bàn giao thành công! Vui lòng thanh toán 50% số tiền còn lại để nhận bàn giao mã nguồn & file chính thức.");
-                          }}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
+                          onClick={() => setShowUatModal(true)}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
                         >
-                          <CheckCircle2 className="w-4 h-4" /> Nghiệm Thu Sản Phẩm
+                          <CheckCircle2 className="w-4 h-4" /> Kiểm Thử UAT & Nghiệm Thu (M3)
                         </button>
                       </div>
                     )}
 
-                    {["accepted", "completed"].includes(selectedOrder.status) && (
+                    {isPendingFinalPayment && (
                       <button
-                        onClick={() => setShowReviewModal(true)}
-                        className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5"
+                        onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                        className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 animate-pulse"
                       >
-                        <Star className="w-3.5 h-3.5 fill-white" /> Đánh Giá Dịch Vụ
+                        <QrCode className="w-3.5 h-3.5" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
                       </button>
+                    )}
+
+                    {(selectedOrder.status === "completed" || (selectedOrder.status === "accepted" && selectedRemaining <= 0)) && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setShowSurveyModal(true)}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition"
+                          title="Khảo sát đo lường chất lượng dịch vụ (ISO 10004:2018) và chỉ số SUS (Brooke, 1996)"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          {selectedOrder.postServiceSurvey ? `Khảo Sát Đã Gửi (${selectedOrder.postServiceSurvey.q6_overallSatisfaction}/5 ⭐)` : "⭐ Khảo Sát Dịch Vụ (ISO 10004)"}
+                        </button>
+                        <button
+                          onClick={() => setShowReviewModal(true)}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-md flex items-center gap-1.5"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-slate-950" /> {selectedReview ? "Xem Đánh Giá Của Bạn" : "⭐ Đánh Giá Nhanh"}
+                        </button>
+                      </div>
                     )}
 
                     {/* Support & Cancel buttons */}
@@ -1035,11 +1098,19 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                 {/* Quotation & VietQR Payment Trigger Details */}
                 {selectedOrder.quotation && (
                   <div className="bg-blue-950/60 p-5 rounded-2xl border border-blue-500/30 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Thông tin Báo Giá & Đặt Cọc 50%</span>
-                      <span className="text-base font-black text-white">
-                        {selectedOrder.quotation.amount.toLocaleString("vi-VN")} ₫
-                      </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Thông tin Báo Giá & Đặt Cọc 50%</span>
+                        <div className="text-base font-black text-white mt-0.5">
+                          {selectedOrder.quotation.amount.toLocaleString("vi-VN")} ₫
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowSowModal(true)}
+                        className="px-3.5 py-1.5 rounded-xl bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-bold text-xs flex items-center gap-1.5 self-start sm:self-auto transition shadow-sm"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-cyan-400" /> Xem Hợp Đồng SOW (M2)
+                      </button>
                     </div>
                     <div className="text-xs text-slate-200 font-medium leading-relaxed">
                       {selectedOrder.quotation.scopeDetails}
@@ -1127,6 +1198,103 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                   </div>
                 )}
 
+                {/* SECTION: Đơn hàng hoàn tất & Đánh giá dịch vụ */}
+                {(selectedOrder.status === "completed" || (selectedOrder.status === "accepted" && selectedRemaining <= 0)) && (
+                  <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950/60 to-slate-900 border border-emerald-500/40 text-slate-100 space-y-4 shadow-xl animate-fade-in">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Đã Hoàn Thành Nghiệm Thu & 100% Chi Phí
+                          </span>
+                          <span className="text-[11px] text-slate-400">Tiến độ: 100%</span>
+                        </div>
+                        <h3 className="text-base font-black text-white">
+                          🎉 Đơn Hàng Đã Hoàn Tất Bàn Giao Thành Công!
+                        </h3>
+                        <p className="text-xs text-slate-300">
+                          Cảm ơn bạn đã lựa chọn dịch vụ của 4YouTech. Hãy gửi nhận xét để giúp chúng tôi ngày một hoàn thiện hơn.
+                        </p>
+                      </div>
+
+                      {!selectedReview ? (
+                        <button
+                          onClick={() => setShowReviewModal(true)}
+                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-lg flex items-center gap-2 shrink-0 transition"
+                        >
+                          <Star className="w-4 h-4 fill-slate-950" /> Viết Đánh Giá Ngay
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setShowReviewModal(true)}
+                          className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs flex items-center gap-1.5 shrink-0"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> Sửa Đánh Giá
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Display existing review if submitted */}
+                    {selectedReview ? (
+                      <div className="p-4 bg-slate-950/70 rounded-xl border border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-300">Đánh giá của bạn:</span>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= (selectedReview.rating || 5)
+                                      ? "fill-amber-400 text-amber-400"
+                                      : "text-slate-700"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs font-black text-amber-400 ml-1">
+                              {selectedReview.rating}/5 sao
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-400">{selectedReview.createdAt}</span>
+                        </div>
+
+                        <div className="text-xs text-slate-200 italic bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                          "{selectedReview.comment || "Khách hàng không để lại nhận xét bằng lời."}"
+                        </div>
+
+                        {selectedReview.replyText && (
+                          <div className="p-3 bg-purple-950/40 border border-purple-500/30 rounded-lg text-xs space-y-1 mt-2">
+                            <div className="font-bold text-purple-300 flex items-center gap-1">
+                              <MessageSquare className="w-3.5 h-3.5" /> Phản hồi từ {selectedReview.repliedBy || "4YouTech"}:
+                            </div>
+                            <div className="text-slate-300">{selectedReview.replyText}</div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 text-xs pt-1">
+                        <span className="font-bold text-amber-300">Chấm điểm nhanh:</span>
+                        <div className="flex items-center gap-1.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => {
+                                setRating(star);
+                                setShowReviewModal(true);
+                              }}
+                              className="p-1 hover:scale-125 transition-transform"
+                              title={`${star} sao`}
+                            >
+                              <Star className={`w-5 h-5 ${star <= rating ? "fill-amber-400 text-amber-400" : "text-slate-600"}`} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Deliverables Hub Section */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1169,19 +1337,16 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
                             {selectedOrder.status === "deliverable_sent" && del.status !== "accepted" && (
                               <button
-                                onClick={() => {
-                                  acceptDeliverable(selectedOrder.id, del.id);
-                                  alert("🎉 Đã nghiệm thu sản phẩm bàn giao thành công! Vui lòng thanh toán 50% số tiền còn lại để nhận bàn giao chính thức.");
-                                }}
-                                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs inline-flex items-center gap-1 shadow-sm transition"
+                                onClick={() => setShowUatModal(true)}
+                                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs inline-flex items-center gap-1 shadow-sm transition"
                               >
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Nghiệm Thu Bản Này
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Kiểm Thử UAT & Nghiệm Thu
                               </button>
                             )}
 
                             {del.status === "accepted" && (
                               <span className="px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-bold text-[11px] inline-flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" /> Đã nghiệm thu
+                                <CheckCircle2 className="w-3 h-3" /> Đã nghiệm thu UAT
                               </span>
                             )}
 
@@ -1197,8 +1362,92 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                   )}
                 </div>
 
+                {/* Transfer Session & Guide Card (Giai đoạn 11 trong Service Lifecycle) */}
+                {selectedOrder.transferSession && (
+                  <div className="p-5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-3 shadow-md">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-500/20 pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-xl">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-black text-white">Transfer Session (Hướng Dẫn & Chuyển Giao Kỹ Thuật)</div>
+                          <div className="text-[11px] text-indigo-300/80">Thời gian: {selectedOrder.transferSession.sessionDate || "Theo lịch hẹn"}</div>
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${selectedOrder.transferSession.isCompleted ? "bg-emerald-950/80 text-emerald-400 border-emerald-500/30" : "bg-amber-950/80 text-amber-300 border-amber-500/30"}`}>
+                        {selectedOrder.transferSession.isCompleted ? "✓ Đã hoàn tất chuyển giao" : "⏳ Chờ diễn ra"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span className="text-slate-400 text-[11px]">Trạng thái xác nhận:</span>
+                        <div className="text-slate-200 font-medium mt-0.5">
+                          {selectedOrder.transferSession.customerConfirmed ? "Khách hàng đã xác nhận thành công" : "Chờ khách xác nhận sau buổi họp"}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[11px]">Nền tảng / Link họp:</span>
+                        <div className="mt-0.5">
+                          {selectedOrder.transferSession.meetLink ? (
+                            <a href={selectedOrder.transferSession.meetLink} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline flex items-center gap-1 font-bold">
+                              <span>Google Meet / Trực tuyến</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <span className="text-slate-400">Trực tiếp / Sẽ gửi link</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {(selectedOrder.transferSession.docsUrl || selectedOrder.transferSession.videoRecordingUrl) && (
+                      <div className="pt-2 border-t border-indigo-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="text-slate-300 text-[11px]">Tài liệu bàn giao & Video quay lại:</span>
+                        <div className="flex items-center gap-2">
+                          {selectedOrder.transferSession.docsUrl && (
+                            <a href={selectedOrder.transferSession.docsUrl} target="_blank" rel="noreferrer" className="px-3 py-1 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 font-bold text-[11px] flex items-center gap-1">
+                              <Download className="w-3 h-3" /> Tải tài liệu
+                            </a>
+                          )}
+                          {selectedOrder.transferSession.videoRecordingUrl && (
+                            <a href={selectedOrder.transferSession.videoRecordingUrl} target="_blank" rel="noreferrer" className="px-3 py-1 rounded-lg bg-cyan-900/60 hover:bg-cyan-800 text-cyan-200 font-bold text-[11px] flex items-center gap-1">
+                              <ExternalLink className="w-3 h-3" /> Xem video recording
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Post-Service Survey Summary Card (ISO 10004:2018 & SUS) */}
+                {selectedOrder.postServiceSurvey && (
+                  <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-purple-300 flex items-center gap-1.5">
+                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        Kết quả khảo sát dịch vụ (ISO 10004): Điểm CSAT {selectedOrder.postServiceSurvey.q6_overallSatisfaction}/5
+                      </span>
+                      <span className="text-[10px] text-slate-400">{selectedOrder.postServiceSurvey.submittedAt}</span>
+                    </div>
+                    <div className="text-slate-300 flex flex-wrap gap-4 text-[11px]">
+                      <div>Sẵn sàng giới thiệu (Referral): <strong className="text-white">{selectedOrder.postServiceSurvey.recommendIntent ? "Có" : "Không"}</strong></div>
+                      {selectedOrder.postServiceSurvey.susScore !== undefined && (
+                        <div>Điểm Usability (SUS Brooke 1996): <strong className="text-cyan-400">{selectedOrder.postServiceSurvey.susScore}/100</strong></div>
+                      )}
+                    </div>
+                    {selectedOrder.postServiceSurvey.improvePoint && (
+                      <div className="text-slate-400 text-[11px] italic bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                        "Góp ý: {selectedOrder.postServiceSurvey.improvePoint}"
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Customer Review & Staff/Admin Reply Section */}
-                {selectedOrder.review && (
+                {selectedReview && (
                   <div className="space-y-3 bg-amber-950/50 p-5 rounded-3xl border border-amber-500/40 text-xs">
                     <div className="flex items-center justify-between">
                       <div className="font-bold text-white text-sm flex items-center gap-1.5">
@@ -1206,28 +1455,28 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                         Đánh Giá Của Bạn Cho Đơn Hàng
                       </div>
                       <span className="font-bold text-amber-300 bg-amber-900/80 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-xs">
-                        {selectedOrder.review.rating} / 5 ★
+                        {selectedReview.rating} / 5 ★
                       </span>
                     </div>
 
                     <div className="text-slate-200 font-medium bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 italic">
-                      "{selectedOrder.review.comment}"
+                      "{selectedReview.comment}"
                     </div>
 
                     {/* Admin / Staff Reply */}
-                    {selectedOrder.review.replyText ? (
+                    {selectedReview.replyText ? (
                       <div className="bg-blue-950/80 p-4 rounded-2xl border border-blue-500/30 space-y-1.5 animate-fade-in">
                         <div className="font-bold text-cyan-300 flex items-center justify-between">
                           <span className="flex items-center gap-1.5 text-xs">
                             <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-                            Phản hồi từ {selectedOrder.review.repliedBy || "4YouTech"}:
+                            Phản hồi từ {selectedReview.repliedBy || "4YouTech"}:
                           </span>
                           <span className="text-[10px] text-slate-400 font-normal">
-                            {selectedOrder.review.repliedAt}
+                            {selectedReview.repliedAt}
                           </span>
                         </div>
                         <p className="text-slate-200 font-medium leading-relaxed pl-5 text-xs">
-                          {selectedOrder.review.replyText}
+                          {selectedReview.replyText}
                         </p>
                       </div>
                     ) : (
@@ -1289,6 +1538,13 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
             })() : null}
           </div>
 
+        </div>
+      )}
+
+      {/* Support & Complaints Management Tab (Góp ý 1 - Minh chứng M4) */}
+      {activeTab === "support" && (
+        <div className="space-y-6 animate-fade-in">
+          <SupportTicketsManagement orders={myOrders} currentUserRole="customer" />
         </div>
       )}
 
@@ -1458,6 +1714,27 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
           </div>
         </div>
       )}
+
+      {/* Scope of Work Modal (Minh chứng M2) */}
+      <SowModal
+        isOpen={showSowModal}
+        onClose={() => setShowSowModal(false)}
+        order={selectedOrder}
+      />
+
+      {/* UAT & Acceptance Sign-off Modal (Minh chứng M3) */}
+      <UatAcceptanceModal
+        isOpen={showUatModal}
+        onClose={() => setShowUatModal(false)}
+        order={selectedOrder}
+      />
+
+      {/* Post-Service Survey & SUS Modal (Góp ý 2 - ISO 10004 & Brooke 1996) */}
+      <PostServiceSurveyModal
+        isOpen={showSurveyModal}
+        onClose={() => setShowSurveyModal(false)}
+        order={selectedOrder}
+      />
 
     </div>
   );

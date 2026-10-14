@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { queryDb } from "@/lib/db";
 import { SEED_ORDERS } from "@/lib/store";
+import { notifyDataChange } from "@/lib/realtime-bus";
 
 export async function GET() {
   try {
@@ -67,6 +68,30 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const order = await request.json();
+
+    // Ensure customer user exists in Users table to satisfy foreign key constraint
+    if (order.customerId) {
+      try {
+        const userExist = await queryDb<any>(
+          `SELECT 1 FROM "Users" WHERE "UserId" = ?`,
+          [order.customerId]
+        );
+        if (!userExist || userExist.length === 0) {
+          await queryDb(
+            `INSERT INTO "Users" ("UserId", "Name", "Email", "Phone", "Role", "Status")
+             VALUES (?, ?, ?, ?, 'customer', 'active')`,
+            [
+              order.customerId,
+              order.customerName || "Khách hàng",
+              order.customerEmail || "",
+              order.customerPhone || ""
+            ]
+          );
+        }
+      } catch (uErr) {
+        console.warn("User auto-provisioning warning:", uErr);
+      }
+    }
 
     const existing = await queryDb<any>(
       `SELECT 1 FROM "ServiceOrders" WHERE "OrderId" = ?`,
@@ -202,6 +227,9 @@ export async function POST(request: Request) {
         }
       }
     }
+
+    // Broadcast real-time change to all connected browsers
+    notifyDataChange("orders", "update", order.id);
 
     return NextResponse.json({
       success: true,
