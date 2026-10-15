@@ -48,6 +48,53 @@ export function isValidEmailFormat(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+// Phone number format validator helper (Realtime)
+export function getPhoneValidationError(phone: string): string | null {
+  if (!phone || !phone.trim()) {
+    return "Vui lòng nhập số điện thoại liên hệ.";
+  }
+  const trimmed = phone.trim();
+
+  // 1. Catch letters
+  if (/[a-zA-ZÀ-ỹ]/.test(trimmed)) {
+    return "Số điện thoại không được chứa chữ cái (chỉ nhập số 0-9).";
+  }
+
+  // 2. Catch other special characters (allow spaces and dashes during typing)
+  if (/[^\d\s\.\-\+]/.test(trimmed)) {
+    return "Số điện thoại chỉ được chứa các ký tự số (0-9).";
+  }
+
+  // 3. Catch not starting with 0
+  const normalized = trimmed.startsWith("+84") ? "0" + trimmed.slice(3) : trimmed;
+  const digits = normalized.replace(/\D/g, "");
+
+  if (!digits.startsWith("0")) {
+    return "Số điện thoại phải bắt đầu bằng chữ số 0 (Ví dụ: 0912345678).";
+  }
+
+  // 4. Catch insufficient length
+  if (digits.length < 10) {
+    return `Số điện thoại phải gồm đúng 10 chữ số (hiện có ${digits.length}/10 số).`;
+  }
+
+  // 5. Catch excess length
+  if (digits.length > 10) {
+    return `Số điện thoại không được vượt quá 10 chữ số (hiện có ${digits.length} số).`;
+  }
+
+  // 6. Catch invalid Vietnamese mobile carrier prefix
+  if (!/^0(3|5|7|8|9|2)\d{8}$/.test(digits)) {
+    return "Đầu số điện thoại không hợp lệ tại Việt Nam (hợp lệ: 03, 05, 07, 08, 09).";
+  }
+
+  return null;
+}
+
+export function isValidPhoneFormat(phone: string): boolean {
+  return getPhoneValidationError(phone) === null;
+}
+
 export function UnifiedAuthPage({
   onAuthSuccess
 }: {
@@ -164,9 +211,9 @@ export function UnifiedAuthPage({
       return;
     }
 
-    const phoneDigits = regForm.phone.replace(/\D/g, "");
-    if (!regForm.phone.trim() || phoneDigits.length < 9) {
-      setRegError("Vui lòng nhập Số điện thoại liên hệ chính xác (tối thiểu 9-10 chữ số).");
+    const phoneErr = getPhoneValidationError(regForm.phone);
+    if (phoneErr) {
+      setRegError(phoneErr);
       return;
     }
 
@@ -286,6 +333,10 @@ export function UnifiedAuthPage({
   const regEmailValid = isValidEmailFormat(regForm.email);
   const showRegEmailErr = regForm.email.length > 0 && !regEmailValid;
   const showRegEmailOk = regForm.email.length > 0 && regEmailValid;
+
+  const regPhoneErr = regForm.phone.length > 0 ? getPhoneValidationError(regForm.phone) : null;
+  const showRegPhoneErr = regForm.phone.length > 0 && regPhoneErr !== null;
+  const showRegPhoneOk = regForm.phone.length > 0 && regPhoneErr === null;
 
   const forgotEmailValid = isValidEmailFormat(forgotEmail);
   const showForgotEmailErr = forgotEmail.length > 0 && !forgotEmailValid;
@@ -535,16 +586,36 @@ export function UnifiedAuthPage({
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Số điện thoại liên hệ *</label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Phone className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 transition ${
+                    showRegPhoneErr ? "text-rose-500" : showRegPhoneOk ? "text-emerald-500" : "text-slate-400"
+                  }`} />
                   <input
-                    type="tel"
+                    type="text"
+                    inputMode="numeric"
                     required
+                    maxLength={11}
                     value={regForm.phone}
                     onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
-                    placeholder="0912 345 678"
-                    className="w-full pl-9 pr-3.5 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500 font-bold text-slate-900 bg-white"
+                    placeholder="0912345678"
+                    className={`w-full pl-9 pr-3.5 py-2.5 border rounded-xl text-xs outline-none font-bold text-slate-900 transition ${
+                      showRegPhoneErr
+                        ? "border-rose-400 bg-rose-50/20 focus:ring-2 focus:ring-rose-400 text-rose-900"
+                        : showRegPhoneOk
+                        ? "border-emerald-400 bg-emerald-50/20 focus:ring-2 focus:ring-emerald-400 text-slate-900"
+                        : "border-slate-200 focus:ring-2 focus:ring-sky-500 text-slate-900 bg-white"
+                    }`}
                   />
                 </div>
+                {showRegPhoneErr && (
+                  <div className="text-[11px] font-semibold text-rose-600 flex items-center gap-1 mt-1 animate-fade-in">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {regPhoneErr}
+                  </div>
+                )}
+                {showRegPhoneOk && (
+                  <div className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1 mt-1 animate-fade-in">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Số điện thoại hợp lệ (10 chữ số)
+                  </div>
+                )}
               </div>
 
               <div>

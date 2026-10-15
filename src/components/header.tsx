@@ -27,6 +27,7 @@ import {
   Menu
 } from "lucide-react";
 import { CartDrawerModal } from "@/components/cart-drawer-modal";
+import { getPhoneValidationError } from "@/components/auth-pages";
 
 export function Header({
   activeTab,
@@ -574,6 +575,13 @@ function UserProfileModal({
     if (!name.trim()) {
       setProfileMsg({ type: "error", text: "Họ và tên không được để trống!" });
       return;
+    }
+    if (phone.trim()) {
+      const phoneErr = getPhoneValidationError(phone);
+      if (phoneErr) {
+        setProfileMsg({ type: "error", text: phoneErr });
+        return;
+      }
     }
     const skillList = skills.split(",").map((s) => s.trim()).filter(Boolean);
     updateUserProfile(currentUser.id, {

@@ -9,6 +9,7 @@ import { SowModal } from "@/components/sow-modal";
 import { UatAcceptanceModal } from "@/components/uat-acceptance-modal";
 import { PostServiceSurveyModal } from "@/components/post-service-survey-modal";
 import { SupportTicketsManagement } from "@/components/support-tickets-management";
+import { getPhoneValidationError } from "@/components/auth-pages";
 import {
   PlusCircle,
   Clock,
@@ -189,6 +190,13 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
       setProfileMsg({ type: "error", text: "Vui lòng không để trống họ và tên." });
       return;
     }
+    if (profileForm.phone && profileForm.phone.trim()) {
+      const phoneErr = getPhoneValidationError(profileForm.phone);
+      if (phoneErr) {
+        setProfileMsg({ type: "error", text: phoneErr });
+        return;
+      }
+    }
     updateUserProfile(currentUser.id, profileForm);
     setProfileMsg({ type: "success", text: "Đã lưu thay đổi thông tin cá nhân thành công!" });
     setIsEditingProfile(false);
@@ -251,10 +259,12 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
       return;
     }
 
-    const phoneDigits = newForm.customerPhone.replace(/\D/g, "");
-    if (!newForm.customerPhone.trim() || phoneDigits.length < 9) {
-      alert("Vui lòng nhập Số điện thoại liên hệ chính xác (tối thiểu 9-10 chữ số).");
-      return;
+    if (newForm.customerPhone && newForm.customerPhone.trim()) {
+      const phoneErr = getPhoneValidationError(newForm.customerPhone);
+      if (phoneErr) {
+        alert(phoneErr);
+        return;
+      }
     }
 
     if (!newForm.requirements || !newForm.desiredDeadline) {
