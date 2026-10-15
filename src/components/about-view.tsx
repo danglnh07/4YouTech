@@ -101,10 +101,10 @@ export function AboutView({
 
   return (
     <div className="space-y-16 pb-20 animate-fade-in text-slate-100">
-      
+
       {/* Ultra-Aesthetic Hero Banner Section */}
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-950 via-[#070d26] to-purple-950 p-8 sm:p-14 shadow-2xl border border-blue-500/30">
-        
+
         {/* Glowing Background Light Orbs */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/15 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/15 rounded-full blur-[120px] pointer-events-none" />
@@ -119,12 +119,12 @@ export function AboutView({
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15]">
             Nơi Ý Tưởng Được Thổi Hồn Bằng <br />
             <span className="gradient-title-cyan">
-              Thiết Kế Đột Phá & Code Chuẩn Đẳng Cấp
+              Thiết Kế Đột Phá & Code Tối Ưu
             </span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-3xl">
-            4YouTech không chỉ tạo ra sản phẩm công nghệ – chúng tôi biến từng đồ án, dự án cá nhân và giải pháp doanh nghiệp thành một tác phẩm nghệ thuật số ấn tượng. Sự kết hợp hoàn hảo giữa <strong className="text-cyan-300">T duy Thẩm mỹ Đỉnh cao</strong> và <strong className="text-purple-300">Mã nguồn Độc quyền Tối ưu</strong>.
+            4YouTech không chỉ tạo ra sản phẩm công nghệ – chúng tôi biến từng đồ án, dự án cá nhân và giải pháp doanh nghiệp thành một tác phẩm nghệ thuật số ấn tượng. Sự kết hợp hoàn hảo giữa <strong className="text-cyan-300">Tư duy Thẩm mỹ Đỉnh cao</strong> và <strong className="text-purple-300">Mã nguồn Độc quyền Tối ưu</strong>.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-4">
@@ -192,7 +192,7 @@ export function AboutView({
             TRIẾT LÝ THIẾT KẾ
           </span>
           <h2 className="text-2xl sm:text-4xl font-black text-white">
-            4 Trụ Cột Tạo Nên <span className="gradient-title-cyan">Sản Phẩm Đẳng Cấp</span>
+            4 Trụ Cột Tạo Nên <span className="gradient-title-cyan">Sản Phẩm Tối Ưu</span>
           </h2>
           <p className="text-xs text-slate-400">
             Mọi sản phẩm do 4YouTech đảm nhận đều đáp ứng khắt khe các tiêu chí nghệ thuật & kỹ thuật
@@ -315,23 +315,23 @@ export function AboutView({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs pt-4 border-t border-blue-500/20">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-cyan-400 font-bold">
-              <MapPin className="w-4 h-4" /> Địa chỉ văn phòng:
+              <MapPin className="w-4 h-4" /> Địa chỉ:
             </div>
-            <div className="text-slate-300 leading-relaxed">Khu Công Nghệ Cao, TP. Thủ Đức, TP. Hồ Chí Minh</div>
+            <div className="text-slate-300 leading-relaxed">Phường Bình Thuỷ, TP Cần Thơ</div>
           </div>
 
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-emerald-400 font-bold">
               <Phone className="w-4 h-4" /> Hotline Zalo tư vấn:
             </div>
-            <div className="text-white font-black text-sm">0999.888.777 (24/7)</div>
+            <div className="text-white font-black text-sm">0365.915.433 (24/7)</div>
           </div>
 
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-amber-400 font-bold">
               <Mail className="w-4 h-4" /> Email liên hệ official:
             </div>
-            <div className="text-slate-300 font-mono">support@4youtech.com</div>
+            <div className="text-slate-300 font-mono">admin@4youtech.com</div>
           </div>
         </div>
       </div>

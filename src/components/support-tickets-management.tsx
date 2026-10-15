@@ -123,13 +123,13 @@ export function SupportTicketsManagement({
 
   return (
     <div className="space-y-6">
-      
+
       {/* Top Banner: Legal & ISO Compliance */}
       <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-950/70 via-slate-900 to-indigo-950/70 border border-blue-500/30 text-xs text-slate-300 space-y-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-cyan-300 font-extrabold text-sm">
             <Scale className="w-4 h-4 text-cyan-400" />
-            <span>Quy Trình Tiếp Nhận & Xử Lý Khiếu Nại (Minh Chứng M4 • Complaint Log)</span>
+            <span>Quy Trình Tiếp Nhận & Xử Lý Khiếu Nại</span>
           </div>
           <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">
             Tuân thủ Điều 31 & 36 Luật BVQLNTD • ISO 10002:2018
@@ -153,11 +153,10 @@ export function SupportTicketsManagement({
               <button
                 key={f.id}
                 onClick={() => setFilterType(f.id as any)}
-                className={`px-3 py-1.5 rounded-lg font-bold transition text-[11px] ${
-                  filterType === f.id
+                className={`px-3 py-1.5 rounded-lg font-bold transition text-[11px] ${filterType === f.id
                     ? "bg-cyan-500 text-slate-950 shadow-xs"
                     : "text-slate-400 hover:text-white"
-                }`}
+                  }`}
               >
                 {f.label}
               </button>
@@ -175,11 +174,10 @@ export function SupportTicketsManagement({
               <button
                 key={f.id}
                 onClick={() => setFilterStatus(f.id as any)}
-                className={`px-3 py-1.5 rounded-lg font-bold transition text-[11px] ${
-                  filterStatus === f.id
+                className={`px-3 py-1.5 rounded-lg font-bold transition text-[11px] ${filterStatus === f.id
                     ? "bg-amber-500 text-slate-950 shadow-xs"
                     : "text-slate-400 hover:text-white"
-                }`}
+                  }`}
               >
                 {f.label}
               </button>
@@ -289,9 +287,8 @@ export function SupportTicketsManagement({
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star
                             key={s}
-                            className={`w-3.5 h-3.5 ${
-                              s <= ticket.customerSatisfactionRating! ? "fill-amber-400 text-amber-400" : "text-slate-700"
-                            }`}
+                            className={`w-3.5 h-3.5 ${s <= ticket.customerSatisfactionRating! ? "fill-amber-400 text-amber-400" : "text-slate-700"
+                              }`}
                           />
                         ))}
                         <span className="text-[11px] font-bold text-amber-400 ml-1">

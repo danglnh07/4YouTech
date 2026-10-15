@@ -162,7 +162,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
   const [ticketForm, setTicketForm] = useState({ subject: "", content: "", type: "support" as "support" | "complaint" });
 
   const [chatInput, setChatInput] = useState("");
-  
+
   // Profile edit mode state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -320,7 +320,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
   return (
     <div className="space-y-8 pb-16">
-      
+
       {/* Top Customer Dashboard Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 dark-glass-card p-6 rounded-3xl border border-blue-500/30 shadow-xl">
         <div>
@@ -334,33 +334,30 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
         <div className="flex flex-wrap items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-blue-500/20">
           <button
             onClick={() => setActiveTab("orders")}
-            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${
-              activeTab === "orders"
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${activeTab === "orders"
                 ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             Đơn hàng ({myOrders.length})
           </button>
           <button
             onClick={() => setActiveTab("new_request")}
-            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 ${
-              activeTab === "new_request"
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 ${activeTab === "new_request"
                 ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             <PlusCircle className="w-4 h-4" /> Đặt Dịch Vụ Mới
           </button>
           <button
             onClick={() => setActiveTab("support")}
-            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 ${
-              activeTab === "support"
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 ${activeTab === "support"
                 ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
-            <LifeBuoy className="w-4 h-4" /> Khiếu Nại & Hỗ Trợ (M4)
+            <LifeBuoy className="w-4 h-4" /> Khiếu Nại & Hỗ Trợ
             {mySupportTickets.length > 0 && (
               <span className="px-1.5 py-0.2 bg-cyan-500/30 text-cyan-300 text-[10px] rounded-full font-black">
                 {mySupportTickets.length}
@@ -369,11 +366,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
           </button>
           <button
             onClick={() => setActiveTab("profile")}
-            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${
-              activeTab === "profile"
+            className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition ${activeTab === "profile"
                 ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
+              }`}
           >
             Hồ sơ cá nhân
           </button>
@@ -383,7 +379,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
       {/* Profile & Change Password Tab */}
       {activeTab === "profile" && (
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
-          
+
           {/* Section 1: Update Profile */}
           <div className="lg:col-span-6 dark-glass-card rounded-3xl border border-blue-500/30 p-6 sm:p-8 shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -413,11 +409,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
             {profileMsg && (
               <div
-                className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-                  profileMsg.type === "success"
+                className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${profileMsg.type === "success"
                     ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30"
                     : "bg-rose-950/70 text-rose-300 border border-rose-500/30"
-                }`}
+                  }`}
               >
                 {profileMsg.type === "success" ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -448,11 +443,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                   readOnly={!isEditingProfile}
                   value={profileForm.name}
                   onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs font-bold outline-none transition ${
-                    isEditingProfile
+                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs font-bold outline-none transition ${isEditingProfile
                       ? "bg-slate-900 border-cyan-400 text-white focus:ring-1 focus:ring-cyan-400"
                       : "bg-slate-950/80 border-slate-800 text-slate-300 cursor-not-allowed select-none"
-                  }`}
+                    }`}
                 />
               </div>
 
@@ -464,11 +458,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                   readOnly={!isEditingProfile}
                   value={profileForm.phone}
                   onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs font-bold outline-none transition ${
-                    isEditingProfile
+                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs font-bold outline-none transition ${isEditingProfile
                       ? "bg-slate-900 border-cyan-400 text-white focus:ring-1 focus:ring-cyan-400"
                       : "bg-slate-950/80 border-slate-800 text-slate-300 cursor-not-allowed select-none"
-                  }`}
+                    }`}
                 />
               </div>
 
@@ -480,11 +473,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                   readOnly={!isEditingProfile}
                   value={profileForm.avatar}
                   onChange={(e) => setProfileForm({ ...profileForm, avatar: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs font-bold outline-none transition ${
-                    isEditingProfile
+                  className={`w-full px-3.5 py-2.5 border rounded-xl text-xs font-bold outline-none transition ${isEditingProfile
                       ? "bg-slate-900 border-cyan-400 text-white focus:ring-1 focus:ring-cyan-400"
                       : "bg-slate-950/80 border-slate-800 text-slate-300 cursor-not-allowed select-none"
-                  }`}
+                    }`}
                 />
               </div>
 
@@ -519,11 +511,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
             {passMsg && (
               <div
-                className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-                  passMsg.type === "success"
+                className={`p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${passMsg.type === "success"
                     ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30"
                     : "bg-rose-950/70 text-rose-300 border border-rose-500/30"
-                }`}
+                  }`}
               >
                 {passMsg.type === "success" ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -616,7 +607,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
       {/* New Request Tab (Expanded 2-column Layout to fill screen width) */}
       {activeTab === "new_request" && (
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
-          
+
           {/* Left Column: Form */}
           <div className="lg:col-span-7 dark-glass-card rounded-3xl border border-blue-500/30 p-6 sm:p-8 space-y-6 shadow-2xl">
             <div>
@@ -660,11 +651,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                             prev.includes(srv.id) ? prev.filter((id) => id !== srv.id) : [...prev, srv.id]
                           );
                         }}
-                        className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${
-                          isChecked
+                        className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${isChecked
                             ? "bg-blue-950/80 border-cyan-400 text-white shadow-md"
                             : "bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="shrink-0">
@@ -784,7 +774,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
 
           {/* Right Column: Guidance Cards */}
           <div className="lg:col-span-5 space-y-6">
-            
+
             {/* Payment policy alert */}
             <div className="p-6 bg-amber-950/70 rounded-3xl border border-amber-500/40 text-xs text-amber-200 space-y-3 shadow-xl">
               <div className="font-black text-sm flex items-center gap-2 text-amber-300">
@@ -802,7 +792,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
               <div className="font-extrabold text-sm text-white flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-cyan-400" /> Quy Trình Xử Lý Đơn Hàng 4 Bước
               </div>
-              
+
               <div className="space-y-3 font-medium text-slate-300">
                 <div className="flex gap-3 items-start">
                   <span className="w-5 h-5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-black text-[11px] flex items-center justify-center shrink-0">1</span>
@@ -831,7 +821,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
       {/* Orders Workspace */}
       {activeTab === "orders" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
+
           {/* Left Column: Orders List */}
           <div className="lg:col-span-4 space-y-3">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Danh sách Đơn hàng</span>
@@ -854,11 +844,10 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
                   <div
                     key={ord.id}
                     onClick={() => setSelectedOrderId(ord.id)}
-                    className={`p-4 rounded-2xl border transition cursor-pointer space-y-2 ${
-                      isSelected
+                    className={`p-4 rounded-2xl border transition cursor-pointer space-y-2 ${isSelected
                         ? "bg-blue-950/90 border-cyan-400 shadow-lg shadow-cyan-500/20"
                         : "bg-slate-950/70 border-slate-800 hover:border-slate-700"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-extrabold text-white">{ord.id}</span>
@@ -903,637 +892,635 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
               const selectedReview = selectedOrder.review || reviews.find((r) => r.orderId === selectedOrder.id);
 
               return (
-              <div className="dark-glass-card rounded-3xl border border-blue-500/30 p-6 sm:p-8 shadow-2xl space-y-8 select-none cursor-default text-slate-100">
-                
-                {/* Header Summary */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-bold text-slate-400">{selectedOrder.id}</span>
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${statusLabel(selectedOrder.status).color}`}>
-                        {isPendingFinalPayment ? "Đã Nghiệm Thu (Chờ Thu 50% Còn Lại)" : statusLabel(selectedOrder.status).title}
-                      </span>
-                      {selectedOrder.assignedStaffName ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-950/80 text-purple-300 border border-purple-500/40 flex items-center gap-1">
-                          <UserCheck className="w-3.5 h-3.5 text-purple-400" /> Phụ trách: {selectedOrder.assignedStaffName}
-                          {selectedOrder.collaborators && selectedOrder.collaborators.length > 0 && (
-                            <span className="text-[10px] text-purple-400/80">
-                              (+{selectedOrder.collaborators.length} cộng sự)
-                            </span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-900 text-slate-400 border border-slate-700">
-                          ⏳ Đang chỉ định nhân sự
-                        </span>
-                      )}
-                    </div>
-                    <h2 className="text-xl font-black text-white mt-1">{selectedOrder.serviceName}</h2>
-                  </div>
+                <div className="dark-glass-card rounded-3xl border border-blue-500/30 p-6 sm:p-8 shadow-2xl space-y-8 select-none cursor-default text-slate-100">
 
-                  {/* Actions */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    {["quoted", "deposit_pending"].includes(selectedOrder.status) && (
-                      <button
-                        onClick={() => setActiveCheckoutOrder(selectedOrder)}
-                        className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md hover:opacity-95 transition"
-                      >
-                        <CreditCard className="w-4 h-4" /> Thanh Toán Đặt Cọc 50% ({Math.round(selectedQuotedAmount * 0.5).toLocaleString("vi-VN")} ₫)
-                      </button>
-                    )}
-
-                    {isPendingFinalPayment && (
-                      <button
-                        onClick={() => setActiveCheckoutOrder(selectedOrder)}
-                        className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 animate-bounce"
-                      >
-                        <CreditCard className="w-4 h-4" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
-                      </button>
-                    )}
-
-                    {selectedOrder.quotation && (
-                      <button
-                        onClick={() => setShowSowModal(true)}
-                        className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-bold text-xs flex items-center gap-1.5 transition"
-                        title="Xem chi tiết Scope of Work, Deliverables, Exclusions và Tiêu chí nghiệm thu"
-                      >
-                        <FileText className="w-3.5 h-3.5 text-cyan-400" /> Xem SOW (M2)
-                      </button>
-                    )}
-
-                    {selectedOrder.status === "deliverable_sent" && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setShowRevisionModal(true)}
-                          className="px-3.5 py-2 rounded-xl border border-rose-500/40 bg-rose-950/60 text-rose-300 hover:bg-rose-900 font-bold text-xs transition"
-                        >
-                          Yêu cầu sửa
-                        </button>
-                        <button
-                          onClick={() => setShowUatModal(true)}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
-                        >
-                          <CheckCircle2 className="w-4 h-4" /> Kiểm Thử UAT & Nghiệm Thu (M3)
-                        </button>
-                      </div>
-                    )}
-
-                    {isPendingFinalPayment && (
-                      <button
-                        onClick={() => setActiveCheckoutOrder(selectedOrder)}
-                        className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 animate-pulse"
-                      >
-                        <QrCode className="w-3.5 h-3.5" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
-                      </button>
-                    )}
-
-                    {(selectedOrder.status === "completed" || (selectedOrder.status === "accepted" && selectedRemaining <= 0)) && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setShowSurveyModal(true)}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition"
-                          title="Khảo sát đo lường chất lượng dịch vụ (ISO 10004:2018) và chỉ số SUS (Brooke, 1996)"
-                        >
-                          <Star className="w-3.5 h-3.5 fill-current" />
-                          {selectedOrder.postServiceSurvey ? `Khảo Sát Đã Gửi (${selectedOrder.postServiceSurvey.q6_overallSatisfaction}/5 ⭐)` : "⭐ Khảo Sát Dịch Vụ (ISO 10004)"}
-                        </button>
-                        <button
-                          onClick={() => setShowReviewModal(true)}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-md flex items-center gap-1.5"
-                        >
-                          <Star className="w-3.5 h-3.5 fill-slate-950" /> {selectedReview ? "Xem Đánh Giá Của Bạn" : "⭐ Đánh Giá Nhanh"}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Support & Cancel buttons */}
-                    <button
-                      onClick={() => setShowTicketModal(true)}
-                      className="p-2 text-slate-300 hover:text-cyan-400 rounded-xl hover:bg-slate-800 border border-slate-700"
-                      title="Gửi hỗ trợ / Khiếu nại"
-                    >
-                      <LifeBuoy className="w-4 h-4" />
-                    </button>
-
-                    {["submitted", "quoted", "deposit_pending"].includes(selectedOrder.status) && (
-                      <button
-                        onClick={() => setShowCancelModal(true)}
-                        className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-slate-800 border border-slate-700"
-                        title="Đề nghị hủy đơn"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Progress Bar & Milestones Stepper */}
-                <div className="space-y-4 bg-slate-950/80 p-5 rounded-2xl border border-blue-500/20 select-none cursor-default">
-                  <div className="space-y-3">
+                  {/* Header Summary */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
                     <div>
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200 mb-1">
-                        <span>Tiến độ thực hiện công việc: <strong className="text-cyan-400">{selectedOrder.progressPercent}%</strong></span>
-                        <span>Hạn giao dự kiến: <strong className="text-white">{selectedOrder.quotation?.finalDeadline || selectedOrder.desiredDeadline}</strong></span>
-                      </div>
-                      <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-                        <div
-                          className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 transition-all duration-500 rounded-full"
-                          style={{ width: `${selectedOrder.progressPercent}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Financial Payment Progress Bar */}
-                    {selectedQuotedAmount > 0 && (
-                      <div className="pt-2 border-t border-slate-800">
-                        <div className="flex items-center justify-between text-xs font-bold mb-1">
-                          <span className="flex items-center gap-1.5 text-emerald-400">
-                            <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
-                            Tiến độ thanh toán: {Math.min(100, Math.round((selectedAmountPaid / selectedQuotedAmount) * 100))}% 
-                            {selectedAmountPaid >= selectedQuotedAmount ? (
-                              <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.2 rounded-full font-bold ml-1">Đã cọc/thanh toán 100%</span>
-                            ) : selectedAmountPaid > 0 ? (
-                              <span className="text-[10px] bg-amber-950 text-amber-300 border border-amber-500/40 px-2 py-0.2 rounded-full font-bold ml-1">Đã cọc 50%</span>
-                            ) : (
-                              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.2 rounded-full font-bold ml-1">Chưa cọc</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400">{selectedOrder.id}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${statusLabel(selectedOrder.status).color}`}>
+                          {isPendingFinalPayment ? "Đã Nghiệm Thu (Chờ Thu 50% Còn Lại)" : statusLabel(selectedOrder.status).title}
+                        </span>
+                        {selectedOrder.assignedStaffName ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-950/80 text-purple-300 border border-purple-500/40 flex items-center gap-1">
+                            <UserCheck className="w-3.5 h-3.5 text-purple-400" /> Phụ trách: {selectedOrder.assignedStaffName}
+                            {selectedOrder.collaborators && selectedOrder.collaborators.length > 0 && (
+                              <span className="text-[10px] text-purple-400/80">
+                                (+{selectedOrder.collaborators.length} cộng sự)
+                              </span>
                             )}
                           </span>
-                          <span className="text-slate-300 font-extrabold">
-                            {selectedAmountPaid.toLocaleString("vi-VN")} ₫ / {selectedQuotedAmount.toLocaleString("vi-VN")} ₫
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-900 text-slate-400 border border-slate-700">
+                            ⏳ Đang chỉ định nhân sự
                           </span>
-                        </div>
-                        <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden flex border border-slate-800">
-                          <div
-                            className="h-full bg-emerald-500 transition-all duration-500 rounded-full"
-                            style={{ width: `${Math.min(100, (selectedAmountPaid / selectedQuotedAmount) * 100)}%` }}
-                          ></div>
-                        </div>
-                        <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
-                          <span>Đã cọc/trả: <strong className="text-emerald-400">{selectedAmountPaid.toLocaleString("vi-VN")} ₫</strong></span>
-                          <span>Còn lại (sau nghiệm thu): <strong className="text-amber-400">{selectedRemaining.toLocaleString("vi-VN")} ₫</strong></span>
-                        </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Milestones list */}
-                  {selectedOrder.milestones.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                      {selectedOrder.milestones.map((m) => (
-                        <div key={m.id} className="flex items-center gap-2 text-xs">
-                          {m.completed ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                          ) : (
-                            <Clock className="w-4 h-4 text-slate-500 shrink-0" />
-                          )}
-                          <span className={m.completed ? "font-semibold text-white" : "text-slate-400"}>
-                            {m.title} ({m.targetDate})
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Quotation & VietQR Payment Trigger Details */}
-                {selectedOrder.quotation && (
-                  <div className="bg-blue-950/60 p-5 rounded-2xl border border-blue-500/30 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Thông tin Báo Giá & Đặt Cọc 50%</span>
-                        <div className="text-base font-black text-white mt-0.5">
-                          {selectedOrder.quotation.amount.toLocaleString("vi-VN")} ₫
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setShowSowModal(true)}
-                        className="px-3.5 py-1.5 rounded-xl bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-bold text-xs flex items-center gap-1.5 self-start sm:self-auto transition shadow-sm"
-                      >
-                        <FileText className="w-3.5 h-3.5 text-cyan-400" /> Xem Hợp Đồng SOW (M2)
-                      </button>
-                    </div>
-                    <div className="text-xs text-slate-200 font-medium leading-relaxed">
-                      {selectedOrder.quotation.scopeDetails}
+                      <h2 className="text-xl font-black text-white mt-1">{selectedOrder.serviceName}</h2>
                     </div>
 
-                    {/* Deposit Breakdown Info Card */}
-                    <div className="grid grid-cols-2 gap-2 bg-slate-900/90 p-3 rounded-xl border border-blue-500/20 text-xs">
-                      <div>
-                        <div className="text-[11px] text-slate-400">Số tiền đặt cọc 50%:</div>
-                        <div className="font-bold text-cyan-300 text-sm">
-                          {Math.round(selectedOrder.quotation.amount * 0.5).toLocaleString("vi-VN")} ₫
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-[11px] text-slate-400">Đã thanh toán thực tế:</div>
-                        <div className={`font-bold text-sm ${selectedAmountPaid > 0 ? "text-emerald-400" : "text-slate-500"}`}>
-                          {selectedAmountPaid.toLocaleString("vi-VN")} ₫
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center justify-between text-xs pt-3 border-t border-blue-500/20 gap-2">
-                      <div className="text-slate-300 font-medium flex items-center gap-1.5">
-                        <span>Đã thu: <strong className="text-emerald-400">{selectedAmountPaid.toLocaleString("vi-VN")} ₫</strong></span>
-                        <span className="text-slate-500">•</span>
-                        <span>Còn nợ: <strong className="text-amber-400">{selectedRemaining.toLocaleString("vi-VN")} ₫</strong></span>
-                      </div>
-                      
-                      {selectedOrder.isBeingEdited || selectedOrder.status === "under_review" ? (
-                        <div className="px-3.5 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-300 font-bold text-xs flex items-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5 text-rose-400" /> Admin đang chỉnh sửa giá/dịch vụ (Tạm khóa thanh toán)
-                        </div>
-                      ) : isPendingFinalPayment ? (
+                    {/* Actions */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {["quoted", "deposit_pending"].includes(selectedOrder.status) && (
                         <button
                           onClick={() => setActiveCheckoutOrder(selectedOrder)}
-                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5"
+                          className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md hover:opacity-95 transition"
+                        >
+                          <CreditCard className="w-4 h-4" /> Thanh Toán Đặt Cọc 50% ({Math.round(selectedQuotedAmount * 0.5).toLocaleString("vi-VN")} ₫)
+                        </button>
+                      )}
+
+                      {isPendingFinalPayment && (
+                        <button
+                          onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 animate-bounce"
+                        >
+                          <CreditCard className="w-4 h-4" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
+                        </button>
+                      )}
+
+                      {selectedOrder.quotation && (
+                        <button
+                          onClick={() => setShowSowModal(true)}
+                          className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-bold text-xs flex items-center gap-1.5 transition"
+                          title="Xem chi tiết Scope of Work, Deliverables, Exclusions và Tiêu chí nghiệm thu"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-cyan-400" /> Xem SOW (M2)
+                        </button>
+                      )}
+
+                      {selectedOrder.status === "deliverable_sent" && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setShowRevisionModal(true)}
+                            className="px-3.5 py-2 rounded-xl border border-rose-500/40 bg-rose-950/60 text-rose-300 hover:bg-rose-900 font-bold text-xs transition"
+                          >
+                            Yêu cầu sửa
+                          </button>
+                          <button
+                            onClick={() => setShowUatModal(true)}
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Kiểm Thử UAT & Nghiệm Thu (M3)
+                          </button>
+                        </div>
+                      )}
+
+                      {isPendingFinalPayment && (
+                        <button
+                          onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 animate-pulse"
                         >
                           <QrCode className="w-3.5 h-3.5" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
                         </button>
-                      ) : selectedOrder.status === "quoted" ? (
-                        <button
-                          onClick={() => setActiveCheckoutOrder(selectedOrder)}
-                          className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md"
-                        >
-                          <QrCode className="w-3.5 h-3.5" /> Thanh Toán Đặt Cọc 50% ({Math.round(selectedOrder.quotation.amount * 0.5).toLocaleString("vi-VN")} ₫)
-                        </button>
-                      ) : selectedOrder.status === "deposit_pending" ? (
+                      )}
+
+                      {(selectedOrder.status === "completed" || (selectedOrder.status === "accepted" && selectedRemaining <= 0)) && (
                         <div className="flex items-center gap-2">
-                          <span className="px-3 py-1.5 rounded-xl bg-amber-950/80 text-amber-300 border border-amber-500/40 font-bold text-xs flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-amber-400" /> Đã gửi cọc 50% (Chờ Admin duyệt)
-                          </span>
                           <button
-                            onClick={() => setActiveCheckoutOrder(selectedOrder)}
-                            className="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-amber-500/30 text-amber-300 font-semibold text-[11px] hover:bg-slate-800"
+                            onClick={() => setShowSurveyModal(true)}
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition"
+                            title="Khảo sát đo lường chất lượng dịch vụ (ISO 10004:2018) và chỉ số SUS (Brooke, 1996)"
                           >
-                            Xem biên lai / Chuyển thêm
+                            <Star className="w-3.5 h-3.5 fill-current" />
+                            {selectedOrder.postServiceSurvey ? `Khảo Sát Đã Gửi (${selectedOrder.postServiceSurvey.q6_overallSatisfaction}/5 ⭐)` : "⭐ Khảo Sát Dịch Vụ (ISO 10004)"}
+                          </button>
+                          <button
+                            onClick={() => setShowReviewModal(true)}
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-md flex items-center gap-1.5"
+                          >
+                            <Star className="w-3.5 h-3.5 fill-slate-950" /> {selectedReview ? "Xem Đánh Giá Của Bạn" : "⭐ Đánh Giá Nhanh"}
                           </button>
                         </div>
-                      ) : null}
-                    </div>
-                  </div>
-                )}
+                      )}
 
-                {/* 50% Remaining Balance Payment Banner */}
-                {isPendingFinalPayment && (
-                  <div className="p-5 rounded-2xl bg-amber-950/70 border border-amber-500/40 text-amber-200 space-y-3 shadow-xl">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="font-extrabold text-sm flex items-center gap-2 text-amber-300">
-                        <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                        🎉 Sản Phẩm Đã Nghiệm Thu — Yêu Cầu Thanh Toán 50% Số Tiền Còn Lại
-                      </div>
-                      <span className="font-black text-white text-base">
-                        {selectedRemaining.toLocaleString("vi-VN")} ₫
-                      </span>
-                    </div>
-                    <p className="text-xs text-amber-200/90 leading-relaxed">
-                      Bạn đã nghiệm thu kết quả bàn giao công việc thành công! Vui lòng thanh toán nốt 50% số tiền còn lại để đơn hàng chuyển sang trạng thái <strong className="text-white">Hoàn thành 100%</strong> và nhận đầy đủ file mã nguồn chính thức.
-                    </p>
-                    <button
-                      onClick={() => setActiveCheckoutOrder(selectedOrder)}
-                      className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-md flex items-center gap-2 transition"
-                    >
-                      <QrCode className="w-4 h-4" /> Thanh Toán 50% Còn Lại Ngay ({selectedRemaining.toLocaleString("vi-VN")} ₫)
-                    </button>
-                  </div>
-                )}
+                      {/* Support & Cancel buttons */}
+                      <button
+                        onClick={() => setShowTicketModal(true)}
+                        className="p-2 text-slate-300 hover:text-cyan-400 rounded-xl hover:bg-slate-800 border border-slate-700"
+                        title="Gửi hỗ trợ / Khiếu nại"
+                      >
+                        <LifeBuoy className="w-4 h-4" />
+                      </button>
 
-                {/* SECTION: Đơn hàng hoàn tất & Đánh giá dịch vụ */}
-                {(selectedOrder.status === "completed" || (selectedOrder.status === "accepted" && selectedRemaining <= 0)) && (
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950/60 to-slate-900 border border-emerald-500/40 text-slate-100 space-y-4 shadow-xl animate-fade-in">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Đã Hoàn Thành Nghiệm Thu & 100% Chi Phí
-                          </span>
-                          <span className="text-[11px] text-slate-400">Tiến độ: 100%</span>
-                        </div>
-                        <h3 className="text-base font-black text-white">
-                          🎉 Đơn Hàng Đã Hoàn Tất Bàn Giao Thành Công!
-                        </h3>
-                        <p className="text-xs text-slate-300">
-                          Cảm ơn bạn đã lựa chọn dịch vụ của 4YouTech. Hãy gửi nhận xét để giúp chúng tôi ngày một hoàn thiện hơn.
-                        </p>
-                      </div>
-
-                      {!selectedReview ? (
+                      {["submitted", "quoted", "deposit_pending"].includes(selectedOrder.status) && (
                         <button
-                          onClick={() => setShowReviewModal(true)}
-                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-lg flex items-center gap-2 shrink-0 transition"
+                          onClick={() => setShowCancelModal(true)}
+                          className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-slate-800 border border-slate-700"
+                          title="Đề nghị hủy đơn"
                         >
-                          <Star className="w-4 h-4 fill-slate-950" /> Viết Đánh Giá Ngay
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setShowReviewModal(true)}
-                          className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs flex items-center gap-1.5 shrink-0"
-                        >
-                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> Sửa Đánh Giá
+                          <X className="w-4 h-4" />
                         </button>
                       )}
                     </div>
+                  </div>
 
-                    {/* Display existing review if submitted */}
-                    {selectedReview ? (
-                      <div className="p-4 bg-slate-950/70 rounded-xl border border-slate-800 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-300">Đánh giá của bạn:</span>
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={`w-4 h-4 ${
-                                    star <= (selectedReview.rating || 5)
-                                      ? "fill-amber-400 text-amber-400"
-                                      : "text-slate-700"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-xs font-black text-amber-400 ml-1">
-                              {selectedReview.rating}/5 sao
+                  {/* Progress Bar & Milestones Stepper */}
+                  <div className="space-y-4 bg-slate-950/80 p-5 rounded-2xl border border-blue-500/20 select-none cursor-default">
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-200 mb-1">
+                          <span>Tiến độ thực hiện công việc: <strong className="text-cyan-400">{selectedOrder.progressPercent}%</strong></span>
+                          <span>Hạn giao dự kiến: <strong className="text-white">{selectedOrder.quotation?.finalDeadline || selectedOrder.desiredDeadline}</strong></span>
+                        </div>
+                        <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                          <div
+                            className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 transition-all duration-500 rounded-full"
+                            style={{ width: `${selectedOrder.progressPercent}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Financial Payment Progress Bar */}
+                      {selectedQuotedAmount > 0 && (
+                        <div className="pt-2 border-t border-slate-800">
+                          <div className="flex items-center justify-between text-xs font-bold mb-1">
+                            <span className="flex items-center gap-1.5 text-emerald-400">
+                              <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+                              Tiến độ thanh toán: {Math.min(100, Math.round((selectedAmountPaid / selectedQuotedAmount) * 100))}%
+                              {selectedAmountPaid >= selectedQuotedAmount ? (
+                                <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.2 rounded-full font-bold ml-1">Đã cọc/thanh toán 100%</span>
+                              ) : selectedAmountPaid > 0 ? (
+                                <span className="text-[10px] bg-amber-950 text-amber-300 border border-amber-500/40 px-2 py-0.2 rounded-full font-bold ml-1">Đã cọc 50%</span>
+                              ) : (
+                                <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.2 rounded-full font-bold ml-1">Chưa cọc</span>
+                              )}
+                            </span>
+                            <span className="text-slate-300 font-extrabold">
+                              {selectedAmountPaid.toLocaleString("vi-VN")} ₫ / {selectedQuotedAmount.toLocaleString("vi-VN")} ₫
                             </span>
                           </div>
-                          <span className="text-[11px] text-slate-400">{selectedReview.createdAt}</span>
-                        </div>
-
-                        <div className="text-xs text-slate-200 italic bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-                          "{selectedReview.comment || "Khách hàng không để lại nhận xét bằng lời."}"
-                        </div>
-
-                        {selectedReview.replyText && (
-                          <div className="p-3 bg-purple-950/40 border border-purple-500/30 rounded-lg text-xs space-y-1 mt-2">
-                            <div className="font-bold text-purple-300 flex items-center gap-1">
-                              <MessageSquare className="w-3.5 h-3.5" /> Phản hồi từ {selectedReview.repliedBy || "4YouTech"}:
-                            </div>
-                            <div className="text-slate-300">{selectedReview.replyText}</div>
+                          <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden flex border border-slate-800">
+                            <div
+                              className="h-full bg-emerald-500 transition-all duration-500 rounded-full"
+                              style={{ width: `${Math.min(100, (selectedAmountPaid / selectedQuotedAmount) * 100)}%` }}
+                            ></div>
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3 text-xs pt-1">
-                        <span className="font-bold text-amber-300">Chấm điểm nhanh:</span>
-                        <div className="flex items-center gap-1.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onClick={() => {
-                                setRating(star);
-                                setShowReviewModal(true);
-                              }}
-                              className="p-1 hover:scale-125 transition-transform"
-                              title={`${star} sao`}
-                            >
-                              <Star className={`w-5 h-5 ${star <= rating ? "fill-amber-400 text-amber-400" : "text-slate-600"}`} />
-                            </button>
-                          ))}
+                          <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+                            <span>Đã cọc/trả: <strong className="text-emerald-400">{selectedAmountPaid.toLocaleString("vi-VN")} ₫</strong></span>
+                            <span>Còn lại (sau nghiệm thu): <strong className="text-amber-400">{selectedRemaining.toLocaleString("vi-VN")} ₫</strong></span>
+                          </div>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Milestones list */}
+                    {selectedOrder.milestones.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                        {selectedOrder.milestones.map((m) => (
+                          <div key={m.id} className="flex items-center gap-2 text-xs">
+                            {m.completed ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            ) : (
+                              <Clock className="w-4 h-4 text-slate-500 shrink-0" />
+                            )}
+                            <span className={m.completed ? "font-semibold text-white" : "text-slate-400"}>
+                              {m.title} ({m.targetDate})
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
-                )}
 
-                {/* Deliverables Hub Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-white text-sm">Sản Phẩm & Bản Thử Bàn Giao ({selectedOrder.deliverables.length})</h3>
-                  </div>
-
-                  {selectedOrder.deliverables.length === 0 ? (
-                    <div className="p-6 bg-slate-950/80 rounded-2xl border border-dashed border-slate-800 text-center text-xs text-slate-500">
-                      Nhóm thực hiện chưa gửi sản phẩm thử. Chúng tôi sẽ cập nhật sớm!
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {selectedOrder.deliverables.map((del) => (
-                        <div key={del.id} className="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-white">
-                              Phiên bản v{del.version}: {del.title}
-                            </span>
-                            <span className="text-[10px] text-slate-400">{del.timestamp}</span>
-                          </div>
-
-                          <DeliverableImage
-                            previewUrl={del.previewUrl}
-                            fileLink={del.fileLink}
-                            title={`v${del.version}: ${del.title}`}
-                            className="h-48 w-full object-cover rounded-xl border border-slate-800"
-                          />
-
-                          <div className="text-xs text-slate-300 font-medium">{del.notes}</div>
-
-                          <div className="flex flex-wrap items-center gap-2.5 pt-1">
-                            <a
-                              href={del.fileLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs inline-flex items-center gap-1 shadow-sm"
-                            >
-                              <Download className="w-3.5 h-3.5" /> Tải về / Xem Link
-                            </a>
-
-                            {selectedOrder.status === "deliverable_sent" && del.status !== "accepted" && (
-                              <button
-                                onClick={() => setShowUatModal(true)}
-                                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs inline-flex items-center gap-1 shadow-sm transition"
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Kiểm Thử UAT & Nghiệm Thu
-                              </button>
-                            )}
-
-                            {del.status === "accepted" && (
-                              <span className="px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-bold text-[11px] inline-flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" /> Đã nghiệm thu UAT
-                              </span>
-                            )}
-
-                            {isPendingFinalPayment && (
-                              <span className="text-[11px] font-semibold text-amber-300">
-                                ⚠️ Cần thanh toán nốt 50% để nhận bàn giao chính thức
-                              </span>
-                            )}
+                  {/* Quotation & VietQR Payment Trigger Details */}
+                  {selectedOrder.quotation && (
+                    <div className="bg-blue-950/60 p-5 rounded-2xl border border-blue-500/30 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Thông tin Báo Giá & Đặt Cọc 50%</span>
+                          <div className="text-base font-black text-white mt-0.5">
+                            {selectedOrder.quotation.amount.toLocaleString("vi-VN")} ₫
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                        <button
+                          onClick={() => setShowSowModal(true)}
+                          className="px-3.5 py-1.5 rounded-xl bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-bold text-xs flex items-center gap-1.5 self-start sm:self-auto transition shadow-sm"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-cyan-400" /> Xem Hợp Đồng SOW (M2)
+                        </button>
+                      </div>
+                      <div className="text-xs text-slate-200 font-medium leading-relaxed">
+                        {selectedOrder.quotation.scopeDetails}
+                      </div>
 
-                {/* Transfer Session & Guide Card (Giai đoạn 11 trong Service Lifecycle) */}
-                {selectedOrder.transferSession && (
-                  <div className="p-5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-3 shadow-md">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-500/20 pb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-xl">
-                          <FileText className="w-4 h-4" />
+                      {/* Deposit Breakdown Info Card */}
+                      <div className="grid grid-cols-2 gap-2 bg-slate-900/90 p-3 rounded-xl border border-blue-500/20 text-xs">
+                        <div>
+                          <div className="text-[11px] text-slate-400">Số tiền đặt cọc 50%:</div>
+                          <div className="font-bold text-cyan-300 text-sm">
+                            {Math.round(selectedOrder.quotation.amount * 0.5).toLocaleString("vi-VN")} ₫
+                          </div>
                         </div>
                         <div>
-                          <div className="text-xs font-black text-white">Transfer Session (Hướng Dẫn & Chuyển Giao Kỹ Thuật)</div>
-                          <div className="text-[11px] text-indigo-300/80">Thời gian: {selectedOrder.transferSession.sessionDate || "Theo lịch hẹn"}</div>
+                          <div className="text-[11px] text-slate-400">Đã thanh toán thực tế:</div>
+                          <div className={`font-bold text-sm ${selectedAmountPaid > 0 ? "text-emerald-400" : "text-slate-500"}`}>
+                            {selectedAmountPaid.toLocaleString("vi-VN")} ₫
+                          </div>
                         </div>
                       </div>
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${selectedOrder.transferSession.isCompleted ? "bg-emerald-950/80 text-emerald-400 border-emerald-500/30" : "bg-amber-950/80 text-amber-300 border-amber-500/30"}`}>
-                        {selectedOrder.transferSession.isCompleted ? "✓ Đã hoàn tất chuyển giao" : "⏳ Chờ diễn ra"}
-                      </span>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <span className="text-slate-400 text-[11px]">Trạng thái xác nhận:</span>
-                        <div className="text-slate-200 font-medium mt-0.5">
-                          {selectedOrder.transferSession.customerConfirmed ? "Khách hàng đã xác nhận thành công" : "Chờ khách xác nhận sau buổi họp"}
+                      <div className="flex flex-wrap items-center justify-between text-xs pt-3 border-t border-blue-500/20 gap-2">
+                        <div className="text-slate-300 font-medium flex items-center gap-1.5">
+                          <span>Đã thu: <strong className="text-emerald-400">{selectedAmountPaid.toLocaleString("vi-VN")} ₫</strong></span>
+                          <span className="text-slate-500">•</span>
+                          <span>Còn nợ: <strong className="text-amber-400">{selectedRemaining.toLocaleString("vi-VN")} ₫</strong></span>
                         </div>
+
+                        {selectedOrder.isBeingEdited || selectedOrder.status === "under_review" ? (
+                          <div className="px-3.5 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-300 font-bold text-xs flex items-center gap-1.5">
+                            <Lock className="w-3.5 h-3.5 text-rose-400" /> Admin đang chỉnh sửa giá/dịch vụ (Tạm khóa thanh toán)
+                          </div>
+                        ) : isPendingFinalPayment ? (
+                          <button
+                            onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5"
+                          >
+                            <QrCode className="w-3.5 h-3.5" /> Thanh Toán 50% Còn Lại ({selectedRemaining.toLocaleString("vi-VN")} ₫)
+                          </button>
+                        ) : selectedOrder.status === "quoted" ? (
+                          <button
+                            onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                            className="px-4 py-2 rounded-xl gradient-btn font-bold text-xs flex items-center gap-1.5 shadow-md"
+                          >
+                            <QrCode className="w-3.5 h-3.5" /> Thanh Toán Đặt Cọc 50% ({Math.round(selectedOrder.quotation.amount * 0.5).toLocaleString("vi-VN")} ₫)
+                          </button>
+                        ) : selectedOrder.status === "deposit_pending" ? (
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1.5 rounded-xl bg-amber-950/80 text-amber-300 border border-amber-500/40 font-bold text-xs flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-amber-400" /> Đã gửi cọc 50% (Chờ Admin duyệt)
+                            </span>
+                            <button
+                              onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                              className="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-amber-500/30 text-amber-300 font-semibold text-[11px] hover:bg-slate-800"
+                            >
+                              Xem biên lai / Chuyển thêm
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
-                      <div>
-                        <span className="text-slate-400 text-[11px]">Nền tảng / Link họp:</span>
-                        <div className="mt-0.5">
-                          {selectedOrder.transferSession.meetLink ? (
-                            <a href={selectedOrder.transferSession.meetLink} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline flex items-center gap-1 font-bold">
-                              <span>Google Meet / Trực tuyến</span>
-                              <ChevronRight className="w-3 h-3" />
-                            </a>
-                          ) : (
-                            <span className="text-slate-400">Trực tiếp / Sẽ gửi link</span>
+                    </div>
+                  )}
+
+                  {/* 50% Remaining Balance Payment Banner */}
+                  {isPendingFinalPayment && (
+                    <div className="p-5 rounded-2xl bg-amber-950/70 border border-amber-500/40 text-amber-200 space-y-3 shadow-xl">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="font-extrabold text-sm flex items-center gap-2 text-amber-300">
+                          <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                          🎉 Sản Phẩm Đã Nghiệm Thu — Yêu Cầu Thanh Toán 50% Số Tiền Còn Lại
+                        </div>
+                        <span className="font-black text-white text-base">
+                          {selectedRemaining.toLocaleString("vi-VN")} ₫
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-200/90 leading-relaxed">
+                        Bạn đã nghiệm thu kết quả bàn giao công việc thành công! Vui lòng thanh toán nốt 50% số tiền còn lại để đơn hàng chuyển sang trạng thái <strong className="text-white">Hoàn thành 100%</strong> và nhận đầy đủ file mã nguồn chính thức.
+                      </p>
+                      <button
+                        onClick={() => setActiveCheckoutOrder(selectedOrder)}
+                        className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-md flex items-center gap-2 transition"
+                      >
+                        <QrCode className="w-4 h-4" /> Thanh Toán 50% Còn Lại Ngay ({selectedRemaining.toLocaleString("vi-VN")} ₫)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* SECTION: Đơn hàng hoàn tất & Đánh giá dịch vụ */}
+                  {(selectedOrder.status === "completed" || (selectedOrder.status === "accepted" && selectedRemaining <= 0)) && (
+                    <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950/60 to-slate-900 border border-emerald-500/40 text-slate-100 space-y-4 shadow-xl animate-fade-in">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Đã Hoàn Thành Nghiệm Thu & 100% Chi Phí
+                            </span>
+                            <span className="text-[11px] text-slate-400">Tiến độ: 100%</span>
+                          </div>
+                          <h3 className="text-base font-black text-white">
+                            🎉 Đơn Hàng Đã Hoàn Tất Bàn Giao Thành Công!
+                          </h3>
+                          <p className="text-xs text-slate-300">
+                            Cảm ơn bạn đã lựa chọn dịch vụ của 4YouTech. Hãy gửi nhận xét để giúp chúng tôi ngày một hoàn thiện hơn.
+                          </p>
+                        </div>
+
+                        {!selectedReview ? (
+                          <button
+                            onClick={() => setShowReviewModal(true)}
+                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-lg flex items-center gap-2 shrink-0 transition"
+                          >
+                            <Star className="w-4 h-4 fill-slate-950" /> Viết Đánh Giá Ngay
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setShowReviewModal(true)}
+                            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs flex items-center gap-1.5 shrink-0"
+                          >
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> Sửa Đánh Giá
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Display existing review if submitted */}
+                      {selectedReview ? (
+                        <div className="p-4 bg-slate-950/70 rounded-xl border border-slate-800 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-300">Đánh giá của bạn:</span>
+                              <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`w-4 h-4 ${star <= (selectedReview.rating || 5)
+                                        ? "fill-amber-400 text-amber-400"
+                                        : "text-slate-700"
+                                      }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-xs font-black text-amber-400 ml-1">
+                                {selectedReview.rating}/5 sao
+                              </span>
+                            </div>
+                            <span className="text-[11px] text-slate-400">{selectedReview.createdAt}</span>
+                          </div>
+
+                          <div className="text-xs text-slate-200 italic bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                            "{selectedReview.comment || "Khách hàng không để lại nhận xét bằng lời."}"
+                          </div>
+
+                          {selectedReview.replyText && (
+                            <div className="p-3 bg-purple-950/40 border border-purple-500/30 rounded-lg text-xs space-y-1 mt-2">
+                              <div className="font-bold text-purple-300 flex items-center gap-1">
+                                <MessageSquare className="w-3.5 h-3.5" /> Phản hồi từ {selectedReview.repliedBy || "4YouTech"}:
+                              </div>
+                              <div className="text-slate-300">{selectedReview.replyText}</div>
+                            </div>
                           )}
                         </div>
-                      </div>
-                    </div>
-
-                    {(selectedOrder.transferSession.docsUrl || selectedOrder.transferSession.videoRecordingUrl) && (
-                      <div className="pt-2 border-t border-indigo-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <span className="text-slate-300 text-[11px]">Tài liệu bàn giao & Video quay lại:</span>
-                        <div className="flex items-center gap-2">
-                          {selectedOrder.transferSession.docsUrl && (
-                            <a href={selectedOrder.transferSession.docsUrl} target="_blank" rel="noreferrer" className="px-3 py-1 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 font-bold text-[11px] flex items-center gap-1">
-                              <Download className="w-3 h-3" /> Tải tài liệu
-                            </a>
-                          )}
-                          {selectedOrder.transferSession.videoRecordingUrl && (
-                            <a href={selectedOrder.transferSession.videoRecordingUrl} target="_blank" rel="noreferrer" className="px-3 py-1 rounded-lg bg-cyan-900/60 hover:bg-cyan-800 text-cyan-200 font-bold text-[11px] flex items-center gap-1">
-                              <ExternalLink className="w-3 h-3" /> Xem video recording
-                            </a>
-                          )}
+                      ) : (
+                        <div className="flex items-center gap-3 text-xs pt-1">
+                          <span className="font-bold text-amber-300">Chấm điểm nhanh:</span>
+                          <div className="flex items-center gap-1.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => {
+                                  setRating(star);
+                                  setShowReviewModal(true);
+                                }}
+                                className="p-1 hover:scale-125 transition-transform"
+                                title={`${star} sao`}
+                              >
+                                <Star className={`w-5 h-5 ${star <= rating ? "fill-amber-400 text-amber-400" : "text-slate-600"}`} />
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Post-Service Survey Summary Card (ISO 10004:2018 & SUS) */}
-                {selectedOrder.postServiceSurvey && (
-                  <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-purple-300 flex items-center gap-1.5">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                        Kết quả khảo sát dịch vụ (ISO 10004): Điểm CSAT {selectedOrder.postServiceSurvey.q6_overallSatisfaction}/5
-                      </span>
-                      <span className="text-[10px] text-slate-400">{selectedOrder.postServiceSurvey.submittedAt}</span>
-                    </div>
-                    <div className="text-slate-300 flex flex-wrap gap-4 text-[11px]">
-                      <div>Sẵn sàng giới thiệu (Referral): <strong className="text-white">{selectedOrder.postServiceSurvey.recommendIntent ? "Có" : "Không"}</strong></div>
-                      {selectedOrder.postServiceSurvey.susScore !== undefined && (
-                        <div>Điểm Usability (SUS Brooke 1996): <strong className="text-cyan-400">{selectedOrder.postServiceSurvey.susScore}/100</strong></div>
                       )}
                     </div>
-                    {selectedOrder.postServiceSurvey.improvePoint && (
-                      <div className="text-slate-400 text-[11px] italic bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
-                        "Góp ý: {selectedOrder.postServiceSurvey.improvePoint}"
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
 
-                {/* Customer Review & Staff/Admin Reply Section */}
-                {selectedReview && (
-                  <div className="space-y-3 bg-amber-950/50 p-5 rounded-3xl border border-amber-500/40 text-xs">
+                  {/* Deliverables Hub Section */}
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="font-bold text-white text-sm flex items-center gap-1.5">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                        Đánh Giá Của Bạn Cho Đơn Hàng
-                      </div>
-                      <span className="font-bold text-amber-300 bg-amber-900/80 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-xs">
-                        {selectedReview.rating} / 5 ★
-                      </span>
+                      <h3 className="font-bold text-white text-sm">Sản Phẩm & Bản Thử Bàn Giao ({selectedOrder.deliverables.length})</h3>
                     </div>
 
-                    <div className="text-slate-200 font-medium bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 italic">
-                      "{selectedReview.comment}"
-                    </div>
-
-                    {/* Admin / Staff Reply */}
-                    {selectedReview.replyText ? (
-                      <div className="bg-blue-950/80 p-4 rounded-2xl border border-blue-500/30 space-y-1.5 animate-fade-in">
-                        <div className="font-bold text-cyan-300 flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-xs">
-                            <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-                            Phản hồi từ {selectedReview.repliedBy || "4YouTech"}:
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-normal">
-                            {selectedReview.repliedAt}
-                          </span>
-                        </div>
-                        <p className="text-slate-200 font-medium leading-relaxed pl-5 text-xs">
-                          {selectedReview.replyText}
-                        </p>
+                    {selectedOrder.deliverables.length === 0 ? (
+                      <div className="p-6 bg-slate-950/80 rounded-2xl border border-dashed border-slate-800 text-center text-xs text-slate-500">
+                        Nhóm thực hiện chưa gửi sản phẩm thử. Chúng tôi sẽ cập nhật sớm!
                       </div>
                     ) : (
-                      <div className="text-[11px] text-slate-400 italic">
-                        💬 4YouTech đã ghi nhận đánh giá của bạn và sẽ sớm phản hồi!
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Direct Messages & Chat Box */}
-                <div className="space-y-4 border-t border-slate-800 pt-6">
-                  <h3 className="font-bold text-white text-sm flex items-center gap-1.5">
-                    <MessageSquare className="w-4 h-4 text-cyan-400" /> Trao đổi với Nhóm Thực Hiện
-                  </h3>
-
-                  <div className="bg-slate-950/90 rounded-2xl border border-slate-800 p-4 space-y-3 max-h-72 overflow-y-auto">
-                    {selectedOrder.messages.length === 0 ? (
-                      <div className="text-center text-xs text-slate-500 py-4">Chưa có tin nhắn nào</div>
-                    ) : (
-                      selectedOrder.messages.map((msg) => {
-                        const isMe = msg.senderId === currentUser.id;
-                        return (
-                          <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                            <div className="text-[10px] text-slate-400 mb-0.5">
-                              {msg.senderName} ({msg.senderRole}) • {msg.createdAt}
+                      <div className="space-y-3">
+                        {selectedOrder.deliverables.map((del) => (
+                          <div key={del.id} className="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-white">
+                                Phiên bản v{del.version}: {del.title}
+                              </span>
+                              <span className="text-[10px] text-slate-400">{del.timestamp}</span>
                             </div>
-                            <div
-                              className={`p-3 rounded-2xl max-w-md text-xs font-medium ${
-                                isMe
-                                  ? "bg-cyan-600 text-white rounded-tr-none shadow-md"
-                                  : "bg-slate-900 border border-slate-700 text-slate-200 rounded-tl-none"
-                              }`}
-                            >
-                              {msg.text}
+
+                            <DeliverableImage
+                              previewUrl={del.previewUrl}
+                              fileLink={del.fileLink}
+                              title={`v${del.version}: ${del.title}`}
+                              className="h-48 w-full object-cover rounded-xl border border-slate-800"
+                            />
+
+                            <div className="text-xs text-slate-300 font-medium">{del.notes}</div>
+
+                            <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                              <a
+                                href={del.fileLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs inline-flex items-center gap-1 shadow-sm"
+                              >
+                                <Download className="w-3.5 h-3.5" /> Tải về / Xem Link
+                              </a>
+
+                              {selectedOrder.status === "deliverable_sent" && del.status !== "accepted" && (
+                                <button
+                                  onClick={() => setShowUatModal(true)}
+                                  className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs inline-flex items-center gap-1 shadow-sm transition"
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Kiểm Thử UAT & Nghiệm Thu
+                                </button>
+                              )}
+
+                              {del.status === "accepted" && (
+                                <span className="px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-bold text-[11px] inline-flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" /> Đã nghiệm thu UAT
+                                </span>
+                              )}
+
+                              {isPendingFinalPayment && (
+                                <span className="text-[11px] font-semibold text-amber-300">
+                                  ⚠️ Cần thanh toán nốt 50% để nhận bàn giao chính thức
+                                </span>
+                              )}
                             </div>
                           </div>
-                        );
-                      })
+                        ))}
+                      </div>
                     )}
                   </div>
 
-                  <form onSubmit={handleSendChat} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Nhập tin nhắn cho Staff/Admin..."
-                      className="flex-1 px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs font-medium text-white outline-none focus:border-cyan-400 placeholder:text-slate-500"
-                    />
-                    <button type="submit" className="px-5 py-2.5 rounded-xl gradient-btn font-bold text-xs text-white shadow-md flex items-center gap-1">
-                      <Send className="w-3.5 h-3.5" /> Gửi
-                    </button>
-                  </form>
-                </div>
+                  {/* Transfer Session & Guide Card (Giai đoạn 11 trong Service Lifecycle) */}
+                  {selectedOrder.transferSession && (
+                    <div className="p-5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-3 shadow-md">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-500/20 pb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-xl">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-black text-white">Transfer Session (Hướng Dẫn & Chuyển Giao Kỹ Thuật)</div>
+                            <div className="text-[11px] text-indigo-300/80">Thời gian: {selectedOrder.transferSession.sessionDate || "Theo lịch hẹn"}</div>
+                          </div>
+                        </div>
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${selectedOrder.transferSession.isCompleted ? "bg-emerald-950/80 text-emerald-400 border-emerald-500/30" : "bg-amber-950/80 text-amber-300 border-amber-500/30"}`}>
+                          {selectedOrder.transferSession.isCompleted ? "✓ Đã hoàn tất chuyển giao" : "⏳ Chờ diễn ra"}
+                        </span>
+                      </div>
 
-              </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-slate-400 text-[11px]">Trạng thái xác nhận:</span>
+                          <div className="text-slate-200 font-medium mt-0.5">
+                            {selectedOrder.transferSession.customerConfirmed ? "Khách hàng đã xác nhận thành công" : "Chờ khách xác nhận sau buổi họp"}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 text-[11px]">Nền tảng / Link họp:</span>
+                          <div className="mt-0.5">
+                            {selectedOrder.transferSession.meetLink ? (
+                              <a href={selectedOrder.transferSession.meetLink} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline flex items-center gap-1 font-bold">
+                                <span>Google Meet / Trực tuyến</span>
+                                <ChevronRight className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <span className="text-slate-400">Trực tiếp / Sẽ gửi link</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {(selectedOrder.transferSession.docsUrl || selectedOrder.transferSession.videoRecordingUrl) && (
+                        <div className="pt-2 border-t border-indigo-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <span className="text-slate-300 text-[11px]">Tài liệu bàn giao & Video quay lại:</span>
+                          <div className="flex items-center gap-2">
+                            {selectedOrder.transferSession.docsUrl && (
+                              <a href={selectedOrder.transferSession.docsUrl} target="_blank" rel="noreferrer" className="px-3 py-1 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 font-bold text-[11px] flex items-center gap-1">
+                                <Download className="w-3 h-3" /> Tải tài liệu
+                              </a>
+                            )}
+                            {selectedOrder.transferSession.videoRecordingUrl && (
+                              <a href={selectedOrder.transferSession.videoRecordingUrl} target="_blank" rel="noreferrer" className="px-3 py-1 rounded-lg bg-cyan-900/60 hover:bg-cyan-800 text-cyan-200 font-bold text-[11px] flex items-center gap-1">
+                                <ExternalLink className="w-3 h-3" /> Xem video recording
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Post-Service Survey Summary Card (ISO 10004:2018 & SUS) */}
+                  {selectedOrder.postServiceSurvey && (
+                    <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-purple-300 flex items-center gap-1.5">
+                          <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                          Kết quả khảo sát dịch vụ (ISO 10004): Điểm CSAT {selectedOrder.postServiceSurvey.q6_overallSatisfaction}/5
+                        </span>
+                        <span className="text-[10px] text-slate-400">{selectedOrder.postServiceSurvey.submittedAt}</span>
+                      </div>
+                      <div className="text-slate-300 flex flex-wrap gap-4 text-[11px]">
+                        <div>Sẵn sàng giới thiệu (Referral): <strong className="text-white">{selectedOrder.postServiceSurvey.recommendIntent ? "Có" : "Không"}</strong></div>
+                        {selectedOrder.postServiceSurvey.susScore !== undefined && (
+                          <div>Điểm Usability (SUS Brooke 1996): <strong className="text-cyan-400">{selectedOrder.postServiceSurvey.susScore}/100</strong></div>
+                        )}
+                      </div>
+                      {selectedOrder.postServiceSurvey.improvePoint && (
+                        <div className="text-slate-400 text-[11px] italic bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                          "Góp ý: {selectedOrder.postServiceSurvey.improvePoint}"
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Customer Review & Staff/Admin Reply Section */}
+                  {selectedReview && (
+                    <div className="space-y-3 bg-amber-950/50 p-5 rounded-3xl border border-amber-500/40 text-xs">
+                      <div className="flex items-center justify-between">
+                        <div className="font-bold text-white text-sm flex items-center gap-1.5">
+                          <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                          Đánh Giá Của Bạn Cho Đơn Hàng
+                        </div>
+                        <span className="font-bold text-amber-300 bg-amber-900/80 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-xs">
+                          {selectedReview.rating} / 5 ★
+                        </span>
+                      </div>
+
+                      <div className="text-slate-200 font-medium bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 italic">
+                        "{selectedReview.comment}"
+                      </div>
+
+                      {/* Admin / Staff Reply */}
+                      {selectedReview.replyText ? (
+                        <div className="bg-blue-950/80 p-4 rounded-2xl border border-blue-500/30 space-y-1.5 animate-fade-in">
+                          <div className="font-bold text-cyan-300 flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 text-xs">
+                              <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                              Phản hồi từ {selectedReview.repliedBy || "4YouTech"}:
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-normal">
+                              {selectedReview.repliedAt}
+                            </span>
+                          </div>
+                          <p className="text-slate-200 font-medium leading-relaxed pl-5 text-xs">
+                            {selectedReview.replyText}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-[11px] text-slate-400 italic">
+                          💬 4YouTech đã ghi nhận đánh giá của bạn và sẽ sớm phản hồi!
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Direct Messages & Chat Box */}
+                  <div className="space-y-4 border-t border-slate-800 pt-6">
+                    <h3 className="font-bold text-white text-sm flex items-center gap-1.5">
+                      <MessageSquare className="w-4 h-4 text-cyan-400" /> Trao đổi với Nhóm Thực Hiện
+                    </h3>
+
+                    <div className="bg-slate-950/90 rounded-2xl border border-slate-800 p-4 space-y-3 max-h-72 overflow-y-auto">
+                      {selectedOrder.messages.length === 0 ? (
+                        <div className="text-center text-xs text-slate-500 py-4">Chưa có tin nhắn nào</div>
+                      ) : (
+                        selectedOrder.messages.map((msg) => {
+                          const isMe = msg.senderId === currentUser.id;
+                          return (
+                            <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                              <div className="text-[10px] text-slate-400 mb-0.5">
+                                {msg.senderName} ({msg.senderRole}) • {msg.createdAt}
+                              </div>
+                              <div
+                                className={`p-3 rounded-2xl max-w-md text-xs font-medium ${isMe
+                                    ? "bg-cyan-600 text-white rounded-tr-none shadow-md"
+                                    : "bg-slate-900 border border-slate-700 text-slate-200 rounded-tl-none"
+                                  }`}
+                              >
+                                {msg.text}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <form onSubmit={handleSendChat} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Nhập tin nhắn cho Staff/Admin..."
+                        className="flex-1 px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs font-medium text-white outline-none focus:border-cyan-400 placeholder:text-slate-500"
+                      />
+                      <button type="submit" className="px-5 py-2.5 rounded-xl gradient-btn font-bold text-xs text-white shadow-md flex items-center gap-1">
+                        <Send className="w-3.5 h-3.5" /> Gửi
+                      </button>
+                    </form>
+                  </div>
+
+                </div>
               );
             })() : null}
           </div>
@@ -1595,7 +1582,7 @@ export function CustomerView({ preselectedServiceId }: { preselectedServiceId?: 
               <X className="w-5 h-5" />
             </button>
             <h3 className="font-black text-white text-lg">Đánh Giá Chất Lượng Dịch Vụ</h3>
-            
+
             <div className="flex items-center justify-center gap-2 py-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button key={star} onClick={() => setRating(star)} className="p-1">

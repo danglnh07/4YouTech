@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useApp } from "@/lib/app-context";
 import { formatPriceRange, formatDaysRange } from "@/lib/store";
 import {
@@ -23,6 +24,11 @@ export function CartDrawerModal({
   onOpenWorkspace: (serviceId?: string | string[]) => void;
 }) {
   const { cart, removeFromCart, clearCart, currentUser, switchRole } = useApp();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // List of selected cart item IDs
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -75,9 +81,17 @@ export function CartDrawerModal({
     onOpenWorkspace(selectedServiceIds);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl relative overflow-hidden">
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-[#0b132e] text-slate-100 border border-blue-500/30 rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl relative overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Modal Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
@@ -256,6 +270,7 @@ export function CartDrawerModal({
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

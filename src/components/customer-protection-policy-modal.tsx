@@ -40,7 +40,7 @@ export function CustomerProtectionPolicyModal({
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-fade-in">
       <div className="bg-[#070d24] border border-cyan-500/30 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl text-slate-100 overflow-hidden">
-        
+
         {/* Modal Header */}
         <div className="p-5 sm:p-6 border-b border-blue-500/20 bg-gradient-to-r from-blue-950/80 via-[#0a1638] to-cyan-950/60 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -50,12 +50,12 @@ export function CustomerProtectionPolicyModal({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 px-2 py-0.5 rounded bg-cyan-950/90 border border-cyan-500/30">
-                  MINH CHỨNG M1 • POLICY V2.0
+                  MINH CHỨNG • POLICY V2.0
                 </span>
                 <span className="text-[11px] text-slate-400">Có hiệu lực từ 01/07/2024</span>
               </div>
               <h2 className="text-lg sm:text-xl font-black text-white mt-1">
-                Chính Sách Bảo Vệ Quyền Lợi Khách Hàng (Customer Protection Policy)
+                CÍNH SÁCH BẢO VỆ QUYỀN LỢI KHÁCH HÀNG
               </h2>
             </div>
           </div>
@@ -81,11 +81,10 @@ export function CustomerProtectionPolicyModal({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-2 rounded-xl whitespace-nowrap transition text-[11px] sm:text-xs font-bold ${
-                activeTab === tab.id
-                  ? "bg-cyan-500 text-slate-950 shadow-md"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-              }`}
+              className={`px-3 py-2 rounded-xl whitespace-nowrap transition text-[11px] sm:text-xs font-bold ${activeTab === tab.id
+                ? "bg-cyan-500 text-slate-950 shadow-md"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                }`}
             >
               {tab.label}
             </button>
@@ -94,7 +93,7 @@ export function CustomerProtectionPolicyModal({
 
         {/* Tab Content Body */}
         <div className="p-5 sm:p-7 overflow-y-auto space-y-6 text-xs sm:text-sm leading-relaxed text-slate-300">
-          
+
           {/* TAB 1: OVERVIEW & LEGAL FOUNDATION */}
           {activeTab === "overview" && (
             <div className="space-y-6 animate-fade-in">
@@ -186,7 +185,7 @@ export function CustomerProtectionPolicyModal({
             <div className="space-y-6 animate-fade-in">
               <div>
                 <h3 className="font-extrabold text-white text-sm">
-                  Quy Trình Dịch Vụ Toàn Diện 12 Bước (Standardized Service Lifecycle)
+                  Quy Trình Dịch Vụ Toàn Diện 12 Bước
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Được thiết kế bao phủ từ khi tiếp nhận đến bảo vệ quyền lợi sau bàn giao.
@@ -230,40 +229,40 @@ export function CustomerProtectionPolicyModal({
             <div className="space-y-6 animate-fade-in">
               <div className="space-y-2">
                 <h3 className="font-extrabold text-white text-sm">
-                  1. Văn Bản Phạm Vi Công Việc (Scope of Work - SOW)
+                  1. Văn Bản Phạm Vi Công Việc
                 </h3>
                 <p className="text-xs text-slate-300">
                   Mỗi đơn hàng tại 4YouTech đều được thiết lập SOW chính thức đính kèm báo giá, bao gồm các cấu phần bắt buộc:
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
                   <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <strong className="text-cyan-400">Deliverables (Sản phẩm bàn giao):</strong> Liệt kê cụ thể từng file, định dạng, độ phân giải hoặc source code sẽ bàn giao.
+                    <strong className="text-cyan-400">Sản phẩm bàn giao:</strong> Liệt kê cụ thể từng file, định dạng, độ phân giải hoặc source code sẽ bàn giao.
                   </div>
                   <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <strong className="text-rose-400">Exclusions (Phạm vi không bao gồm):</strong> Nêu rõ những gì không nằm trong gói để tránh hiểu lầm và ngăn ngừa Scope Creep.
+                    <strong className="text-rose-400">Phạm vi không bao gồm:</strong> Nêu rõ những gì không nằm trong gói để tránh hiểu lầm và ngăn ngừa Scope Creep.
                   </div>
                   <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <strong className="text-amber-400">Deadlines & Milestones:</strong> Thời hạn cam kết theo từng mốc công việc và chế tài xử lý nếu xảy ra trễ hạn.
+                    <strong className="text-amber-400">Thời hạn và các mốc quan trọng:</strong> Thời hạn cam kết theo từng mốc công việc và chế tài xử lý nếu xảy ra trễ hạn.
                   </div>
                   <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <strong className="text-emerald-400">Acceptance Criteria (Tiêu chí nghiệm thu):</strong> Các tiêu chuẩn định lượng để đo lường việc hoàn thành đạt yêu cầu.
+                    <strong className="text-emerald-400">ATiêu chí nghiệm thu:</strong> Các tiêu chuẩn định lượng để đo lường việc hoàn thành đạt yêu cầu.
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3 pt-2 border-t border-slate-800">
                 <h3 className="font-extrabold text-white text-sm">
-                  2. Quy Định Vòng Chỉnh Sửa (Revision Policy)
+                  2. Quy Định Vòng Chỉnh Sửa
                 </h3>
                 <ul className="space-y-2 text-xs list-disc pl-5 text-slate-300">
                   <li>
-                    <strong className="text-white">Số vòng revision nằm trong scope:</strong> Tùy theo gói dịch vụ (thông thường từ 2 đến 4 vòng) được quy định rõ trong SOW.
+                    <strong className="text-white">Số vòng revisioan nằm trong scope:</strong> Tùy theo gói dịch vụ (thông thường từ 2 đến 4 vòng) được quy định rõ trong SOW.
                   </li>
                   <li>
                     <strong className="text-white">Phạm vi revision hợp lệ:</strong> Tinh chỉnh màu sắc, font chữ, bố cục, sửa lỗi bug kỹ thuật hoặc căn chỉnh tỷ lệ theo đúng yêu cầu ban đầu.
                   </li>
                   <li>
-                    <strong className="text-white">Yêu cầu ngoài scope (Out of Scope):</strong> Trường hợp thay đổi concept hoàn toàn mới hoặc phát sinh thêm màn hình/tính năng chưa có trong SOW ban đầu, nhóm sẽ báo giá bổ sung và xác nhận thời gian trước khi thực hiện.
+                    <strong className="text-white">Yêu cầu ngoài scope:</strong> Trường hợp thay đổi concept hoàn toàn mới hoặc phát sinh thêm màn hình/tính năng chưa có trong SOW ban đầu, nhóm sẽ báo giá bổ sung và xác nhận thời gian trước khi thực hiện.
                   </li>
                   <li>
                     <strong className="text-white">Thời gian hoàn thiện revision:</strong> Cam kết hoàn thành trong vòng 24 - 48 giờ làm việc kể từ khi nhận phản hồi chi tiết từ khách hàng.
@@ -287,26 +286,26 @@ export function CustomerProtectionPolicyModal({
 
               <div className="space-y-3">
                 <h3 className="font-extrabold text-white text-sm">
-                  Quy Trình Kiểm Thử Chấp Nhận Của Người Dùng (Customer UAT - M3)
+                  Quy Trình Kiểm Thử Chấp Nhận Của Người Dùng
                 </h3>
                 <p className="text-xs text-slate-300">
                   Khách hàng kiểm tra deliverable theo 4 nhóm tiêu chí chuẩn mực:
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1">
-                    <span className="font-bold text-cyan-300">1. Tiêu chí Chức Năng (Functional):</span>
+                    <span className="font-bold text-cyan-300">1. Tiêu chí Chức Năng :</span>
                     <p className="text-[11px] text-slate-400">Các nút bấm, form nhập liệu, đường dẫn liên kết và logic hệ thống hoạt động chính xác.</p>
                   </div>
                   <div className="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1">
-                    <span className="font-bold text-purple-300">2. Tiêu chí Mỹ Thuật (Visual & UI):</span>
+                    <span className="font-bold text-purple-300">2. Tiêu chí Mỹ Thuật :</span>
                     <p className="text-[11px] text-slate-400">Màu sắc, tỷ lệ chữ, khoảng cách, phong cách thiết kế đúng theo bản vẽ Figma hoặc moodboard đã duyệt.</p>
                   </div>
                   <div className="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1">
-                    <span className="font-bold text-amber-300">3. Tiêu chí Tương Thích (Compatibility):</span>
+                    <span className="font-bold text-amber-300">3. Tiêu chí Tương Thích :</span>
                     <p className="text-[11px] text-slate-400">Hiển thị chuẩn responsive trên Mobile/Tablet/Desktop hoặc mở file định dạng AI/PSD/PDF không lỗi font.</p>
                   </div>
                   <div className="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1">
-                    <span className="font-bold text-emerald-300">4. Tiêu chí Tài Liệu (Documentation):</span>
+                    <span className="font-bold text-emerald-300">4. Tiêu chí Tài Liệu :</span>
                     <p className="text-[11px] text-slate-400">Có đầy đủ tài liệu hướng dẫn vận hành, link source code và video hướng dẫn sử dụng.</p>
                   </div>
                 </div>
@@ -320,7 +319,7 @@ export function CustomerProtectionPolicyModal({
               <div className="space-y-3">
                 <h3 className="font-extrabold text-white text-sm flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  Chính Sách Hỗ Trợ Kỹ Thuật Sau Bàn Giao (Post-handover Support)
+                  Chính Sách Hỗ Trợ Kỹ Thuật Sau Bàn Giao
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
                   Thay vì dùng thuật ngữ "bảo hành" chung chung, 4YouTech định nghĩa rõ ràng phạm vi đồng hành hỗ trợ sau khi nghiệm thu:

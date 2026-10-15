@@ -224,9 +224,8 @@ function AnimatedShowcaseBanner() {
             <button
               key={idx}
               onClick={() => setActiveSlide(idx)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                activeSlide === idx ? "w-7 bg-cyan-400" : "w-2 bg-slate-700 hover:bg-slate-500"
-              }`}
+              className={`h-2 rounded-full transition-all duration-300 ${activeSlide === idx ? "w-7 bg-cyan-400" : "w-2 bg-slate-700 hover:bg-slate-500"
+                }`}
             />
           ))}
         </div>
@@ -573,7 +572,7 @@ export function GuestView({
 
   return (
     <div className="space-y-16 pb-16">
-      
+
       {/* Floating Toast Notification */}
       {toastMsg && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#0b132e] text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up border border-cyan-500/40 backdrop-blur-xl">
@@ -588,7 +587,7 @@ export function GuestView({
         <div className="absolute bottom-0 left-1/3 -ml-16 -mb-16 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
-          
+
           {/* Left Column: Headline & Action */}
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-xs font-bold tracking-wide select-none">
@@ -614,12 +613,12 @@ export function GuestView({
               >
                 Khám phá dịch vụ <ArrowRight className="w-4 h-4" />
               </a>
-              
+
               <a
                 href="#sample-projects-section"
                 className="px-6 py-3.5 rounded-full gradient-btn-secondary font-bold text-sm flex items-center gap-2"
               >
-                <Eye className="w-4 h-4 text-cyan-400" /> Xem showreel
+                <Eye className="w-4 h-4 text-cyan-400" /> Xem mẫu
               </a>
             </div>
 
@@ -739,11 +738,10 @@ export function GuestView({
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${
-                    selectedCategory === cat
-                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/30 font-bold"
-                      : "text-slate-300 hover:text-white"
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${selectedCategory === cat
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/30 font-bold"
+                    : "text-slate-300 hover:text-white"
+                    }`}
                 >
                   {cat === "all" ? "Tất cả" : cat}
                 </button>
@@ -835,11 +833,10 @@ export function GuestView({
               return (
                 <div
                   key={srv.id}
-                  className={`dark-glass-card rounded-2xl border transition-all overflow-hidden flex flex-col justify-between group relative snap-start ${
-                    isCheckedInCatalog
-                      ? "border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] bg-cyan-950/20"
-                      : "border-blue-500/20 hover:border-blue-500/40"
-                  }`}
+                  className={`dark-glass-card rounded-2xl border transition-all overflow-hidden flex flex-col justify-between group relative snap-start ${isCheckedInCatalog
+                    ? "border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] bg-cyan-950/20"
+                    : "border-blue-500/20 hover:border-blue-500/40"
+                    }`}
                 >
                   {/* Top Checkbox Button for Multi-selection */}
                   {currentUser.role !== "admin" && currentUser.role !== "staff" && (
@@ -850,11 +847,10 @@ export function GuestView({
                           prev.includes(srv.id) ? prev.filter((id) => id !== srv.id) : [...prev, srv.id]
                         );
                       }}
-                      className={`absolute top-3 right-3 z-20 px-2.5 py-1 rounded-xl border backdrop-blur-md transition flex items-center gap-1.5 text-[11px] font-extrabold cursor-pointer ${
-                        isCheckedInCatalog
-                          ? "bg-cyan-400 text-slate-950 border-cyan-300 shadow-md"
-                          : "bg-slate-950/80 text-slate-300 border-slate-700 hover:border-cyan-400 hover:text-white"
-                      }`}
+                      className={`absolute top-3 right-3 z-20 px-2.5 py-1 rounded-xl border backdrop-blur-md transition flex items-center gap-1.5 text-[11px] font-extrabold cursor-pointer ${isCheckedInCatalog
+                        ? "bg-cyan-400 text-slate-950 border-cyan-300 shadow-md"
+                        : "bg-slate-950/80 text-slate-300 border-slate-700 hover:border-cyan-400 hover:text-white"
+                        }`}
                       title={isCheckedInCatalog ? "Bỏ chọn dịch vụ này" : "Tích chọn dịch vụ này"}
                     >
                       {isCheckedInCatalog ? (
@@ -978,51 +974,46 @@ export function GuestView({
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
             <button
               onClick={() => setProjectSubCategory("all")}
-              className={`px-3.5 py-1.5 rounded-full transition ${
-                projectSubCategory === "all"
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
-                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
-              }`}
+              className={`px-3.5 py-1.5 rounded-full transition ${projectSubCategory === "all"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
+                }`}
             >
               Tất cả Mẫu
             </button>
             <button
               onClick={() => setProjectSubCategory("Logo")}
-              className={`px-3.5 py-1.5 rounded-full transition ${
-                projectSubCategory === "Logo"
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
-                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
-              }`}
+              className={`px-3.5 py-1.5 rounded-full transition ${projectSubCategory === "Logo"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
+                }`}
             >
               🎨 Logo & Brand
             </button>
             <button
               onClick={() => setProjectSubCategory("Banner")}
-              className={`px-3.5 py-1.5 rounded-full transition ${
-                projectSubCategory === "Banner"
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
-                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
-              }`}
+              className={`px-3.5 py-1.5 rounded-full transition ${projectSubCategory === "Banner"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
+                }`}
             >
               🖼️ Banner & Poster
             </button>
             <button
               onClick={() => setProjectSubCategory("Website")}
-              className={`px-3.5 py-1.5 rounded-full transition ${
-                projectSubCategory === "Website"
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
-                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
-              }`}
+              className={`px-3.5 py-1.5 rounded-full transition ${projectSubCategory === "Website"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
+                }`}
             >
               💻 Website & Portfolio
             </button>
             <button
               onClick={() => setProjectSubCategory("UI/UX")}
-              className={`px-3.5 py-1.5 rounded-full transition ${
-                projectSubCategory === "UI/UX"
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
-                  : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
-              }`}
+              className={`px-3.5 py-1.5 rounded-full transition ${projectSubCategory === "UI/UX"
+                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md font-bold"
+                : "bg-slate-900/80 text-slate-300 border border-blue-500/30 hover:bg-slate-900"
+                }`}
             >
               📱 App UI/UX
             </button>
@@ -1124,11 +1115,10 @@ export function GuestView({
                   }
                 }}
                 disabled={currentProjectPage === 1}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                  currentProjectPage === 1
-                    ? "bg-slate-900/50 text-slate-600 cursor-not-allowed border border-slate-800"
-                    : "bg-blue-950/80 text-cyan-300 border border-blue-500/30 hover:bg-blue-900 hover:text-white"
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${currentProjectPage === 1
+                  ? "bg-slate-900/50 text-slate-600 cursor-not-allowed border border-slate-800"
+                  : "bg-blue-950/80 text-cyan-300 border border-blue-500/30 hover:bg-blue-900 hover:text-white"
+                  }`}
               >
                 <ChevronLeft className="w-4 h-4" /> Trang trước
               </button>
@@ -1141,11 +1131,10 @@ export function GuestView({
                       setCurrentProjectPage(pageNum);
                       document.getElementById("sample-projects-section")?.scrollIntoView({ behavior: "smooth" });
                     }}
-                    className={`w-9 h-9 rounded-xl text-xs font-black transition ${
-                      currentProjectPage === pageNum
-                        ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-500/30 border border-cyan-400/50 scale-105"
-                        : "bg-slate-900/80 text-slate-400 border border-blue-500/20 hover:text-white hover:bg-slate-800"
-                    }`}
+                    className={`w-9 h-9 rounded-xl text-xs font-black transition ${currentProjectPage === pageNum
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-500/30 border border-cyan-400/50 scale-105"
+                      : "bg-slate-900/80 text-slate-400 border border-blue-500/20 hover:text-white hover:bg-slate-800"
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -1160,11 +1149,10 @@ export function GuestView({
                   }
                 }}
                 disabled={currentProjectPage === totalProjectPages}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                  currentProjectPage === totalProjectPages
-                    ? "bg-slate-900/50 text-slate-600 cursor-not-allowed border border-slate-800"
-                    : "bg-blue-950/80 text-cyan-300 border border-blue-500/30 hover:bg-blue-900 hover:text-white"
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${currentProjectPage === totalProjectPages
+                  ? "bg-slate-900/50 text-slate-600 cursor-not-allowed border border-slate-800"
+                  : "bg-blue-950/80 text-cyan-300 border border-blue-500/30 hover:bg-blue-900 hover:text-white"
+                  }`}
               >
                 Trang sau <ChevronRight className="w-4 h-4" />
               </button>
@@ -1190,7 +1178,7 @@ export function GuestView({
 
         {/* 4 Phases with 12 Stages Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          
+
           {/* Phase 1: Thẩm Định & Thiết Lập Scope */}
           <div className="p-5 rounded-3xl dark-glass-card border border-blue-500/30 space-y-3 relative overflow-hidden flex flex-col justify-between">
             <div className="absolute top-0 right-0 px-3 py-1 bg-blue-900/40 text-blue-300 text-[10px] font-black rounded-bl-xl border-l border-b border-blue-500/20">
@@ -1327,7 +1315,7 @@ export function GuestView({
               </ul>
             </div>
             <div className="text-[10px] font-bold text-emerald-300 bg-emerald-950/60 p-2 rounded-xl border border-emerald-500/20">
-              🛡️ Minh chứng M4: Support & Complaint Log có SLA kiểm tra
+              🛡️ Minh chứng : Support & Complaint Log có SLA kiểm tra
             </div>
           </div>
 
@@ -1342,7 +1330,7 @@ export function GuestView({
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h4 className="font-black text-sm sm:text-base text-white">
-                  Chính Sách Bảo Vệ Quyền Lợi Khách Hàng (Customer Protection Policy)
+                  Chính Sách Bảo Vệ Quyền Lợi Khách Hàng
                 </h4>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
                   Hiệu lực từ 01/07/2024
@@ -1606,17 +1594,15 @@ export function GuestView({
               <div className="flex border-b border-slate-200">
                 <button
                   onClick={() => { setAuthTab("login"); setAuthMessage(""); setOtpStep(false); }}
-                  className={`flex-1 py-3 text-sm font-bold border-b-2 text-center transition ${
-                    authTab === "login" ? "border-sky-600 text-sky-600" : "border-transparent text-slate-400"
-                  }`}
+                  className={`flex-1 py-3 text-sm font-bold border-b-2 text-center transition ${authTab === "login" ? "border-sky-600 text-sky-600" : "border-transparent text-slate-400"
+                    }`}
                 >
                   Đăng nhập
                 </button>
                 <button
                   onClick={() => { setAuthTab("register"); setAuthMessage(""); setOtpStep(false); }}
-                  className={`flex-1 py-3 text-sm font-bold border-b-2 text-center transition ${
-                    authTab === "register" ? "border-sky-600 text-sky-600" : "border-transparent text-slate-400"
-                  }`}
+                  className={`flex-1 py-3 text-sm font-bold border-b-2 text-center transition ${authTab === "register" ? "border-sky-600 text-sky-600" : "border-transparent text-slate-400"
+                    }`}
                 >
                   Tạo tài khoản
                 </button>
@@ -1803,7 +1789,7 @@ export function GuestView({
             {/* REGISTER FORM STEP 2: VERIFY OTP */}
             {authTab === "register" && otpStep && (
               <form onSubmit={handleVerifyOtp} className="space-y-4 animate-fade-in">
-                
+
                 {/* System Email Sent Notification Banner */}
                 <div className="p-3.5 bg-slate-900 text-white rounded-2xl text-xs space-y-1.5 border border-cyan-400/40">
                   <div className="flex items-center gap-2">
