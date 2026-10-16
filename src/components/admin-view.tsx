@@ -16,6 +16,7 @@ import {
 import { DeliverableImage } from "@/components/deliverable-image";
 import { PilotKpiDashboard } from "@/components/pilot-kpi-dashboard";
 import { SupportTicketsManagement } from "@/components/support-tickets-management";
+import { WebTrafficAnalytics } from "@/components/web-traffic-analytics";
 import {
   ShieldCheck,
   Users,
@@ -379,7 +380,7 @@ export function AdminView() {
   const allTickets = useMemo(() => orders.flatMap((o) => o.supportTickets || []), [orders]);
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    "overview" | "requests" | "payments" | "pilot_kpi" | "tickets" | "users" | "services" | "projects" | "reviews"
+    "overview" | "traffic" | "requests" | "payments" | "pilot_kpi" | "tickets" | "users" | "services" | "projects" | "reviews"
   >("overview");
 
   // Selected Order for Detail Inspection Modal or Split View
@@ -584,6 +585,7 @@ export function AdminView() {
         <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 bg-slate-800 p-1.5 rounded-2xl border border-slate-700 max-w-full">
           {[
             { id: "overview", label: "Báo Cáo Tổng Quan" },
+            { id: "traffic", label: "Lưu Lượng Web (1/10 - 15/10)" },
             { id: "requests", label: `Đơn Hàng (${orders.length})` },
             { id: "payments", label: `Duyệt Thanh Toán (${pendingTxns.length})` },
             { id: "pilot_kpi", label: "KPI Pilot 10 Khách (Góp ý 2)" },
@@ -684,6 +686,12 @@ export function AdminView() {
 
           {/* Revenue Line Chart Component */}
           <RevenueLineChartComponent transactions={transactions} orders={orders} />
+
+          {/* Web Traffic Analytics Component (01/10 - 15/10) */}
+          <WebTrafficAnalytics
+            isCompact={true}
+            onViewDetails={() => setActiveAdminTab("traffic")}
+          />
 
           {/* Quick Orders Overview Table with 1-click Modal View */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
@@ -809,6 +817,13 @@ export function AdminView() {
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* TAB: WEB TRAFFIC ANALYTICS (01/10 - 15/10) */}
+      {activeAdminTab === "traffic" && (
+        <div className="space-y-6 animate-fade-in">
+          <WebTrafficAnalytics isCompact={false} />
         </div>
       )}
 
