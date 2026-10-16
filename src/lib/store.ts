@@ -721,8 +721,8 @@ export const SEED_SERVICES: ServiceItem[] = [
     scopeOutput: "Mã nguồn Next.js/React, Chuẩn Responsive Mobile/Tablet, Hướng dẫn quản trị & Deploy Vercel/Netlify miễn phí.",
     supportType: "Online",
     demoImages: [
-      "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80"
+      "/images/portfolio-trunghieu.jpg",
+      "/images/portfolio-camly.png"
     ]
   },
   {
@@ -854,6 +854,26 @@ export const SEED_SERVICES: ServiceItem[] = [
 // Seed Sample Projects
 export const SEED_PROJECTS: SampleProject[] = [
   {
+    id: "proj-portfolio-trunghieu",
+    name: "Website Portfolio Cá Nhân Developer Pro - Nguyễn Trung Hiếu",
+    category: "IT",
+    subCategory: "Website",
+    description: "Website Personal Portfolio Backend Developer & Web/UI Design chuyên nghiệp xuất bản trực tiếp trên Netlify. Trình bày thông tin cá nhân, dự án công nghệ 4YouTech, bộ chứng chỉ chuyên môn Coursera (SDLC, Web Design) & hồ sơ năng lực làm việc.",
+    image: "/images/portfolio-trunghieu.jpg",
+    link: "https://nguyen-trung-hieu.netlify.app/",
+    featured: true
+  },
+  {
+    id: "proj-portfolio-camly",
+    name: "Website Portfolio Cá Nhân Graphic Designer - Nguyễn Thị Cẩm Lý",
+    category: "IT",
+    subCategory: "Website",
+    description: "Website Portfolio cá nhân Graphic Design xuất bản trực tiếp trên Netlify với phong cách đồ họa nghệ thuật, màu sắc nổi bật. Trình bày bộ sưu tập nhận diện thương hiệu, thiết kế Banner, Poster, chứng chỉ Coursera từ ĐH FPT & thông tin liên hệ.",
+    image: "/images/portfolio-camly.png",
+    link: "https://nguyen-thi-cam-ly.netlify.app/",
+    featured: true
+  },
+  {
     id: "proj-mcropdiary",
     name: "McropDiary - App & Giao Diện UI/UX Quản Lý Mùa Vụ Nông Nghiệp",
     category: "Design",
@@ -862,16 +882,6 @@ export const SEED_PROJECTS: SampleProject[] = [
     image: "/images/mcropdiary-ui.jpg",
     link: "https://www.figma.com/proto/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&p=f&t=RPGQ7V25bEgJuevk-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=91%3A6&show-proto-sidebar=1",
     designLink: "https://www.figma.com/design/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&t=RPGQ7V25bEgJuevk-1",
-    featured: true
-  },
-  {
-    id: "proj-portfolio-trunghieu",
-    name: "Website Portfolio Cá Nhân Developer Pro - Nguyễn Trung Hiếu",
-    category: "IT",
-    subCategory: "Website",
-    description: "Website Personal Portfolio lập trình viên chuyên nghiệp xuất bản trực tiếp trên Netlify. Trình bày thông tin cá nhân, bộ sưu tập sản phẩm công nghệ, kỹ năng Fullstack & hồ sơ năng lực làm việc.",
-    image: "/images/portfolio-trunghieu.jpg",
-    link: "https://nguyen-trung-hieu.netlify.app/",
     featured: true
   },
   {
@@ -984,16 +994,7 @@ export const SEED_PROJECTS: SampleProject[] = [
     link: "/images/poster-ocean.jpg",
     featured: true
   },
-  {
-    id: "proj-portfolio-camly",
-    name: "Website Portfolio Cá Nhân Pro - Nguyễn Thị Cẩm Lý",
-    category: "IT",
-    subCategory: "Website",
-    description: "Website Portfolio cá nhân được thiết kế hiện đại, bố cục ấn tượng, xuất bản trực tiếp trên Netlify. Trình bày thông tin giới thiệu, dự án thực tế, kỹ năng lập trình & liên hệ làm việc.",
-    image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
-    link: "https://nguyen-thi-cam-ly.netlify.app/",
-    featured: true
-  },
+
   {
     id: "proj-portfolio-danglnh",
     name: "Website Personal Portfolio & Showcase - Đặng Lê Nho Hoàng",

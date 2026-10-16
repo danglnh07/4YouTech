@@ -336,10 +336,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const parsed: SampleProject[] = JSON.parse(savedProjects);
         const updated = parsed.map((p) => {
           const seed = SEED_PROJECTS.find((s) => s.id === p.id);
-          return seed ? { ...p, description: seed.description } : p;
+          return seed ? { ...p, ...seed, description: seed.description } : p;
         });
         const missingSeed = SEED_PROJECTS.filter((sp) => !updated.some((p) => p.id === sp.id));
-        setProjects([...updated, ...missingSeed]);
+        const combined = [...updated, ...missingSeed];
+        const seedOrderMap = new Map(SEED_PROJECTS.map((sp, idx) => [sp.id, idx]));
+        combined.sort((a, b) => {
+          const orderA = seedOrderMap.has(a.id) ? seedOrderMap.get(a.id)! : 999;
+          const orderB = seedOrderMap.has(b.id) ? seedOrderMap.get(b.id)! : 999;
+          return orderA - orderB;
+        });
+        setProjects(combined);
       } else {
         setProjects(SEED_PROJECTS);
       }

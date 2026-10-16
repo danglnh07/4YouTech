@@ -348,7 +348,12 @@ export function GuestView({
       (p) =>
         p.subCategory === projectSubCategory ||
         p.category === projectSubCategory ||
-        (projectSubCategory === "Banner" && (p.subCategory === "Banner" || p.subCategory === "Poster"))
+        (projectSubCategory === "Banner" && (p.subCategory === "Banner" || p.subCategory === "Poster")) ||
+        (projectSubCategory === "Website" && (
+          p.subCategory === "Website" ||
+          p.name.toLowerCase().includes("portfolio") ||
+          (p.link && p.link.includes("netlify.app"))
+        ))
     );
   }, [projects, projectSubCategory]);
 
