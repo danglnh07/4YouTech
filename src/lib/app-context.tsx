@@ -378,7 +378,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
       if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
       if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
-      if (pRes?.data && pRes.data.length > 0) setProjects(pRes.data);
+      if (pRes?.data && pRes.data.length > 0) {
+        const enriched = pRes.data.map((p: any) => {
+          const seed = SEED_PROJECTS.find((s) => s.id === p.id);
+          return seed ? { ...seed, ...p, images: seed.images || p.images, versions: seed.versions || p.versions, brandDetails: seed.brandDetails || p.brandDetails } : p;
+        });
+        setProjects(enriched);
+      }
       if (rRes?.data && rRes.data.length > 0) setReviews(rRes.data);
       if (tRes?.data && tRes.data.length > 0) setTransactions(tRes.data);
     }).catch((err) => {

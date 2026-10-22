@@ -133,9 +133,10 @@ export const PROJECT_REFERENCES = [
   },
   {
     id: "logo-brand",
-    name: "Logo & Bộ nhận diện thương hiệu",
+    name: "Logo Cà Phê “PHIN” (PHIN COFFEE - 3 Phiên Bản Sáng Tối)",
     category: "Design",
-    image: "/images/logo-phin-coffee.png"
+    image: "/images/logo-phin-coffee-v1.png",
+    link: "/images/logo-phin-coffee-v1.png"
   },
   {
     id: "banner-quang-cao",

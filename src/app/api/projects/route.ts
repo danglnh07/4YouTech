@@ -6,16 +6,25 @@ export async function GET() {
   try {
     const rows = await queryDb<any>(`SELECT * FROM "SampleProjects" ORDER BY "CreatedAt" DESC`);
     if (rows && rows.length > 0) {
-      const projects = rows.map((row: any) => ({
-        id: row.ProjectId || row.projectid,
-        name: row.Name || row.name,
-        category: row.Category || row.category,
-        subCategory: row.SubCategory || row.subcategory,
-        description: row.Description || row.description,
-        image: row.ImageUrl || row.imageurl,
-        link: row.DemoLink || row.demolink,
-        featured: Boolean(row.IsFeatured ?? row.isfeatured)
-      }));
+      const projects = rows.map((row: any) => {
+        const id = row.ProjectId || row.projectid;
+        const seed = SEED_PROJECTS.find((s) => s.id === id);
+        return {
+          id,
+          name: row.Name || row.name,
+          category: row.Category || row.category,
+          subCategory: row.SubCategory || row.subcategory,
+          description: row.Description || row.description,
+          image: row.ImageUrl || row.imageurl,
+          images: seed?.images,
+          versions: seed?.versions,
+          brandDetails: seed?.brandDetails,
+          detailedDescription: seed?.detailedDescription,
+          link: row.DemoLink || row.demolink,
+          designLink: seed?.designLink,
+          featured: Boolean(row.IsFeatured ?? row.isfeatured)
+        };
+      });
       return NextResponse.json({ source: "db", data: projects });
     }
   } catch (error) {

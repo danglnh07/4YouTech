@@ -99,13 +99,52 @@ export function formatVNShortDate(dateStr: string): string {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
+export interface ProjectVersion {
+  title: string;
+  image: string;
+  badge?: string;
+  description?: string;
+  characteristics?: string;
+}
+
+export interface ProjectBrandColor {
+  name: string;
+  hex?: string;
+  role: string;
+  desc: string;
+}
+
+export interface ProjectBrandVariant {
+  name: string;
+  bgDesc: string;
+  description: string;
+  characteristics: string;
+  image: string;
+}
+
+export interface ProjectBrandDetails {
+  overview?: string;
+  idea?: string;
+  visualAnalysis?: string;
+  layout?: string;
+  colors?: ProjectBrandColor[];
+  typography?: string;
+  tagline?: string;
+  colorVariants?: ProjectBrandVariant[];
+  summary?: string;
+}
+
 export interface SampleProject {
   id: string;
   name: string;
   category: ServiceCategory;
   subCategory?: "Logo" | "Banner" | "Poster" | "Website" | "UI/UX" | "Database" | "Other";
   image: string;
+  images?: string[];
+  versions?: ProjectVersion[];
   description: string;
+  detailedDescription?: string;
+  brandDetails?: ProjectBrandDetails;
   link?: string;
   designLink?: string;
   featured?: boolean;
@@ -858,31 +897,115 @@ export const SEED_PROJECTS: SampleProject[] = [
     name: "Website Portfolio Cá Nhân Developer Pro - Nguyễn Trung Hiếu",
     category: "IT",
     subCategory: "Website",
-    description: "Website Personal Portfolio Backend Developer & Web/UI Design chuyên nghiệp xuất bản trực tiếp trên Netlify. Trình bày thông tin cá nhân, dự án công nghệ 4YouTech, bộ chứng chỉ chuyên môn Coursera (SDLC, Web Design) & hồ sơ năng lực làm việc.",
+    description: "Website Personal Portfolio Backend Developer & Web/UI Design chuyên nghiệp xuất bản trực tiếp trên Netlify. Tích hợp Dark Mode phong cách công nghệ cao với font Manrope & DM Mono, trình bày triết lý 'Từ logic đến trải nghiệm', dự án nền tảng 4YouTech (Fullstack + Figma Design/Prototype) và bộ 3 chứng chỉ quốc tế uy tín từ Coursera (Minnesota, Michigan, CertNexus).",
     image: "/images/portfolio-trunghieu.jpg",
     link: "https://nguyen-trung-hieu.netlify.app/",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "Website Portfolio cá nhân được xây dựng với định vị một Backend Developer đa năng, kết hợp tư duy logic hệ thống vững chắc với năng lực thiết kế giao diện Web & UI/UX hiện đại.\n\nÝ tưởng cốt lõi xoay quanh thông điệp \"Từ logic đến trải nghiệm\" — thể hiện sự kết nối chặt chẽ giữa cách thức dữ liệu và hệ thống vận hành trơn tru phía sau (Backend) với cách người dùng thực sự cảm nhận và tương tác trực quan ở phía trước (Frontend & UX). Giao diện mang hơi thở Futuristic Tech tối giản, sắc sảo và đậm chất kỹ sư phần mềm chuyên nghiệp.",
+      visualAnalysis: "Điểm nhấn thị giác mở màn là khối Hero Art tương tác dạng Orb số hóa mang ký tự biểu trưng \"H.\" phát sáng đa tầng, tượng trưng cho hạt nhân logic và sự sáng tạo kỹ thuật số. Hiệu ứng nhịp đập Pulse đèn tín hiệu xanh báo trạng thái hoạt động trực tuyến (\"PORTFOLIO / 2026\") lập tức thu hút ánh nhìn.\n\nPhần trình diễn dự án nổi bật 4YouTech được đóng khung giao diện 3 pha (Discover - Design - Build) với 3 nút chuyển hướng tức thì đến Web thực tế, Bản thiết kế Figma Canvas và Bản tương tác Figma Prototype.",
+      layout: "Website áp dụng bố cục trang đơn (Single-Page Application) liền mạch với cấu trúc 3 phân khu chuẩn hóa theo chỉ số số học [01 — 03]:\n\n• 01 / GIỚI THIỆU (About): Bố cục chia đôi (Split layout) giữa tuyên ngôn triết lý phát triển và danh mục thẻ kỹ năng chuyên môn (Backend, Web Dev, Figma UI, SDLC).\n• 02 / DỰ ÁN NỔI BẬT (Featured Project): Khung giao diện trung tâm nổi bật dự án 4YouTech kèm bộ liên kết tài nguyên trực tiếp.\n• 03 / HỌC TẬP & CHỨNG CHỈ (Certificates): Lưới 3 cột (3-column grid) trưng bày trực quan các chứng chỉ quốc tế có gắn link xác thực (Verify Credential) trực tuyến.",
+      colors: [
+        {
+          name: "Dark Obsidian",
+          hex: "#11151b",
+          role: "Nền chủ đạo (Background)",
+          desc: "Tạo chiều sâu không gian số, giảm mỏi mắt và tôn lên vẻ hiện đại, công nghệ cao của một kỹ sư Backend."
+        },
+        {
+          name: "Electric Cyan",
+          hex: "#06b6d4",
+          role: "Điểm nhấn tương tác (Accent)",
+          desc: "Xuất hiện ở các nút CTA, hiệu ứng hover, pulse tín hiệu và liên kết định hướng quan trọng."
+        },
+        {
+          name: "Paper Slate",
+          hex: "#f8fafc",
+          role: "Văn bản & Tiêu đề (Typography)",
+          desc: "Đạt độ tương phản chuẩn WCAG AAA trên nền đen, mang lại trải nghiệm đọc rõ ràng, sắc nét."
+        }
+      ],
+      typography: "Sự kết hợp tinh tế giữa hai họ font chuẩn công nghệ quốc tế: Font tiêu đề chính Manrope (Sans-serif) với các biến thể nét in đậm (800) và chữ nghiêng nghệ thuật (Italic) tạo phong thái đĩnh đạc, hiện đại; kết hợp font DM Mono (Monospace) cho các chỉ số phân đoạn [01 / 02 / 03], nhãn kỹ thuật và mã code, mang lại phong vị của một IDE lập trình cao cấp.",
+      tagline: "Từ logic đến trải nghiệm — Tôi quan tâm đến cách hệ thống vận hành phía sau và cách người dùng trải nghiệm sản phẩm ở phía trước.",
+      summary: "Website Portfolio của Nguyễn Trung Hiếu là hình mẫu chuẩn mực cho một lập trình viên thế hệ mới: giao diện tinh gọn, hiệu năng tải trang tức thì (<500ms), bố cục trực quan chuẩn quốc tế và minh chứng năng lực rõ ràng qua dự án thực tế cùng các chứng nhận Coursera được xác thực minh bạch."
+    }
   },
   {
     id: "proj-portfolio-camly",
     name: "Website Portfolio Cá Nhân Graphic Designer - Nguyễn Thị Cẩm Lý",
     category: "IT",
     subCategory: "Website",
-    description: "Website Portfolio cá nhân Graphic Design xuất bản trực tiếp trên Netlify với phong cách đồ họa nghệ thuật, màu sắc nổi bật. Trình bày bộ sưu tập nhận diện thương hiệu, thiết kế Banner, Poster, chứng chỉ Coursera từ ĐH FPT & thông tin liên hệ.",
+    description: "Website Portfolio cá nhân Graphic Design xuất bản trực tiếp trên Netlify với phong cách Neo-Brutalism & Modern Pop Art rực rỡ, lấy cảm hứng từ kỹ thuật in ấn spot-colour print cổ điển. Trưng bày hơn 17 tác phẩm đa dạng (Logo, Banner, Poster, Bao bì, Bìa sách, Ấn phẩm sự kiện), hệ thống bộ lọc động kèm Lightbox tương tác và 2 chứng chỉ Coursera từ ĐH FPT định dạng cuống vé cổ điển.",
     image: "/images/portfolio-camly.png",
     link: "https://nguyen-thi-cam-ly.netlify.app/",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "Website Portfolio cá nhân của Nguyễn Thị Cẩm Lý là một tuyên ngôn thị giác sống động với triết lý: \"I turn creative ideas into thoughtful designs — From rough sketches to refined designs. I make things look like they mean it.\"\n\nThiết kế đoạn tuyệt với những bóng mờ mềm mại thông thường, thay vào đó là phong cách Neo-Brutalism kết hợp Modern Pop Art với những mảng màu phẳng sắc cạnh (flat, hard-edged colour blocks) lấy cảm hứng từ kỹ thuật in spot-colour print truyền thống.",
+      visualAnalysis: "Tâm điểm thị giác ở khu vực Hero là tấm poster nghệ thuật trừu tượng đặt nghiêng 2.5 độ với bóng đổ cứng (hard shadow 14px) màu xanh thẫm, tích hợp hiệu ứng animation dạng pop-in bật nảy khi tải trang.\n\nCác mảng hình học cơ bản (nửa vầng trăng, hình tròn, kẻ sọc barcode, hình vuông xoay góc 12 độ) được sắp đặt theo nguyên lý bố cục phi đối xứng, tạo nhịp điệu thị giác vui tươi, tràn đầy năng lượng sáng tạo của một nhà thiết kế trẻ.",
+      layout: "Website sử dụng kiến trúc chia khối màu đa tầng (Multi-colored Blocks) liên tục tạo bất ngờ khi cuộn trang:\n\n• Hero Block (Nền Xanh Coban #2B35F5): Màn chào sân ấn tượng với typography khổng lồ và poster nghệ thuật.\n• Work Showcase (Nền Giấy Trắng #FFFFFF): Hệ thống lọc danh mục thông minh (Banner, Poster, Logo, Menu, Bìa sách, Khác) cùng lưới Masonry 3 cột trưng bày 17+ dự án thực tế kèm Lightbox tương tác phóng to chi tiết.\n• About & Disciplines (Nền Vàng Chanh #D4F53C): Bố cục 2 cột thể hiện chân dung khung tròn cách điệu, kỹ năng chuyên sâu và phần mềm thành thạo (Illustrator, Photoshop, InDesign, Figma).\n• Certificates (Nền Hồng Pastel #FFB8DE): Trình bày chứng chỉ Coursera dưới dạng các cuống vé xem phim cổ điển (Ticket Stubs) đục lỗ khuyết bán nguyệt cực kỳ độc đáo.",
+      colors: [
+        {
+          name: "Electric Cobalt Blue",
+          hex: "#2B35F5",
+          role: "Hero & Contact Block",
+          desc: "Đại diện cho sự tự tin, chuyên nghiệp, chiều sâu nghệ thuật và khát khao sáng tạo không giới hạn."
+        },
+        {
+          name: "Acid Lime",
+          hex: "#D4F53C",
+          role: "About & Accent Highlights",
+          desc: "Màu điểm nhấn năng động, nút CTA và khối About, truyền tải năng lượng tươi mới và phong cách phá cách."
+        },
+        {
+          name: "Bubblegum Pink",
+          hex: "#FFB8DE",
+          role: "Certificates Background",
+          desc: "Màu nền khu vực chứng chỉ và hình họa bổ trợ, mang sắc thái ngọt ngào, tinh tế của tư duy đồ họa thị giác."
+        }
+      ],
+      typography: "Bộ đôi phông chữ cá tính mang tính nhận diện thương hiệu tuyệt đối: Tiêu đề sử dụng Unbounded — kiểu chữ Sans-serif hình học góc cạnh, nét siêu đậm (Ultra Black) tạo hiệu ứng giật gân thị giác; phần thân trang sử dụng Hanken Grotesk với độ rộng dòng thoáng đãng, dễ đọc trên mọi thiết bị.",
+      tagline: "I turn creative ideas into thoughtful designs — From rough sketches to refined designs.",
+      summary: "Một tác phẩm portfolio kỹ thuật số xuất sắc, xóa nhòa ranh giới giữa một website tĩnh và một triển lãm nghệ thuật đồ họa. Trang web không chỉ lưu trữ tác phẩm mà bản thân nó chính là minh chứng sống động nhất cho tư duy màu sắc, bố cục và bản lĩnh sáng tạo độc nhất của Nguyễn Thị Cẩm Lý."
+    }
   },
   {
     id: "proj-mcropdiary",
-    name: "McropDiary - App & Giao Diện UI/UX Quản Lý Mùa Vụ Nông Nghiệp",
+    name: "MyCropDiary - App & Giao Diện UI/UX Quản Lý Mùa Vụ Nông Nghiệp Tiêu Chuẩn VietGAP",
     category: "Design",
     subCategory: "UI/UX",
-    description: "Hệ thống Nhật ký & Giao diện UI/UX thông minh McropDiary dành cho quản lý mùa vụ nông nghiệp. Giúp chủ trang trại và nông dân theo dõi tiến độ gieo trồng, quản lý vật tư, theo dõi thời tiết, phân bón & thống kê sản lượng thu hoạch thời gian thực.",
+    description: "Nền tảng ứng dụng di động & Giao diện UI/UX chuyên sâu MyCropDiary hỗ trợ số hóa quy trình quản lý mùa vụ canh tác nông nghiệp theo tiêu chuẩn VietGAP. Cung cấp giải pháp ghi chép nhật ký nông vụ điện tử tự động, giám sát thời tiết vi khí hậu thời gian thực, quản lý kho vật tư - phân bón - thuốc bảo vệ thực vật, cảnh báo thời gian cách ly thu hoạch và trích xuất mã QR truy xuất nguồn gốc nông sản minh bạch.",
     image: "/images/mcropdiary-ui.jpg",
     link: "https://www.figma.com/proto/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&p=f&t=RPGQ7V25bEgJuevk-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=91%3A6&show-proto-sidebar=1",
     designLink: "https://www.figma.com/design/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&t=RPGQ7V25bEgJuevk-1",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "MyCropDiary được phát triển từ nhu cầu cấp thiết về việc chuẩn hóa và số hóa quy trình canh tác nông nghiệp công nghệ cao tại Việt Nam, trực tiếp giải quyết bài toán ghi chép nhật ký mùa vụ theo chuẩn VietGAP (Good Agricultural Practices).\n\nÝ tưởng cốt lõi là chuyển đổi sổ tay ghi chép truyền thống dễ rách, thất lạc và thiếu minh bạch thành một ứng dụng di động trực quan, thông minh và cực kỳ dễ sử dụng đối với cả người nông dân lẫn các kỹ sư nông nghiệp tại các hợp tác xã, trang trại. Nền tảng vừa là công cụ giám sát canh tác, vừa là chứng thư bảo chứng chất lượng và truy xuất nguồn gốc cho nông sản sạch khi đưa ra thị trường tiêu thụ.",
+      visualAnalysis: "Trọng tâm thiết kế UI/UX được định hình xoay quanh nguyên lý \"Mobile-First for Field Work\" — tối ưu tuyệt đối cho thao tác bằng một tay (Thumb-zone) ngay tại bờ ruộng hoặc nhà màng:\n\n• Dashboard tổng quan mùa vụ: Trực quan hóa tiến độ sinh trưởng cây trồng bằng thanh tiến trình trực quan (Gieo mầm → Cây con → Ra hoa → Đậu trái → Thu hoạch).\n• Nhật ký điện tử 1-chạm (One-tap Logging): Ghi nhận nhanh các hoạt động tưới nước, bón phân, làm cỏ hoặc phòng trừ sâu bệnh bằng hệ thống icon minh họa lớn, giảm thiểu tối đa việc phải gõ văn bản phức tạp.\n• Cảnh báo an toàn & thời gian cách ly (PHI - Pre-Harvest Interval): Tự động đếm ngược số ngày cách ly sau khi phun chế phẩm sinh học hoặc phân bón, ngăn chặn nguy cơ thu hoạch sớm khi tồn dư hóa chất chưa phân hủy an toàn.",
+      layout: "Hệ thống màn hình ứng dụng được cấu trúc khoa học theo hành trình trải nghiệm người dùng (Figma Prototype gồm 18+ artboards hoàn chỉnh):\n\n• Màn hình Trang chủ (Farm Hub): Thẻ trạng thái vi khí hậu thời tiết hôm nay, danh sách việc cần làm (To-Do List) trong ngày và cảnh báo sâu bệnh theo mùa.\n• Quản lý Lô/Thửa đất (Plot Management): Sơ đồ các thửa ruộng được phân chia trực quan, hiển thị giống cây trồng, ngày xuống giống và sản lượng dự kiến.\n• Quản lý Vật tư & Kho (Inventory): Thống kê số lượng hạt giống, phân bón, thuốc BVTV với mã vạch Barcode/QR, hạn sử dụng và chi phí đầu vào.\n• Báo cáo & QR Truy xuất nguồn gốc (Traceability): Tạo mã QR động cho từng lô nông sản thu hoạch, cho phép người tiêu dùng quét để xem toàn bộ lịch sử chăm sóc đạt chuẩn VietGAP.",
+      colors: [
+        {
+          name: "VietGAP Emerald Green",
+          hex: "#16a34a",
+          role: "Màu chủ đạo (Primary Green)",
+          desc: "Tượng trưng cho sự sống xanh tươi, nông nghiệp sạch và tiêu chuẩn chất lượng VietGAP nghiêm ngặt."
+        },
+        {
+          name: "Harvest Amber Gold",
+          hex: "#f59e0b",
+          role: "Màu điểm nhấn (Harvest Accent)",
+          desc: "Biểu trưng cho mùa màng bội thu, hoa trái chín rộ, trạng thái cảnh báo an toàn và giá trị kinh tế."
+        },
+        {
+          name: "AgriTech Sky Blue",
+          hex: "#0284c7",
+          role: "Công nghệ & Tưới tiêu (IoT Water)",
+          desc: "Đại diện cho tính năng tưới tiêu thông minh, dữ liệu khí tượng vi khí hậu và kết nối cảm biến nông trại."
+        }
+      ],
+      typography: "Hệ thống phông chữ Sans-serif hiện đại (Plus Jakarta Sans / Inter) với các phân cấp thị giác rõ ràng: cỡ chữ tối thiểu 14px cho body text và 20px-28px cho các chỉ số số liệu quan trọng. Khoảng cách dòng thoáng (Line height 1.5) cùng các nút bấm to bản bo tròn (Corner radius 16px) mang lại trải nghiệm bấm chắc chắn, hạn chế thao tác nhầm khi người dùng đeo găng tay lao động.",
+      tagline: "Số hóa nhật ký mùa vụ — Nâng tầm nông sản Việt theo chuẩn VietGAP.",
+      summary: "MyCropDiary là một giải pháp thiết kế UI/UX toàn diện cho ngành nông nghiệp số, kết hợp hoàn hảo giữa quy chuẩn pháp lý khắt khe của VietGAP với trải nghiệm người dùng hiện đại, mở ra bước đột phá trong quản trị nông trại thông minh và minh bạch chuỗi cung ứng thực phẩm an toàn."
+    }
   },
   {
     id: "proj-logo-1",
@@ -896,32 +1019,263 @@ export const SEED_PROJECTS: SampleProject[] = [
   },
   {
     id: "proj-logo-ladybug",
-    name: "Logo Monogram Chú Bọ Rùa Đỏ Cách Điệu (OR Monogram Ladybug Logo)",
+    name: "Logo Dr. Bọ Rùa (Sản Phẩm Thuốc Trừ Sâu)",
     category: "Design",
     subCategory: "Logo",
-    description: "Thiết kế Logo Monogram sáng tạo hình chú bọ rùa (Ladybug) sắc đỏ nổi bật, lồng ghép khéo léo 2 chữ cái 'O' và 'R'. Phong cách đồ họa Vector hiện đại, đường nét mềm mại tinh tế, tượng trưng cho sự may mắn, tràn đầy sức sống và tinh thần sáng tạo đột phá.",
-    image: "/images/logo-ladybug-or.png",
-    link: "/images/logo-ladybug-or.png",
+    description: "Logo Dr. Bọ Rùa lấy cảm hứng từ loài thiên địch có ích trong nông nghiệp, kiểm soát sâu rệp hại mùa màng. Thiết kế cách điệu hình học tối giản với 3 phiên bản màu (Nền trắng, Nền đỏ đậm, Nền đen tương phản cao).",
+    image: "/images/logo-ladybug-v1.png",
+    images: [
+      "/images/logo-ladybug-v1.png",
+      "/images/logo-ladybug-v2.png",
+      "/images/logo-ladybug-v3.png"
+    ],
+    versions: [
+      {
+        title: "Phương án tiêu chuẩn (Nền trắng, biểu tượng màu đỏ)",
+        image: "/images/logo-ladybug-v1.png",
+        badge: "Bản Gốc • Trắng Đỏ",
+        description: "Phương án màu sắc tiêu chuẩn trên nền sáng, tôn vinh hình khối chú bọ rùa đỏ cô đọng, sắc nét và dễ ứng dụng trên bao bì, nhãn chai nông nghiệp.",
+        characteristics: "Sạch sẽ, rõ nét, nhận diện tự nhiên."
+      },
+      {
+        title: "Phương án đảo màu (Nền đỏ đậm, biểu tượng màu trắng)",
+        image: "/images/logo-ladybug-v2.png",
+        badge: "Đảo Màu • Đỏ Trắng",
+        description: "Phương án đảo màu tạo ấn tượng thị giác mạnh mẽ với nền đỏ đậm của sức mạnh và sự cảnh giác, biểu tượng bọ rùa trắng nổi bật giúp thu hút sự chú ý ngay lập tức trên kệ trưng bày.",
+        characteristics: "Mạnh mẽ, ấm áp, nổi bật trên kệ hàng."
+      },
+      {
+        title: "Phương án tương phản cao (Nền đen, biểu tượng đỏ viền trắng)",
+        image: "/images/logo-ladybug-v3.png",
+        badge: "Nền Đen • Đỏ Viền Trắng",
+        description: "Phương án trên nền tối mang diện mạo công nghệ, sắc đỏ kết hợp đường viền mảnh màu trắng tạo độ tương phản cao về độ sáng, làm rõ từng hình khối và râu bọ rùa cách điệu.",
+        characteristics: "Tối giản, uy lực, tương phản vượt trội."
+      }
+    ],
+    brandDetails: {
+      overview: "Logo lấy cảm hứng từ hình tượng bọ rùa, một loài côn trùng có ích trong nông nghiệp, nổi bật với khả năng kiểm soát các loài sâu hại như rệp cây. Việc lựa chọn bọ rùa làm biểu tượng tạo sự liên kết trực tiếp với lĩnh vực bảo vệ thực vật, đồng thời truyền tải thông điệp về giải pháp phòng trừ sâu hại và bảo vệ mùa màng hiệu quả.",
+      idea: "Ý tưởng chủ đạo của logo bắt nguồn từ hình tượng bọ rùa, một loài côn trùng có ích trong nông nghiệp, nổi bật với khả năng kiểm soát các loài sâu hại như rệp cây. Việc lựa chọn bọ rùa làm biểu tượng tạo sự liên kết trực tiếp với lĩnh vực bảo vệ thực vật, đồng thời truyền tải thông điệp về giải pháp phòng trừ sâu hại và bảo vệ mùa màng. Phần thân được kết hợp với những đường nét gợi liên tưởng đến chữ cái cách điệu, góp phần tạo dấu ấn riêng cho thương hiệu.",
+      colors: [
+        {
+          name: "Màu Đỏ Nông Nghiệp",
+          hex: "#C62828",
+          role: "Màu chủ đạo / Sức mạnh diệt trừ",
+          desc: "Màu đỏ là màu chủ đạo, gắn liền với hình ảnh tự nhiên của bọ rùa và mang ý nghĩa về sức mạnh, sự chủ động và tính hiệu quả. Trong lĩnh vực thuốc trừ sâu, màu đỏ còn tạo cảm giác cảnh giác và khả năng hành động nhanh chóng trước các tác nhân gây hại."
+        },
+        {
+          name: "Màu Trắng Tinh Khiết",
+          hex: "#FFFFFF",
+          role: "Đường nét & Đảo màu",
+          desc: "Xuất hiện ở các khoảng trống phân chia bộ phận râu, đầu và cánh, giúp hình khối tối giản rõ ràng, đồng thời tượng trưng cho sự an toàn và hiệu quả minh bạch đối với cây trồng."
+        },
+        {
+          name: "Màu Đen Tương Phản",
+          hex: "#0A0A0A",
+          role: "Nền tương phản cao",
+          desc: "Khi đặt trên nền đen, sắc đỏ tạo sự tương phản về độ sáng nhất định, mang đến diện mạo mạnh mẽ và nổi bật trên bao bì, nhãn mác và truyền thông số."
+        }
+      ],
+      typography: "Logo được xây dựng theo phong cách tối giản và cách điệu hình học. Hai chiếc râu, phần đầu hình bán nguyệt và thân bọ rùa tạo thành một tổng thể dễ nhận biết. Phần thân được kết hợp với những đường nét gợi liên tưởng đến chữ cái cách điệu, góp phần tạo dấu ấn riêng cho thương hiệu. Cấu trúc logo gần đối xứng theo trục dọc, mang lại cảm giác chắc chắn, ổn định và dễ ghi nhớ. Các khoảng trống bên trong được sử dụng để phân chia những bộ phận của biểu tượng, giúp thiết kế không trở nên quá phức tạp.",
+      colorVariants: [
+        {
+          name: "Nền trắng, biểu tượng màu đỏ",
+          bgDesc: "Phương án tiêu chuẩn",
+          characteristics: "Sạch sẽ, rõ nét, nhận diện tự nhiên.",
+          description: "Phương án màu sắc tiêu chuẩn trên nền sáng, tôn vinh hình khối chú bọ rùa đỏ cô đọng, sắc nét và dễ ứng dụng trên bao bì, nhãn chai nông nghiệp.",
+          image: "/images/logo-ladybug-v1.png"
+        },
+        {
+          name: "Nền đỏ đậm, biểu tượng màu trắng",
+          bgDesc: "Phương án đảo màu",
+          characteristics: "Mạnh mẽ, ấm áp, nổi bật trên kệ hàng.",
+          description: "Phương án đảo màu tạo ấn tượng thị giác mạnh mẽ với nền đỏ đậm của sức mạnh và sự cảnh giác, biểu tượng bọ rùa trắng nổi bật giúp thu hút sự chú ý ngay lập tức trên kệ trưng bày.",
+          image: "/images/logo-ladybug-v2.png"
+        },
+        {
+          name: "Nền đen, biểu tượng đỏ viền trắng",
+          bgDesc: "Phương án tương phản cao",
+          characteristics: "Tối giản, uy lực, tương phản vượt trội.",
+          description: "Phương án trên nền tối mang diện mạo công nghệ, sắc đỏ kết hợp đường viền mảnh màu trắng tạo độ tương phản cao về độ sáng, làm rõ từng hình khối và râu bọ rùa cách điệu.",
+          image: "/images/logo-ladybug-v3.png"
+        }
+      ],
+      summary: "Logo có hình khối tương đối cô đọng, phù hợp với bao bì sản phẩm, nhãn chai, tem dán, biển quảng cáo và các nền tảng truyền thông số. Biểu tượng bọ rùa giúp khách hàng dễ dàng liên tưởng đến hoạt động kiểm soát sâu hại một cách chuyên nghiệp, uy tín và hiệu quả cao."
+    },
+    link: "/images/logo-ladybug-v1.png",
     featured: true
   },
   {
     id: "proj-logo-phin-coffee",
-    name: "Logo Thương Hiệu Cà Phê Quý Ông PHIN COFFEE",
+    name: "Logo Cà Phê “PHIN” (PHIN COFFEE - 3 Phiên Bản Sáng Tối)",
     category: "Design",
     subCategory: "Logo",
-    description: "Thiết kế Logo nhận diện thương hiệu PHIN COFFEE độc đáo, phối màu vàng chanh nổi bật kết hợp sắc nâu sẫm cà phê rang xay. Ý tưởng tạo hình phin cà phê truyền thống kết hợp chiếc mũ Fedora quý ông lịch lãm, tạo nên dấu ấn thương hiệu cà phê mộc đậm đà, sang trọng và cá tính.",
-    image: "/images/logo-phin-coffee.png",
-    link: "/images/logo-phin-coffee.png",
+    description: "Thiết kế Logo PHIN COFFEE mang đậm bản sắc cà phê Việt Nam kết hợp phong cách đồ họa hiện đại với 3 phiên bản màu (Phương án gốc Nền Vàng, Đảo màu Nền Nâu, Đơn sắc Nền Đen). Ý tưởng phin cà phê truyền thống uốn lượn kết hợp tách cà phê ấm áp.",
+    image: "/images/logo-phin-coffee-v1.png",
+    images: [
+      "/images/logo-phin-coffee-v1.png",
+      "/images/logo-phin-coffee-v3.png",
+      "/images/logo-phin-coffee-v2.png"
+    ],
+    versions: [
+      {
+        title: "Phương án màu gốc (Nền vàng, biểu tượng và chữ màu nâu)",
+        image: "/images/logo-phin-coffee-v1.png",
+        badge: "Bản Gốc • Vàng Nâu",
+        description: "Phương án màu gốc mang đến cảm giác ấm áp, thân thiện và trẻ trung. Màu vàng nổi bật giúp thu hút sự chú ý, trong khi màu nâu gợi liên tưởng đến cà phê rang xay và hương vị đậm đà. Sự kết hợp này tạo nên phong cách gần gũi, năng động và dễ nhận diện.",
+        characteristics: "Tươi sáng, nổi bật, gần gũi."
+      },
+      {
+        title: "Phương án đảo màu (Nền nâu, biểu tượng và chữ màu vàng)",
+        image: "/images/logo-phin-coffee-v3.png",
+        badge: "Đảo Màu • Nâu Vàng",
+        description: "Phương án đảo màu tạo cảm giác trầm ấm, đậm đà và trưởng thành hơn. Nền nâu gợi đến hạt cà phê rang và không gian quán cà phê, còn màu vàng làm nổi bật biểu tượng cùng tên thương hiệu. Tổng thể mang nét cá tính, tạo chiều sâu thị giác và phù hợp với hình ảnh thương hiệu cà phê hiện đại.",
+        characteristics: "Ấm áp, cá tính, đậm chất cà phê."
+      },
+      {
+        title: "Phương án đơn sắc (Nền đen, biểu tượng và chữ màu trắng)",
+        image: "/images/logo-phin-coffee-v2.png",
+        badge: "Đơn Sắc • Đen Trắng",
+        description: "Phương án đơn sắc mang đến cảm giác tối giản, hiện đại và mạnh mẽ. Màu trắng nổi bật trên nền đen giúp logo có độ tương phản cao, làm rõ hình khối, đường nét và kiểu chữ. Việc loại bỏ màu sắc trang trí giúp tập trung vào cấu trúc biểu tượng và tăng tính linh hoạt khi ứng dụng trên nhiều chất liệu.",
+        characteristics: "Tối giản, rõ ràng, hiện đại."
+      }
+    ],
+    brandDetails: {
+      overview: "Logo PHIN COFFEE được thiết kế theo phong cách đơn giản, độc đáo và mang đậm nét đặc trưng của văn hóa cà phê Việt Nam. Logo sử dụng hình ảnh chiếc phin cà phê cách điệu kết hợp với tách cà phê và tên thương hiệu, tạo nên dấu ấn trực quan dễ nhận biết. Tổng thể thiết kế hướng đến sự gần gũi, trẻ trung nhưng vẫn thể hiện được nét truyền thống của cà phê phin Việt Nam.",
+      idea: "Ý tưởng chủ đạo của logo bắt nguồn từ hình ảnh phin cà phê truyền thống của Việt Nam – một dụng cụ pha chế quen thuộc, gắn liền với thói quen thưởng thức cà phê chậm rãi. Hình ảnh chiếc phin được cách điệu thành những đường nét uốn lượn, kết hợp với tách cà phê và giọt cà phê phía trên, tạo cảm giác sinh động và gợi liên tưởng đến quá trình pha chế. Tên thương hiệu “PHIN” được đặt ở vị trí trung tâm với kích thước lớn, giúp nhấn mạnh yếu tố nhận diện chính. Từ “COFFEE” được đặt ngay bên dưới với kích thước nhỏ hơn, bổ trợ cho tên thương hiệu và làm rõ lĩnh vực kinh doanh.",
+      colors: [
+        {
+          name: "Màu Vàng",
+          hex: "#FDD835",
+          role: "Nền chủ đạo",
+          desc: "Chiếm phần lớn diện tích nền, tạo cảm giác nổi bật, tươi sáng và thu hút sự chú ý. Màu vàng còn gợi liên tưởng đến sự ấm áp, năng lượng và không khí thân thiện."
+        },
+        {
+          name: "Màu Nâu Đậm",
+          hex: "#3D2314",
+          role: "Biểu tượng & Chữ PHIN",
+          desc: "Được sử dụng cho hình ảnh phin cà phê, tách cà phê và chữ “PHIN”, gợi liên tưởng đến màu sắc của cà phê rang xay, thể hiện sự đậm đà và đặc trưng của sản phẩm."
+        },
+        {
+          name: "Màu Đen",
+          hex: "#111827",
+          role: "Đường viền & Chi tiết",
+          desc: "Xuất hiện trong đường viền và một số chi tiết chữ, giúp tạo độ tương phản với nền vàng, làm cho logo rõ ràng và dễ nhận diện hơn."
+        }
+      ],
+      typography: "Logo được xây dựng theo bố cục tập trung, với hình ảnh biểu tượng nằm ở phía trên và tên thương hiệu nằm ở phía dưới. Đường viền bo tròn bao quanh một phần biểu tượng và chữ, tạo sự liên kết giữa các thành phần, đồng thời giúp tổng thể trông gọn gàng và thống nhất. Kiểu chữ “PHIN” có nét dày, mạnh mẽ và mang tính trang trí, thể hiện sự cá tính, nổi bật. Trong khi đó, chữ “COFFEE” nhỏ hơn, sử dụng kiểu chữ đậm và dễ đọc, giúp cân bằng bố cục và bổ sung thông tin cho thương hiệu.",
+      colorVariants: [
+        {
+          name: "Nền vàng, biểu tượng và chữ màu nâu",
+          bgDesc: "Phương án màu gốc",
+          characteristics: "Tươi sáng, nổi bật, gần gũi.",
+          description: "Phương án màu gốc mang đến cảm giác ấm áp, thân thiện và trẻ trung. Màu vàng nổi bật giúp thu hút sự chú ý, trong khi màu nâu gợi liên tưởng đến cà phê rang xay và hương vị đậm đà. Sự kết hợp này tạo nên phong cách gần gũi, năng động và dễ nhận diện.",
+          image: "/images/logo-phin-coffee-v1.png"
+        },
+        {
+          name: "Nền nâu, biểu tượng và chữ màu vàng",
+          bgDesc: "Phương án đảo màu",
+          characteristics: "Ấm áp, cá tính, đậm chất cà phê.",
+          description: "Phương án đảo màu tạo cảm giác trầm ấm, đậm đà và trưởng thành hơn. Nền nâu gợi đến hạt cà phê rang và không gian quán cà phê, còn màu vàng làm nổi bật biểu tượng cùng tên thương hiệu. Tổng thể mang nét cá tính, tạo chiều sâu thị giác và phù hợp với hình ảnh thương hiệu cà phê hiện đại.",
+          image: "/images/logo-phin-coffee-v3.png"
+        },
+        {
+          name: "Nền đen, biểu tượng và chữ màu trắng",
+          bgDesc: "Phương án đơn sắc",
+          characteristics: "Tối giản, rõ ràng, hiện đại.",
+          description: "Phương án đơn sắc mang đến cảm giác tối giản, hiện đại và mạnh mẽ. Màu trắng nổi bật trên nền đen giúp logo có độ tương phản cao, làm rõ hình khối, đường nét và kiểu chữ. Việc loại bỏ màu sắc trang trí giúp tập trung vào cấu trúc biểu tượng và tăng tính linh hoạt khi ứng dụng trên nhiều chất liệu.",
+          image: "/images/logo-phin-coffee-v2.png"
+        }
+      ],
+      summary: "Logo PHIN COFFEE là sự kết hợp giữa hình ảnh cà phê phin truyền thống và cách thể hiện đồ họa mang tính hiện đại. Thông qua biểu tượng, màu sắc và kiểu chữ, logo truyền tải hình ảnh một thương hiệu cà phê gần gũi, đậm chất Việt Nam nhưng vẫn có nét trẻ trung và cá tính. Thiết kế không chỉ giúp nhận diện thương hiệu mà còn góp phần thể hiện tinh thần và văn hóa thưởng thức cà phê mà thương hiệu hướng đến."
+    },
+    link: "/images/logo-phin-coffee-v1.png",
     featured: true
   },
   {
     id: "proj-logo-vplus-health",
-    name: "Logo Y Tế & Chăm Sóc Sức Khỏe Trái Tim V+ (V+ Medical & Health Logo)",
+    name: "Logo Vitalis (Dịch Vụ Chăm Sóc Sức Khỏe Xanh)",
     category: "Design",
     subCategory: "Logo",
-    description: "Thiết kế Logo thương hiệu trung tâm y tế & chăm sóc sức khỏe V+ biểu tượng hình trái tim kết hợp chiếc lá mầm xanh và dấu cộng y tế. Phối màu gradient chuyển sắc xanh lam - xanh lá dịu mát, truyền tải thông điệp về sự an tâm, yêu thương, tận tụy và sức sống vươn lên.",
-    image: "/images/logo-vplus-health.png",
-    link: "/images/logo-vplus-health.png",
+    description: "Logo Vitalis được phát triển dựa trên sự kết hợp giữa trái tim, chiếc lá, dấu thập y tế và chữ V. Định hướng mô hình chăm sóc sức khỏe xanh, biểu trưng cho sự sống, y học hiện đại và thân thiện môi trường.",
+    image: "/images/logo-vitalis-v1.png",
+    images: [
+      "/images/logo-vitalis-v1.png",
+      "/images/logo-vitalis-v2.png",
+      "/images/logo-vitalis-v3.png"
+    ],
+    versions: [
+      {
+        title: "Phương án màu gốc (Nền trắng, chuyển sắc xanh dương - xanh lá)",
+        image: "/images/logo-vitalis-v1.png",
+        badge: "Bản Gốc • Nền Trắng",
+        description: "Phương án tiêu chuẩn trên nền trắng làm nổi bật dải chuyển sắc mềm mại từ xanh dương sang xanh lá cây, tối ưu in ấn tài liệu y khoa, danh thiếp, website và hồ sơ sức khỏe.",
+        characteristics: "Thanh thoát, hiện đại, chuẩn y tế."
+      },
+      {
+        title: "Phương án màu xanh ngọc (Nền xanh pastel, logo viền trắng)",
+        image: "/images/logo-vitalis-v2.png",
+        badge: "Pastel • Xanh Ngọc",
+        description: "Phương án trên nền xanh ngọc pastel mang lại cảm giác thư thái, an lành và trị liệu tự nhiên. Đường viền trắng tạo sự phân tách rõ ràng và gia tăng chiều sâu thị giác.",
+        characteristics: "Dịu mát, chữa lành, thân thiện môi trường."
+      },
+      {
+        title: "Phương án nền tối (Nền xanh navy đậm, logo viền trắng)",
+        image: "/images/logo-vitalis-v3.png",
+        badge: "Nền Tối • Xanh Navy",
+        description: "Phương án trên nền xanh navy đậm tạo độ tương phản cao, tôn vinh chữ V màu trắng và dải gradient xanh dương - xanh lá, cực kỳ ấn tượng trên ứng dụng di động, biển hiệu phòng khám và đồng phục.",
+        characteristics: "Chuyên nghiệp, tin cậy, chiều sâu vượt trội."
+      }
+    ],
+    brandDetails: {
+      overview: "Logo Vitalis được phát triển dựa trên sự kết hợp giữa trái tim, chiếc lá, dấu thập y tế và chữ V. Đây là những biểu tượng đại diện cho sức khỏe, sự sống, thiên nhiên và hoạt động chăm sóc con người. Sự kết hợp này góp phần thể hiện định hướng thương hiệu hướng đến mô hình chăm sóc sức khỏe xanh, chú trọng sự hài hòa giữa con người và môi trường.",
+      idea: "Logo Vitalis bắt nguồn từ ý tưởng gắn kết chặt chẽ giữa Y học hiện đại và Thiên nhiên xanh. Trái tim thể hiện tấm lòng tận tụy chăm sóc con người; Dấu thập y tế khẳng định tiêu chuẩn chuyên môn chuẩn xác; Chiếc lá mầm đại diện cho sự hồi phục và sức sống bền vững; Chữ V vừa là chữ cái đầu của thương hiệu Vitalis, vừa mang ý nghĩa biểu trưng cho sự sống mãnh liệt và chăm sóc toàn diện.",
+      colors: [
+        {
+          name: "Màu Xanh Dương",
+          hex: "#0284C7",
+          role: "Màu chủ đạo y tế",
+          desc: "Đại diện cho sự tin cậy, ổn định, tính khoa học và sự chuyên nghiệp trong chăm sóc sức khỏe con người."
+        },
+        {
+          name: "Màu Xanh Lá Cây",
+          hex: "#65A30D",
+          role: "Màu sắc thiên nhiên",
+          desc: "Thể hiện sự sống, khả năng phục hồi, phát triển bền vững và định hướng thân thiện với môi trường tự nhiên."
+        },
+        {
+          name: "Hiệu Ứng Chuyển Sắc (Gradient)",
+          hex: "#0EA5E9",
+          role: "Gắn kết Y tế & Thiên nhiên",
+          desc: "Tạo cảm giác mềm mại, hiện đại và nhấn mạnh sự kết nối xuyên suốt giữa lĩnh vực y tế với thiên nhiên xanh."
+        }
+      ],
+      typography: "Biểu tượng trái tim tạo thành đường bao tổng thể, đại diện cho sự quan tâm, tận tâm và chăm sóc. Chữ V được đặt bên trong, đóng vai trò nhận diện tên thương hiệu Vitalis. Dấu thập y tế ở phía trên bên phải giúp làm rõ lĩnh vực hoạt động, trong khi chiếc lá ở phần dưới tạo liên tưởng đến thiên nhiên, sự phát triển và sức sống. Các chi tiết được liên kết bằng những đường cong mềm mại, tạo cảm giác thân thiện và gần gũi. Bố cục bất đối xứng nhưng có sự cân bằng về mặt thị giác giữa phần chữ V và hình chiếc lá.",
+      colorVariants: [
+        {
+          name: "Nền trắng, chuyển sắc xanh dương - xanh lá",
+          bgDesc: "Phương án màu gốc",
+          characteristics: "Thanh thoát, hiện đại, chuẩn y tế.",
+          description: "Phương án tiêu chuẩn trên nền trắng làm nổi bật dải chuyển sắc mềm mại từ xanh dương sang xanh lá cây, tối ưu in ấn tài liệu y khoa, danh thiếp, website và hồ sơ sức khỏe.",
+          image: "/images/logo-vitalis-v1.png"
+        },
+        {
+          name: "Nền xanh pastel, logo viền trắng",
+          bgDesc: "Phương án xanh ngọc",
+          characteristics: "Dịu mát, chữa lành, thân thiện môi trường.",
+          description: "Phương án trên nền xanh ngọc pastel mang lại cảm giác thư thái, an lành và trị liệu tự nhiên. Đường viền trắng tạo sự phân tách rõ ràng và gia tăng chiều sâu thị giác.",
+          image: "/images/logo-vitalis-v2.png"
+        },
+        {
+          name: "Nền xanh navy đậm, logo viền trắng",
+          bgDesc: "Phương án nền tối",
+          characteristics: "Chuyên nghiệp, tin cậy, chiều sâu vượt trội.",
+          description: "Phương án trên nền xanh navy đậm tạo độ tương phản cao, tôn vinh chữ V màu trắng và dải gradient xanh dương - xanh lá, cực kỳ ấn tượng trên ứng dụng di động, biển hiệu phòng khám và đồng phục.",
+          image: "/images/logo-vitalis-v3.png"
+        }
+      ],
+      summary: "Logo có khả năng truyền đạt tương đối rõ lĩnh vực và giá trị thương hiệu, phù hợp với website y tế, ứng dụng chăm sóc sức khỏe, đồng phục, danh thiếp, biển hiệu và tài liệu truyền thông. Vitalis mang sứ mệnh giải pháp y tế xanh, an tâm và bền vững."
+    },
+    link: "/images/logo-vitalis-v1.png",
     featured: true
   },
   {
@@ -936,63 +1290,255 @@ export const SEED_PROJECTS: SampleProject[] = [
   },
   {
     id: "proj-banner-yte",
-    name: "Banner Quảng Cáo Trung Tâm Y Tế & Chăm Sóc Sức Khỏe Gia Đình",
+    name: "Banner Quảng Cáo Trung Tâm Y Tế Toàn Diện – Sống Khỏe Mỗi Ngày",
     category: "Design",
     subCategory: "Banner",
-    description: "Banner quảng cáo cho chủ đề chăm sóc sức khỏe gia đình và lối sống lành mạnh, năng động, mang lại cảm giác tươi mới và giàu sức sống ngay từ cái nhìn đầu tiên. Nhờ sự kết hợp giữa màu xanh ngọc cùng với hình ảnh lá cây, biểu tượng dấu cộng y tế cùng hình ảnh các nhân vật hoạt hình đang tích cực vận động, banner truyền tải tinh thần tích cực, sự tận tâm và cảm giác được bảo vệ, đồng hành toàn diện cho sức khỏe của cả gia đình.",
+    description: "Banner quảng cáo chăm sóc sức khỏe toàn diện lấy con người và thiên nhiên làm trọng tâm. Kết hợp biểu tượng y tế, hoạt động thể dục gia đình và giải pháp liên hệ mã QR trên nền xanh ngọc tươi mát.",
     image: "/images/banner-y-te.png",
     link: "/images/banner-y-te.png",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "Banner hướng đến quảng bá dịch vụ chăm sóc sức khỏe toàn diện, lấy con người và thiên nhiên làm trọng tâm. Ý tưởng chủ đạo là truyền tải thông điệp về một lối sống lành mạnh, chủ động chăm sóc sức khỏe và duy trì sự cân bằng giữa thể chất với môi trường sống.\n\nThiết kế kết hợp các hình ảnh biểu trưng cho lĩnh vực y tế như dấu thập, cây lá và hoạt động thể chất nhằm xây dựng hình ảnh một dịch vụ chăm sóc sức khỏe gần gũi, tích cực và thân thiện.",
+      visualAnalysis: "Thiết kế kết hợp hài hòa các biểu trưng y tế và lối sống vận động tích cực: Phía trên tiêu đề là dấu thập y tế màu đỏ và chiếc lá xanh mầm giúp nhận diện dịch vụ tức thì. Phần bên phải và phía dưới bố trí các nhân vật minh họa đang chạy bộ và tập thể dục yoga/stretching truyền tải tinh thần năng động. Các chi tiết cây lá viền tại bốn góc tạo khung trang trí tự nhiên, cùng những dấu cộng xanh rải rác duy trì sự liên kết chặt chẽ với chủ đề y tế gia đình.",
+      layout: "Banner sử dụng bố cục ngang cân đối, phân bố thị giác khoa học:\n• Trung tâm: Tiêu đề chính “TRUNG TÂM Y TẾ TOÀN DIỆN – SỐNG KHỎE MỖI NGÀY” chiếm diện tích lớn, thu hút sự chú ý ngay từ cái nhìn đầu tiên.\n• Biểu tượng trên: Dấu thập y tế viền tròn và lá cây xanh đóng vai trò icon nhận diện.\n• Nửa dưới bên phải: Nhóm nhân vật hoạt hình minh họa chạy bộ và vươn vai tập thể dục đầy sức sống trên thảm tập yoga.\n• Góc dưới bên trái: Nút Call-To-Action “LIÊN HỆ NGAY!” bo góc nổi bật cùng mã QR thông minh giúp quét kết nối dịch vụ trực tiếp nhanh chóng.\n• Khung viền 4 góc: Cụm lá cây xanh mát bao bọc tạo cảm giác tươi mát, thân thiện và trong lành.",
+      colors: [
+        {
+          name: "Xanh Lá Đậm (Medical Green)",
+          hex: "#15803d",
+          role: "Tiêu đề & Nút kêu gọi hành động",
+          desc: "Tượng trưng cho thiên nhiên, sức sống, sự phát triển và định hướng chăm sóc sức khỏe xanh bền vững."
+        },
+        {
+          name: "Xanh Ngọc & Nền Trắng (Teal & Pure White)",
+          hex: "#0d9488",
+          role: "Nền chính sạch sẽ & Sóng dịu mát",
+          desc: "Nền trắng kết hợp xanh ngọc nhạt mang lại cảm giác sạch sẽ, thoáng đãng, vô trùng và thư thái chuẩn y tế."
+        },
+        {
+          name: "Dấu Thập Đỏ Tương Phản (Medical Red Cross)",
+          hex: "#dc2626",
+          role: "Biểu tượng y tế khẩn cấp",
+          desc: "Tạo sự tương phản mạnh mẽ với hệ màu xanh, giúp nhấn mạnh đặc trưng cứu chữa và bảo vệ sức khỏe."
+        },
+        {
+          name: "Xanh Pastel Dấu Cộng (Sage Cross)",
+          hex: "#86efac",
+          role: "Dấu cộng y tế rải rác",
+          desc: "Xuất hiện rải rác duy trì sự liên kết chủ đề y tế, tạo cảm giác được chăm sóc và bảo vệ toàn diện."
+        }
+      ],
+      typography: "Tiêu đề “TRUNG TÂM Y TẾ TOÀN DIỆN – SỐNG KHỎE MỖI NGÀY” sử dụng kiểu chữ sans serif in hoa, nét đậm và màu xanh lá đậm, tạo cảm giác vững chắc và rõ ràng. Dòng chữ “CHĂM SÓC GIA ĐÌNH BẠN” và nút “LIÊN HỆ NGAY!” được đặt trong khung nền xanh bo góc, duy trì sự thống nhất về hình thức và tạo điểm nhấn cho lời kêu gọi hành động.",
+      tagline: "TRUNG TÂM Y TẾ TOÀN DIỆN – SỐNG KHỎE MỖI NGÀY\nCHĂM SÓC GIA ĐÌNH BẠN\nLIÊN HỆ NGAY! • Quét mã QR nhận tư vấn sức khỏe gia đình",
+      summary: "Banner quảng cáo truyền tải trọn vẹn thông điệp về sự chủ động chăm sóc sức khỏe gia đình, lối sống thể chất năng động và môi trường y tế xanh thân thiện. Bố cục ngang chuẩn mực, đồ họa tươi sáng kết hợp mã QR thực tế giúp tối ưu tỷ lệ chuyển đổi cho các chiến dịch marketing phòng khám và trung tâm chăm sóc sức khỏe."
+    }
   },
   {
     id: "proj-banner-matkinh",
     name: "Banner Quảng Cáo Mắt Kính Thông Minh AR & Bluetooth",
     category: "Design",
     subCategory: "Banner",
-    description: "Banner mang chủ đề giới thiệu sản phẩm công nghệ đeo thông minh thế hệ mới, tập trung vào khả năng kết nối và hỗ trợ tiện ích rảnh tay cho người dùng. Tổng thể thiết kế tỏa ra cảm giác hiện đại, tối giản và tinh tế. Nền trắng sáng kết hợp với xanh lam nhạt và gọng kính đen sắc nét tạo nên một không gian thị giác sạch sẽ và hi-tech, mang lại cho người xem sự tin tưởng vào tính sáng tạo, tiện nghi và đột phá của sản phẩm.",
+    description: "Banner quảng cáo mắt kính thông minh 'Kết Nối Tương Lai' tích hợp AI, AR và Bluetooth. Phong cách hi-tech thanh lịch với bố cục ngang hiện đại, tương phản sắc nét giữa nền xanh cyan và gọng kính đen.",
     image: "/images/banner-mat-kinh.png",
     link: "/images/banner-mat-kinh.png",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "Banner giới thiệu sản phẩm mắt kính thông minh, nhấn mạnh khả năng tích hợp công nghệ hiện đại như trí tuệ nhân tạo (AI), thực tế tăng cường (AR), camera và kết nối Bluetooth. Ý tưởng chủ đạo là thể hiện sự kết hợp giữa phụ kiện thời trang quen thuộc với công nghệ tiên tiến, qua đó truyền tải hình ảnh một sản phẩm tiện ích, hiện đại và phù hợp với xu hướng sống số.",
+      visualAnalysis: "Hình ảnh sản phẩm mắt kính thông minh gọng đen sắc nét với kích thước lớn được đặt ở phía bên phải đóng vai trò là điểm nhấn thị giác chính. Sản phẩm được đặt phía trước một hình kính lớn có độ mờ, tạo hiệu ứng chiều sâu 3D đa tầng và tôn vinh thiết kế công thái học thanh lịch. Các họa tiết chấm tròn halftone công nghệ ở hai góc góp phần tăng tính hiện đại, đồng thời giúp tổng thể không gian không bị đơn điệu.",
+      layout: "Banner sử dụng bố cục ngang phân chia hai khu vực thị giác đối trọng cân bằng:\n• Khu vực bên trái: Tập trung vào hệ thống thông tin bao gồm tiêu đề chính 2 tầng, đoạn mô tả tính năng làm việc / giải trí rảnh tay, cụm icon tính năng nổi bật (AR Thực tế tăng cường & Bluetooth) và nút CTA “MUA NGAY!” bo góc màu đen nổi bật.\n• Khu vực bên phải: Không gian thị giác lớn dành riêng cho sản phẩm mắt kính thực tế với góc nghiêng năng động, kết hợp lớp nền bóng kính mờ tạo chiều sâu trường ảnh ấn tượng.\n• Hai góc chéo: Họa tiết chấm tròn chuyển sắc công nghệ (dot matrix) tạo hiệu ứng số hóa sống động.",
+      colors: [
+        {
+          name: "Xanh Dương Đậm (Tech Blue)",
+          hex: "#1d4ed8",
+          role: "Tiêu đề phụ & Biểu tượng",
+          desc: "Sử dụng cho tiêu đề phụ 'KẾT NỐI TƯƠNG LAI' và biểu tượng công nghệ, thể hiện sự tin cậy, hiện đại và tính chuyên nghiệp cao."
+        },
+        {
+          name: "Xanh Cyan Nhạt & Trắng Sáng",
+          hex: "#e0f7fa",
+          role: "Nền chính công nghệ sạch",
+          desc: "Nền xanh nhạt tạo cảm giác nhẹ nhàng, sạch sẽ, chuẩn không gian hiển thị hi-tech hiện đại."
+        },
+        {
+          name: "Đen Gọng Kính & Nút CTA (Matte Black)",
+          hex: "#1e293b",
+          role: "Tương phản cao & Trọng tâm",
+          desc: "Màu sắc gọng kính, tiêu đề chính và nút 'MUA NGAY!' tạo độ tương phản rõ ràng với nền sáng, giúp nhận diện thông tin nhanh chóng."
+        },
+        {
+          name: "Xanh Điện Tử Highlight (Electric Blue)",
+          hex: "#2563eb",
+          role: "Tính năng AR & Bluetooth",
+          desc: "Tạo điểm nhấn kết nối trực quan cho các tính năng đột phá của sản phẩm."
+        }
+      ],
+      typography: "Tiêu đề “MẮT KÍNH THÔNG MINH – KẾT NỐI TƯƠNG LAI” sử dụng kiểu chữ sans serif in hoa nét đậm, hình khối vuông vức vững chãi, phù hợp với đặc trưng của sản phẩm công nghệ. Nội dung được phân cấp rõ ràng thông qua kích thước, độ đậm và màu sắc, kết hợp các biểu tượng trực quan để tăng khả năng ghi nhớ.",
+      tagline: "“MẮT KÍNH THÔNG MINH – KẾT NỐI TƯƠNG LAI”\nThiết bị đeo mắt tích hợp AI, AR, Camera giúp làm việc, quay chụp và giải trí rảnh tay\n[AR] Thực tế tăng cường • Bluetooth • MUA NGAY!",
+      summary: "Banner sản phẩm công nghệ Mắt kính thông minh thể hiện trọn vẹn sự giao thoa giữa thời trang tiện dụng và công nghệ tương lai. Bố cục ngang chuẩn mực cho sàn thương mại điện tử, Google Display Network và mạng xã hội, thu hút mạnh mẽ nhóm khách hàng yêu thích công nghệ và lối sống số."
+    }
   },
   {
     id: "proj-banner-dautu",
     name: "Banner Truyền Thông Dịch Vụ Đầu Tư Tài Chính & Bất Động Sản",
     category: "Design",
     subCategory: "Banner",
-    description: "Banner hướng đến chủ đề giải pháp tài chính và dịch vụ tư vấn đầu tư sinh lời bền vững. Banner này mang đến sự uy tín và chuyên nghiệp. Phông nền xanh navy trầm kết hợp cùng các gam màu tương phản mạnh như vàng kim của tiền tài và xanh lá của sự tăng trưởng tạo nên một cảm giác đáng tin. Sự xuất hiện của các biểu tượng đồ thị stock và đồng vàng làm tăng thêm cảm giác tài sản và thịnh vượng về một tương lai tài chính vững vàng.",
+    description: "Banner truyền thông tài chính 'Đầu Tư Thông Minh – Sinh Lời Bền Vững' với bố cục 2 tầng hiện đại, kết hợp màn hình biểu đồ nến, túi tiền vàng kim và dải 4 cam kết giá trị an toàn, minh bạch.",
     image: "/images/banner-dau-tu.png",
     link: "/images/banner-dau-tu.png",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "Banner được xây dựng theo chủ đề đầu tư tài chính, tập trung truyền tải thông điệp về việc quản lý nguồn vốn hiệu quả, tối ưu lợi nhuận và hướng đến sự tăng trưởng tài sản dài hạn.\n\nÝ tưởng chủ đạo là kết hợp các biểu tượng tài chính truyền thống với hình ảnh công nghệ phân tích thị trường, thể hiện một giải pháp đầu tư hiện đại, có định hướng và chú trọng quản trị rủi ro.",
+      visualAnalysis: "Thiết kế kết hợp hài hòa giữa hình tượng tài sản hữu hình và công nghệ phân tích số liệu: Cụm hình minh họa bên phải gồm màn hình biểu đồ nến giao dịch tài chính chuyên sâu, túi tiền Euro đầy đặn, các cọc đồng xu vàng kim xếp chồng lớp cùng các mũi tên xanh vút cao hướng lên trên, đại diện cho hoạt động đầu tư hiệu quả và mục tiêu gia tăng tài sản bền vững. Các lớp hình ảnh được bố trí layer đa tầng tạo chiều sâu thị giác sinh động.",
+      layout: "Banner sử dụng bố cục phân chia theo hai tầng nội dung khoa học và chuẩn mực:\n• Tầng trên (Nền xanh dương đậm): Phân chia thành hai nửa đối trọng:\n  - Bên trái: Tiêu đề 2 tầng “ĐẦU TƯ THÔNG MINH – SINH LỜI BỀN VỮNG”, nội dung giải pháp quản trị rủi ro và nút CTA mũi tên “TƯ VẤN MIỄN PHÍ” màu vàng kim cực kỳ nổi bật.\n  - Bên phải: Cụm minh họa màn hình biểu đồ nến, túi tiền, tiền vàng và mũi tên tăng trưởng bứt phá trên nền chấm tròn halftone công nghệ.\n• Tầng dưới (Nền trắng tinh khiết): Trình bày 4 nhóm lợi ích cốt lõi kèm icon trực quan (Danh mục đa dạng, Tối đa hóa lợi nhuận, Kiểm soát dòng tiền, Cam kết minh bạch & bảo mật).",
+      colors: [
+        {
+          name: "Xanh Dương Đậm (Navy Blue)",
+          hex: "#0a2540",
+          role: "Nền chính chuyên nghiệp & Ổn định",
+          desc: "Gợi sự chuyên nghiệp, ổn định, vững chắc và đáng tin cậy trong lĩnh vực tài chính đầu tư."
+        },
+        {
+          name: "Vàng Kim Thịnh Vượng (Wealth Gold)",
+          hex: "#fbbf24",
+          role: "Tiêu đề & Nút kêu gọi hành động",
+          desc: "Tượng trưng cho giá trị tiền bạc, tài sản tích lũy và sự thịnh vượng, đồng thời tạo điểm nhấn bắt mắt cho tiêu đề và nút kêu gọi hành động."
+        },
+        {
+          name: "Xanh Lá Tăng Trưởng (Growth Green)",
+          hex: "#22c55e",
+          role: "Mũi tên & Đà tăng trưởng",
+          desc: "Thể hiện xu hướng sinh lời và đà tăng trưởng của thị trường, xuất hiện ở các mũi tên vươn cao và biểu đồ nến xanh."
+        },
+        {
+          name: "Trắng Tinh Khiết (Clean White)",
+          hex: "#ffffff",
+          role: "Cân bằng tổng thể & Dải lợi ích",
+          desc: "Tạo sự cân bằng tổng thể, tối ưu khả năng đọc và làm nổi bật dải 4 lợi ích cam kết ở tầng dưới."
+        }
+      ],
+      typography: "Tiêu đề “ĐẦU TƯ THÔNG MINH – SINH LỜI BỀN VỮNG” sử dụng kiểu chữ sans serif in hoa, có nét dày và kích thước lớn. Màu vàng được dùng để nhấn mạnh cụm “ĐẦU TƯ THÔNG MINH”, trong khi phần còn lại sử dụng màu trắng để tạo sự phân cấp. Phần nội dung mô tả sử dụng kiểu chữ hiện đại, dễ đọc. Nút “TƯ VẤN MIỄN PHÍ” có màu vàng nổi bật và hình dáng cách điệu, đóng vai trò hướng sự chú ý đến hành động tiếp theo của khách hàng.",
+      tagline: "“ĐẦU TƯ THÔNG MINH – SINH LỜI BỀN VỮNG”\nGiải pháp tài chính toàn diện giúp bạn tối ưu hóa nguồn vốn, quản lý rủi ro và gia tăng tài sản một cách an toàn, hiệu quả.\nTƯ VẤN MIỄN PHÍ • 4 Cam kết giá trị dài hạn",
+      summary: "Banner truyền thông tài chính mang phong cách hiện đại, đĩnh đạc và tin cậy. Bố cục 2 tầng phân chia thông điệp rõ ràng, vừa tạo ấn tượng thị giác mạnh mẽ với tăng trưởng tài sản, vừa cung cấp đầy đủ 4 giá trị cốt lõi, hoàn hảo cho các chiến dịch quảng bá quỹ đầu tư, công ty chứng khoán và dịch vụ tư vấn tài chính."
+    }
   },
   {
     id: "proj-poster-avocado",
     name: "Poster Truyền Thông Sản Phẩm Trái Bơ Nông Sản Sạch (Avocado)",
     category: "Design",
     subCategory: "Poster",
-    description: "Poster quảng cáo trái bơ \"FRUIT AVOCADO\" được thiết kế theo phong cách hiện đại, tối giản và vô cùng sang trọng. Cận cảnh nửa quả bơ tươi ngon với phần thịt quả xanh bơ mịn màng, hạt bơ tròn màu nâu bóng ở chính giữa và lớp vỏ xanh đậm tự nhiên, gợi cảm giác béo ngậy và giàu dinh dưỡng. Chữ \"FRUIT\" màu đen thanh lịch nằm phía trên. Tên sản phẩm \"AVOCADO\" được in hoa, nét chữ nghệ thuật uốn lượn màu vàng rực rỡ, chiếm vị trí trung tâm vô cùng thu hút. Sử dụng tông màu vàng mù tạt / vàng đất làm chủ đạo ở nửa trên, kết hợp cùng sắc đen xám ở giữa và nền xanh lá / nâu tự nhiên ở nửa dưới. Bố cục chia mảng màu giúp poster có chiều sâu và làm nổi bật hình ảnh trái bơ.",
+    description: "Poster quảng bá trái bơ 'FRUIT AVOCADO' phong cách hiện đại với hình ảnh quả bơ cắt đôi béo mịn và quả bơ nguyên vỏ trên nền đen sang trọng, kết hợp tiêu đề vàng cam nghệ thuật và thông điệp dinh dưỡng lành mạnh.",
     image: "/images/poster-avocado.png",
     link: "/images/poster-avocado.png",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "Poster AVOCADO được thiết kế nhằm giới thiệu và quảng bá quả bơ, một loại trái cây giàu dinh dưỡng và có nhiều lợi ích cho sức khỏe. Thiết kế sử dụng phong cách hiện đại, kết hợp hình ảnh chụp thực tế với kiểu chữ cách điệu và bảng màu tương phản. Tổng thể poster mang đến cảm giác tự nhiên, mạnh mẽ và có phần cá tính, phù hợp với chủ đề trái cây và thực phẩm lành mạnh.",
+      visualAnalysis: "Ý tưởng chủ đạo của poster là làm nổi bật hình ảnh quả bơ thông qua sự kết hợp giữa hình ảnh quả bơ nguyên vỏ và quả bơ đã cắt đôi. Quả bơ nguyên vỏ thể hiện đặc điểm bề mặt sần màu xanh đậm, trong khi quả bơ cắt đôi cho thấy phần thịt màu vàng xanh cùng hạt bơ lớn ở trung tâm.\n\nCách sắp xếp hai hình ảnh tạo sự đa dạng về hình khối, giúp người xem nhận biết sản phẩm một cách trực quan. Chiếc lá xanh được đặt cạnh quả bơ nguyên vỏ còn góp phần nhấn mạnh nguồn gốc tự nhiên của sản phẩm.",
+      layout: "Poster được thiết kế theo bố cục dọc, chia thành các khu vực thông tin rõ ràng:\n• Phần đầu poster: Dải màu vàng cam với chữ “FRUIT” đặt ở góc trái phía trên, đóng vai trò giới thiệu nhóm sản phẩm nông sản sạch.\n• Phần tiêu đề: Chữ “AVOCADO” được đặt ở vị trí trung tâm phía trên, sử dụng kiểu chữ in hoa có nét cao, hẹp và uốn lượn cách điệu. Kích thước lớn giúp tên sản phẩm trở thành điểm nhấn chính.\n• Phần thông tin: Các từ “Creamy”, “Nutty”, “Smooth”, “Aromatic” được sắp xếp thành một hàng ngang mô tả đặc điểm cảm quan. Phía dưới là thông tin về thành phần dinh dưỡng (Vitamin B, Vitamin E, Fiber, Potassium) và công dụng hỗ trợ tim mạch, tiêu hóa, làm đẹp da & tóc.\n• Phần hình ảnh: Hình ảnh quả bơ chiếm phần lớn diện tích phía dưới, tạo trọng tâm thị giác vững chãi và cân bằng với khu vực chứa chữ.\n• Phần cuối poster: Câu hỏi mở “Have you tried it yet?” đặt ở góc dưới bên phải như một lời gợi mở, khuyến khích người xem trải nghiệm sản phẩm.",
+      colors: [
+        {
+          name: "Màu Vàng Cam (Warm Orange Yellow)",
+          hex: "#c58200",
+          role: "Tiêu đề & Dải đầu poster",
+          desc: "Xuất hiện ở phần đầu poster và tiêu đề “AVOCADO”, tạo điểm nhấn nổi bật, thu hút sự chú ý và mang lại cảm giác ấm áp."
+        },
+        {
+          name: "Màu Đen & Xám Đậm (Dark Background)",
+          hex: "#1a1a1a",
+          role: "Nền chính & Chiều sâu",
+          desc: "Sử dụng làm nền chính, tạo chiều sâu và giúp hình ảnh quả bơ cùng phần chữ sáng màu nổi bật hơn."
+        },
+        {
+          name: "Xanh Lá & Vàng Xanh (Avocado Green)",
+          hex: "#588126",
+          role: "Đặc trưng tự nhiên vỏ & thịt bơ",
+          desc: "Thể hiện qua vỏ bơ, chiếc lá và phần thịt quả mịn màng, gợi liên tưởng đến thiên nhiên, sự tươi mới và nguồn gốc thực vật."
+        },
+        {
+          name: "Trắng Ngà Tương Phản (Creamy White)",
+          hex: "#f4f4f4",
+          role: "Phân chia thông tin dinh dưỡng",
+          desc: "Được dùng cho đường kẻ ngang và nội dung chữ mô tả dinh dưỡng, giúp phân chia thông tin và tăng khả năng đọc."
+        }
+      ],
+      typography: "Sự kết hợp giữa kiểu chữ tiêu đề “AVOCADO” in hoa mang tính trang trí cao và chữ phụ đơn giản tạo ra sự phân cấp thông tin rõ ràng, giúp poster vừa có cá tính vừa giữ trọn tính truyền thông.",
+      tagline: "“FRUIT AVOCADO”\nCreamy • Nutty • Smooth • Aromatic\nSupports cardiovascular • Aids digestion • Beautifies skin and hair\nHave you tried it yet?",
+      summary: "Poster AVOCADO sử dụng hình ảnh chân thực, màu sắc tương phản và kiểu chữ nghệ thuật để truyền tải trọn vẹn thông điệp về một loại trái cây tự nhiên, giàu dinh dưỡng và hấp dẫn. Sự kết hợp giữa nền tối, tiêu đề vàng cam và hình ảnh quả bơ xanh tươi ngon tạo nên phong cách thị giác sang trọng, cá tính và thu hút người xem."
+    }
   },
   {
     id: "proj-poster-longan",
-    name: "Poster Quảng Báo Trái Cây Nhiệt Đới Việt Nam - Quả Nhãn (Longan)",
+    name: "Poster Quảng Bá Trái Cây Nhiệt Đới Việt Nam - Quả Nhãn (Longan)",
     category: "Design",
     subCategory: "Poster",
-    description: "Poster quảng cáo trái nhãn \"tropical fruit LONGAN\" được thiết kế vô cùng bắt mắt, hiện đại và tràn đầy cảm hứng tự nhiên. Sử dụng hình ảnh tán cây nhãn sai trĩu quả dưới ánh nắng vàng nhẹ, tạo cảm giác xanh tươi, tự nhiên và ngập tràn không khí nhiệt đới. Cận cảnh một quả nhãn đã bóc vỏ, để lộ phần cơm nhãn trắng trong, mọng nước cùng hạt đen bên trong, tạo ấn tượng thị giác vô cùng kích thích vị giác. Tông màu chủ đạo là sự kết hợp giữa xanh lá đậm của cây cỏ, màu nâu ấm của vỏ nhãn và sắc vàng rực rỡ của nắng/chữ. Poster truyền tải trọn vẹn thông điệp về một loại trái cây đặc sản Việt Nam tươi ngon, nguyên bản, giàu dưỡng chất và đậm đà hương vị nhiệt đới.",
+    description: "Poster quảng bá trái nhãn 'Discover the taste of Vietnamese Longan' kết hợp hình ảnh chụp cận cảnh phần thịt nhãn mọng nước trên nền vườn cây nhiệt đới làm mờ, tôn vinh hương vị ngọt lành và nông sản đặc sản Việt Nam.",
     image: "/images/poster-longan.png",
     link: "/images/poster-longan.png",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "Poster quảng bá trái nhãn Việt Nam với chủ đề “Discover the taste of Vietnamese Longan” (Khám phá hương vị nhãn Việt Nam), hướng đến việc giới thiệu vẻ đẹp và hương vị tự nhiên của loại trái cây nhiệt đới này. Thiết kế kết hợp hình ảnh thực tế, kiểu chữ nổi bật và tông màu trầm ấm, tạo cảm giác gần gũi với thiên nhiên, đồng thời nhấn mạnh sự tươi ngon và hấp dẫn của sản phẩm.",
+      visualAnalysis: "Hình ảnh quả nhãn được chụp cận cảnh, thể hiện rõ phần thịt quả trong mờ và hạt nhãn bên trong. Việc đặt hình ảnh sản phẩm ở tiền cảnh chiếm diện tích lớn giúp tăng tính chân thực, kích thích thị giác và gợi cảm giác muốn thưởng thức ngay lập tức.\n\nThông điệp “Sweet – Fresh – Juicy” nhấn mạnh ba đặc tính nổi bật: vị ngọt, sự tươi mới và độ mọng nước. Cụm từ “Vietnamese Longan” góp phần khẳng định nguồn gốc xuất xứ, quảng bá hình ảnh trái cây nhiệt đới Việt Nam đến người tiêu dùng trong nước và quốc tế.",
+      layout: "Poster được tổ chức theo bố cục dọc, phân lớp rõ ràng và phù hợp với định dạng truyền thông đa kênh:\n• Phần đầu poster: Dòng chữ “Discover the taste of Vietnamese Longan” giới thiệu thông điệp chính. Bên dưới là cụm chữ “tropical fruit” với kiểu chữ viết tay mềm mại, tạo nét tự nhiên và phóng khoáng.\n• Phần trung tâm phía trên: Tiêu đề “LONGAN” được trình bày bằng kiểu chữ in hoa, kích thước lớn và màu vàng nổi bật, thu hút sự chú ý ngay cái nhìn đầu tiên.\n• Phần mô tả: Các dòng chữ “Fresh Vietnamese Longan”, “Naturally sweet – Juicy – Refreshing” và “Nourish the blood and calm the spirit” cung cấp thông tin, nhấn mạnh giá trị dinh dưỡng và bồi bổ sức khỏe.\n• Phần dưới poster: Cận cảnh quả nhãn bóc vỏ mọng nước ở tiền cảnh, kết hợp cụm từ “Sweet - Fresh - Juicy” đặt gọn gàng bên phải tạo thế cân bằng thị giác hài hòa.",
+      colors: [
+        {
+          name: "Xanh Lá Cây Đậm (Deep Green)",
+          hex: "#2d4a22",
+          role: "Không gian vườn cây nhiệt đới",
+          desc: "Xuất hiện ở phần nền làm mờ, gợi liên tưởng đến cây cối, sinh thái tự nhiên và môi trường phát triển của trái nhãn."
+        },
+        {
+          name: "Màu Vàng Rực Rỡ (Tropical Yellow)",
+          hex: "#d99b26",
+          role: "Tiêu đề & Điểm nhấn vị giác",
+          desc: "Sử dụng cho tiêu đề “LONGAN” và lời chào đầu poster, tạo điểm nhấn thị giác ấm áp, gợi cảm giác ngọt ngào và hấp dẫn."
+        },
+        {
+          name: "Trắng Sáng & Nâu Ấm (White & Warm Brown)",
+          hex: "#5c4033",
+          role: "Tương phản & Chiều sâu vỏ nhãn",
+          desc: "Màu trắng cho phần chữ mô tả dễ đọc trên nền tối; sắc nâu ấm tạo cảm giác mộc mạc và chân thực của nhà vườn."
+        }
+      ],
+      typography: "Sự kết hợp tương phản giữa kiểu chữ in hoa không chân dày dặn (“LONGAN”) và kiểu chữ viết tay nghệ thuật (“tropical fruit”) mang lại cảm giác vừa hiện đại, chuyên nghiệp vừa mộc mạc, gần gũi với thiên nhiên.",
+      tagline: "“Discover the taste of Vietnamese Longan”\nFresh Vietnamese Longan • Naturally sweet – Juicy – Refreshing\nNourish the blood and calm the spirit",
+      summary: "Poster LONGAN – TROPICAL FRUIT truyền tải trọn vẹn hình ảnh trái nhãn Việt Nam thông qua sự kết hợp giữa nhiếp ảnh cận cảnh, màu sắc thiên nhiên và kiểu chữ giàu tính biểu cảm. Thiết kế hướng đến cảm giác tươi ngon, ngọt ngào và gần gũi, phù hợp cho các hoạt động quảng bá nông sản và thương hiệu thực phẩm chất lượng cao."
+    }
   },
   {
     id: "proj-poster-ocean",
     name: "Poster Truyền Thông Bảo Vệ Đại Dương & Sinh Vật Biển (Adaptation)",
     category: "Design",
     subCategory: "Poster",
-    description: "Poster với thông điệp cảnh tỉnh về môi trường được thể hiện với phong cách như hình chụp. Trung tâm bức ảnh là một con cá đang bơi lội giữa lòng đại dương xanh nhưng phần đuôi tự nhiên của nó đã bị biến đổi, xoắn lại và chuyển dần thành một chiếc bọc nilon trong suốt với các xác cá chết trôi nổi xung quanh. Hình ảnh này tương phản hoàn toàn với luồng ánh sáng mặt trời rạng rỡ đang xuyên qua làn nước trong xanh từ phía trên, gợi lên cảm giác mong manh của hệ sinh thái biển. Tone màu xanh lam đậm bao trùm không gian mang lại chiều sâu lặng lẽ, làm nổi bật sắc trắng của dải nhựa cùng tiêu đề \"ADAPTATION\" phía dưới. Đi kèm với câu khẩu hiệu \"When nature suffers, so do we\", poster là một lời nhắc nhở rằng sự \"thích nghi\" cưỡng ép này của sinh vật biển chính là lời cảnh báo cho tương lai và sức khỏe của chính con người nếu ô nhiễm nhựa tiếp tục tàn phá đại dương.",
+    description: "Poster thông điệp môi trường 'ADAPTATION' với hình ảnh con cá có phần thân chuyển dần thành chiếc đuôi làm từ túi nilon xoắn lại. Cách thể hiện ẩn dụ sâu sắc phản ánh sự thích nghi méo mó, báo động khi rác thải nhựa xâm lấn và thay thế sự sống tự nhiên của đại dương.",
     image: "/images/poster-ocean.jpg",
     link: "/images/poster-ocean.jpg",
-    featured: true
+    featured: true,
+    brandDetails: {
+      overview: "Trọng tâm ý tưởng nằm ở hình ảnh con cá có phần thân chuyển dần thành chiếc đuôi làm từ túi nilon xoắn lại như đuôi cá. Đây là một cách thể hiện rất hiệu quả vì nó không mô tả ô nhiễm theo kiểu trực diện như rác nổi dày đặc, mà dùng sự biến dạng của sinh vật để cho thấy thiên nhiên đang bị can thiệp và tổn thương.\n\nChi tiết này làm nổi bật khái niệm “adaptation” (thích nghi). Tuy nhiên, sự thích nghi ở đây không mang nghĩa tích cực, mà là một sự thích nghi bất đắc dĩ, méo mó và đáng báo động. Sinh vật biển đang buộc phải sống chung với rác thải nhựa đến mức cơ thể của chúng dường như bị “hóa nhựa”.",
+      visualAnalysis: "Hình con cá là điểm nhấn thị giác chính của poster. Phần đầu và thân cá vẫn giữ được vẻ tự nhiên với sắc xanh đặc trưng của sinh vật biển, nhưng phần đuôi chuyển thành một túi nilon trong suốt, thắt xoắn và xòe ra như vây đuôi. Cách chuyển đổi này tạo ra hiệu ứng vừa đẹp vừa bất an:\n• Đẹp vì tạo hình khá mềm mại, hòa vào nước và vẫn giữ được dáng bơi.\n• Bất an vì người xem nhận ra phần đuôi không còn là cơ thể thật, mà là rác thải nhân tạo.\n\nChính sự “nửa sinh vật, nửa rác thải” này làm nên sức nặng biểu tượng. Nó cho thấy đại dương không chỉ bị ô nhiễm bên ngoài, mà rác nhựa đã trở thành một phần trong hệ sinh thái, thậm chí như đang thay thế sự sống tự nhiên.",
+      layout: "Bố cục poster khá tối giản nhưng hiệu quả. Con cá được đặt lệch về trung tâm phải, bơi trong không gian nước sâu rộng lớn. Cách bố trí này tạo cảm giác:\n• Cô độc,\n• Nhỏ bé trước môi trường bao la,\n• Và bị nuốt chửng bởi chính đại dương đang dần trở nên xa lạ.\n\nNguồn sáng từ góc trên bên trái chiếu xuống tạo nên các tia sáng xuyên nước, giúp tăng chiều sâu không gian và thu hút mắt người xem đi từ ánh sáng xuống hình con cá rồi đến phần chữ ở phía dưới.\n\nKhoảng trống lớn của nền nước xanh cũng rất quan trọng. Nó giúp poster không bị rối, đồng thời tạo cảm giác yên tĩnh, lạnh và hơi ngột ngạt, phù hợp với chủ đề môi trường đang bị đe dọa.",
+      colors: [
+        {
+          name: "Xanh Lam Đậm (Deep Ocean)",
+          hex: "#071e3d",
+          role: "Không gian biển sâu",
+          desc: "Gợi không gian đại dương sâu thẳm, tự nhiên và bí ẩn; tạo cảm giác lạnh, lặng và nghiêm túc."
+        },
+        {
+          name: "Ánh Sáng Trắng Xuyên Nước",
+          hex: "#e0f2fe",
+          role: "Nguồn sáng & Chiều sâu",
+          desc: "Chiếu từ góc trên tạo các vệt tia sáng rọi xuống lòng biển, dẫn dắt thị giác và làm nổi bật phần chữ màu trắng."
+        },
+        {
+          name: "Sắc Xanh Cá & Nilon Bán Trong Suốt",
+          hex: "#0ea5e9",
+          role: "Điểm nhấn trung tâm",
+          desc: "Thân cá có độ bão hòa cao tạo tâm điểm; phần đuôi nilon bán trong suốt nhạt màu làm tăng vẻ mong manh và giả tạo."
+        }
+      ],
+      typography: "Từ khóa “ADAPTATION” được đặt rất lớn ở phía dưới, sử dụng kiểu chữ sans serif mảnh, thanh thoát và hiện đại. Cách dùng chữ này tạo cảm giác tinh tế, đồng thời làm cho tiêu đề trở nên trang trọng và dễ đọc.",
+      tagline: "“When nature suffers, so do we.\nOcean is worth protecting,\nfor the health of sea wildlife and ours.”",
+      summary: "Poster mang tính kêu gọi và giải thích thêm cho hình ảnh. Nội dung này nhấn mạnh mối liên hệ mật thiết giữa sức khỏe của thiên nhiên và sức khỏe con người. Tức là đây không chỉ là vấn đề của cá, của đại dương, mà cũng là vấn đề của chính chúng ta."
+    }
   },
 
   {

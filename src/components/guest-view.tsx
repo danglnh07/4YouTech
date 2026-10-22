@@ -39,7 +39,13 @@ import {
   FileText,
   FileCheck,
   Headphones,
-  HeartHandshake
+  HeartHandshake,
+  Coffee,
+  Sliders,
+  Sun,
+  Moon,
+  Contrast,
+  Type
 } from "lucide-react";
 
 function formatDisplayUrl(url: string, maxLength = 24): string {
@@ -251,6 +257,186 @@ function AnimatedShowcaseBanner() {
   );
 }
 
+function ProjectCardItem({
+  proj,
+  onOpenPreview,
+  categoryBadgeClass,
+  services,
+  onSelectServiceToBook,
+  onSwitchToWorkspace,
+}: {
+  proj: SampleProject;
+  onOpenPreview: (proj: SampleProject, initialIndex?: number) => void;
+  categoryBadgeClass: (cat: ServiceCategory) => string;
+  services: ServiceItem[];
+  onSelectServiceToBook: (serviceId: string) => void;
+  onSwitchToWorkspace: () => void;
+}) {
+  const images = proj.images && proj.images.length > 0 ? proj.images : [proj.image];
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const prevSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIdx((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const nextSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIdx((prev) => (prev + 1) % images.length);
+  };
+
+  const hasMultipleImages = images.length > 1;
+  const currentVersion = proj.versions?.[activeIdx];
+
+  return (
+    <div className="dark-glass-card rounded-3xl border border-blue-500/25 overflow-hidden shadow-xl transition-all duration-300 group flex flex-col justify-between hover:border-cyan-400/50 hover:shadow-cyan-500/10">
+      {/* Media Frame with Slider Controls */}
+      <div
+        className="h-60 bg-slate-950 relative overflow-hidden cursor-pointer select-none"
+        onClick={() => onOpenPreview(proj, activeIdx)}
+      >
+        <img
+          src={images[activeIdx]}
+          alt={`${proj.name} - Version ${activeIdx + 1}`}
+          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500 opacity-95 group-hover:opacity-100"
+        />
+
+        {/* Top Badges */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10 pointer-events-none">
+          <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-cyan-950/90 text-cyan-300 border border-cyan-500/40 backdrop-blur-md">
+            Dự án mẫu
+          </span>
+          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase ${categoryBadgeClass(proj.category)}`}>
+            {proj.category}
+          </span>
+        </div>
+
+        {/* Multi-version Tag on Top-Right */}
+        {hasMultipleImages && (
+          <div className="absolute top-3 right-3 z-10">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-950/85 text-amber-300 border border-amber-400/40 backdrop-blur-md shadow-lg flex items-center gap-1">
+              <Sliders className="w-3 h-3 text-amber-400" />
+              {images.length} Phiên bản màu
+            </span>
+          </div>
+        )}
+
+        {/* Hover Overlay: Xem phóng to */}
+        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+          <span className="px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+            <Maximize2 className="w-4 h-4" /> Xem chi tiết &amp; phóng to
+          </span>
+        </div>
+
+        {/* Interactive Slider Navigation Arrows (shown if multiple images) */}
+        {hasMultipleImages && (
+          <>
+            <button
+              type="button"
+              onClick={prevSlide}
+              aria-label="Phiên bản trước"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/80 hover:bg-cyan-500 hover:text-slate-950 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all z-20 shadow-md active:scale-95"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={nextSlide}
+              aria-label="Phiên bản sau"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/80 hover:bg-cyan-500 hover:text-slate-950 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all z-20 shadow-md active:scale-95"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Bottom Slider Dots & Active Version Badge */}
+            <div className="absolute bottom-2.5 inset-x-0 flex flex-col items-center gap-1 z-10 pointer-events-none">
+              {currentVersion?.badge && (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-950/85 text-cyan-300 border border-cyan-500/40 backdrop-blur-sm shadow-sm">
+                  {currentVersion.badge}
+                </span>
+              )}
+              <div className="flex items-center gap-1.5 pointer-events-auto bg-slate-950/80 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-sm">
+                {images.map((_, dotIdx) => (
+                  <button
+                    key={dotIdx}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIdx(dotIdx);
+                    }}
+                    className={`h-2 rounded-full transition-all ${
+                      activeIdx === dotIdx ? "w-5 bg-cyan-400" : "w-2 bg-slate-500 hover:bg-slate-300"
+                    }`}
+                    title={`Chuyển tới phiên bản ${dotIdx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Card Body */}
+      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+        <div>
+          <h4 className="font-extrabold text-white text-base group-hover:text-cyan-400 transition line-clamp-1">
+            {proj.name}
+          </h4>
+          <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">
+            {proj.description}
+          </p>
+        </div>
+
+        <div className="pt-4 border-t border-blue-500/15 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+          <button
+            onClick={() => onOpenPreview(proj, activeIdx)}
+            className="inline-flex items-center gap-1 text-xs font-bold text-cyan-400 hover:text-cyan-300"
+          >
+            Chi tiết <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="flex items-center gap-1.5 shrink-0 max-w-[65%] flex-wrap justify-end">
+            {proj.link && proj.link.startsWith("http") && (
+              <a
+                href={proj.link}
+                target="_blank"
+                rel="noreferrer"
+                className="max-w-[125px] px-2.5 py-1 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-extrabold text-[11px] hover:bg-cyan-900 transition flex items-center gap-1 shadow-sm overflow-hidden"
+                title={proj.link}
+              >
+                <ExternalLink className="w-3 h-3 text-cyan-400 shrink-0" />
+                <span className="truncate">{proj.subCategory === "UI/UX" ? "Prototype" : formatDisplayUrl(proj.link, 16)}</span>
+              </a>
+            )}
+            {proj.designLink && (
+              <a
+                href={proj.designLink}
+                target="_blank"
+                rel="noreferrer"
+                className="max-w-[125px] px-2.5 py-1 rounded-xl bg-pink-950/80 border border-pink-500/40 text-pink-300 font-extrabold text-[11px] hover:bg-pink-900 transition flex items-center gap-1 shadow-sm overflow-hidden"
+                title={proj.designLink}
+              >
+                <ExternalLink className="w-3 h-3 text-pink-400 shrink-0" />
+                <span className="truncate">Figma Design</span>
+              </a>
+            )}
+            <button
+              onClick={() => {
+                const matchedSrv = services.find((s) => s.category === proj.category);
+                if (matchedSrv) onSelectServiceToBook(matchedSrv.id);
+                else onSwitchToWorkspace();
+              }}
+              className="px-3 py-1.5 rounded-xl bg-blue-950/60 border border-blue-500/30 text-cyan-300 font-bold text-xs hover:bg-blue-900/80 transition shrink-0"
+            >
+              Đặt mẫu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function GuestView({
   onSelectServiceToBook,
   onSwitchToWorkspace,
@@ -320,6 +506,12 @@ export function GuestView({
   // Projects Showcase filter, pagination & preview modal state
   const [projectSubCategory, setProjectSubCategory] = useState<string>("all");
   const [previewProject, setPreviewProject] = useState<SampleProject | null>(null);
+  const [previewImageIndex, setPreviewImageIndex] = useState<number>(0);
+
+  const openProjectPreview = (proj: SampleProject, initialIndex: number = 0) => {
+    setPreviewProject(proj);
+    setPreviewImageIndex(initialIndex);
+  };
 
   // Pagination for Sample Projects Showcase (8 items per page)
   const PROJECTS_PER_PAGE = 8;
@@ -1028,79 +1220,15 @@ export function GuestView({
         {/* Projects Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {paginatedProjects.map((proj) => (
-            <div
+            <ProjectCardItem
               key={proj.id}
-              className="dark-glass-card rounded-3xl border border-blue-500/25 overflow-hidden shadow-xl transition-all duration-300 group flex flex-col justify-between"
-            >
-              <div
-                className="h-56 bg-slate-950 relative overflow-hidden cursor-pointer"
-                onClick={() => setPreviewProject(proj)}
-              >
-                <img
-                  src={proj.image}
-                  alt={proj.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100"
-                />
-                <div className="absolute inset-0 bg-slate-950/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
-                  <span className="px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5">
-                    <Maximize2 className="w-4 h-4" /> Xem phóng to
-                  </span>
-                </div>
-                <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                  <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-cyan-950/80 text-cyan-300 border border-cyan-500/40">
-                    Dự án mẫu
-                  </span>
-                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase ${categoryBadgeClass(proj.category)}`}>
-                    {proj.category}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <div>
-                  <h4 className="font-extrabold text-white text-base group-hover:text-cyan-400 transition line-clamp-1">
-                    {proj.name}
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">
-                    {proj.description}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-blue-500/15 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
-                  <button
-                    onClick={() => setPreviewProject(proj)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-cyan-400 hover:text-cyan-300"
-                  >
-                    Chi tiết <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-
-                  <div className="flex items-center gap-1.5 shrink-0 max-w-[55%]">
-                    {proj.link && proj.link.startsWith("http") && (
-                      <a
-                        href={proj.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="max-w-[120px] px-2.5 py-1 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-extrabold text-[11px] hover:bg-cyan-900 transition flex items-center gap-1 shadow-sm overflow-hidden"
-                        title={proj.link}
-                      >
-                        <ExternalLink className="w-3 h-3 text-cyan-400 shrink-0" />
-                        <span className="truncate">{formatDisplayUrl(proj.link, 18)}</span>
-                      </a>
-                    )}
-                    <button
-                      onClick={() => {
-                        const matchedSrv = services.find((s) => s.category === proj.category);
-                        if (matchedSrv) onSelectServiceToBook(matchedSrv.id);
-                        else onSwitchToWorkspace();
-                      }}
-                      className="px-3 py-1.5 rounded-xl bg-blue-950/60 border border-blue-500/30 text-cyan-300 font-bold text-xs hover:bg-blue-900/80 transition shrink-0"
-                    >
-                      Đặt mẫu
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              proj={proj}
+              onOpenPreview={openProjectPreview}
+              categoryBadgeClass={categoryBadgeClass}
+              services={services}
+              onSelectServiceToBook={onSelectServiceToBook}
+              onSwitchToWorkspace={onSwitchToWorkspace}
+            />
           ))}
         </div>
 
@@ -1383,89 +1511,521 @@ export function GuestView({
         </div>
       </section>
 
-      {/* Project Image Preview Modal */}
-      {previewProject && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative space-y-5">
-            <button
-              onClick={() => setPreviewProject(null)}
-              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* Project Image Preview Modal with Slider & Rich Brand Guidelines */}
+      {previewProject && (() => {
+        const modalImages = previewProject.images && previewProject.images.length > 0
+          ? previewProject.images
+          : [previewProject.image];
+        const safeIdx = Math.min(Math.max(0, previewImageIndex), modalImages.length - 1);
+        const currentImg = modalImages[safeIdx] || previewProject.image;
+        const currentVer = previewProject.versions?.[safeIdx];
+        const brand = previewProject.brandDetails;
 
-            <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${categoryBadgeClass(previewProject.category)}`}>
-                {previewProject.category}
-              </span>
-              {previewProject.subCategory && (
-                <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-bold">
-                  #{previewProject.subCategory}
-                </span>
-              )}
-            </div>
+        const prevModalSlide = () => {
+          setPreviewImageIndex((prev) => (prev - 1 + modalImages.length) % modalImages.length);
+        };
 
-            <h3 className="text-xl font-black text-slate-900">{previewProject.name}</h3>
+        const nextModalSlide = () => {
+          setPreviewImageIndex((prev) => (prev + 1) % modalImages.length);
+        };
 
-            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-              <img src={previewProject.image} alt={previewProject.name} className="w-full max-h-96 object-cover" />
-            </div>
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in overflow-y-auto">
+            <div className="bg-[#0b132e] text-slate-100 rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto p-5 sm:p-8 shadow-[0_0_50px_rgba(0,180,255,0.25)] relative border border-cyan-500/35 space-y-6">
+              {/* Close Button */}
+              <button
+                onClick={() => setPreviewProject(null)}
+                className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 transition z-20"
+                aria-label="Đóng"
+              >
+                <X className="w-5 h-5" />
+              </button>
 
-            <p className="text-slate-600 text-sm leading-relaxed">{previewProject.description}</p>
+              {/* Header Badges & Project Title */}
+              <div className="space-y-2 pr-10">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`px-2.5 py-1 rounded-md text-xs font-black uppercase ${categoryBadgeClass(previewProject.category)}`}>
+                    {previewProject.category}
+                  </span>
+                  {previewProject.subCategory && (
+                    <span className="px-2.5 py-1 bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 rounded-md text-xs font-bold">
+                      #{previewProject.subCategory}
+                    </span>
+                  )}
+                  {modalImages.length > 1 && (
+                    <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-950/80 border border-amber-500/40 text-amber-300 flex items-center gap-1">
+                      <Sliders className="w-3.5 h-3.5 text-amber-400" /> {modalImages.length} Phiên bản màu sắc &amp; sáng tối
+                    </span>
+                  )}
+                </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
-              <div className="flex flex-wrap items-center gap-2 max-w-full sm:max-w-[65%]">
-                {previewProject.link && (
-                  <a
-                    href={previewProject.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="max-w-full sm:max-w-[260px] px-3.5 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs overflow-hidden"
-                    title={previewProject.link}
-                  >
-                    <span className="shrink-0">📱 UX Proto:</span>
-                    <span className="truncate">{formatDisplayUrl(previewProject.link, 22)}</span>
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  </a>
-                )}
-                {previewProject.designLink && (
-                  <a
-                    href={previewProject.designLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="max-w-full sm:max-w-[260px] px-3.5 py-2 bg-pink-50 text-pink-700 hover:bg-pink-100 border border-pink-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs overflow-hidden"
-                    title={previewProject.designLink}
-                  >
-                    <span className="shrink-0">🎨 UI Design:</span>
-                    <span className="truncate">{formatDisplayUrl(previewProject.designLink, 22)}</span>
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  </a>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {previewProject.name}
+                </h3>
+              </div>
+
+              {/* Main Image Slider Showcase */}
+              <div className="space-y-3">
+                <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/90 relative shadow-2xl flex flex-col items-center justify-center group">
+                  {/* Image Display */}
+                  <div className="w-full h-72 sm:h-96 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 relative">
+                    <img
+                      src={currentImg}
+                      alt={`${previewProject.name} - Version ${safeIdx + 1}`}
+                      className="max-h-full max-w-full object-contain rounded-xl shadow-lg transition-all duration-300"
+                    />
+
+                    {/* Left/Right Slider Buttons */}
+                    {modalImages.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={prevModalSlide}
+                          aria-label="Phiên bản trước"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/80 hover:bg-cyan-400 hover:text-slate-950 text-white border border-cyan-500/30 backdrop-blur-md flex items-center justify-center transition shadow-lg active:scale-95 z-10"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={nextModalSlide}
+                          aria-label="Phiên bản tiếp theo"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/80 hover:bg-cyan-400 hover:text-slate-950 text-white border border-cyan-500/30 backdrop-blur-md flex items-center justify-center transition shadow-lg active:scale-95 z-10"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
+
+                    {/* Counter Pill */}
+                    {modalImages.length > 1 && (
+                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-700 text-xs font-mono font-bold text-slate-300 backdrop-blur-md">
+                        {safeIdx + 1} / {modalImages.length}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Caption & Version Bar under image */}
+                  <div className="w-full p-3 sm:p-4 bg-slate-900/90 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-extrabold text-[11px]">
+                        {currentVer?.badge || `Phiên bản ${safeIdx + 1}`}
+                      </span>
+                      <span className="font-bold text-slate-200">
+                        {currentVer?.title || `Phiên bản ${safeIdx + 1}`}
+                      </span>
+                    </div>
+                    {currentVer?.characteristics && (
+                      <span className="text-[11px] font-semibold text-amber-300 bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-full self-start sm:self-auto flex items-center gap-1">
+                        ✨ Đặc điểm: {currentVer.characteristics}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Thumbnails Strip */}
+                {modalImages.length > 1 && (
+                  <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                    {modalImages.map((img, idx) => {
+                      const v = previewProject.versions?.[idx];
+                      const isActive = safeIdx === idx;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setPreviewImageIndex(idx)}
+                          className={`p-2 sm:p-2.5 rounded-2xl border text-left transition-all flex items-center gap-2.5 ${
+                            isActive
+                              ? "border-cyan-400 bg-cyan-950/40 shadow-[0_0_15px_rgba(6,182,212,0.3)] ring-2 ring-cyan-400/50"
+                              : "border-slate-800 bg-slate-900/60 hover:border-slate-600 hover:bg-slate-900"
+                          }`}
+                        >
+                          <img
+                            src={img}
+                            alt={`thumb-${idx}`}
+                            className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-700"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold text-white truncate">
+                              {v?.badge || `Bản ${idx + 1}`}
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate">
+                              {v?.title || (idx === 0 ? "Bản gốc" : `Phiên bản ${idx + 1}`)}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPreviewProject(null)}
-                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50"
-                >
-                  Đóng
-                </button>
-                <button
-                  onClick={() => {
-                    const matchedSrv = services.find((s) => s.category === previewProject.category);
-                    setPreviewProject(null);
-                    if (matchedSrv) onSelectServiceToBook(matchedSrv.id);
-                    else onSwitchToWorkspace();
-                  }}
-                  className="px-5 py-2 gradient-btn text-white rounded-xl text-xs font-bold shadow-md"
-                >
-                  Đặt Dịch Vụ Tương Tự
-                </button>
+              {/* Comprehensive Brand Case Study (Phần Detail Mô Tả của Logo) */}
+              {brand ? (
+                <div className="space-y-6 pt-2">
+                  <div className="flex items-center gap-2 border-b border-blue-500/20 pb-3">
+                    {previewProject.name.toLowerCase().includes("cà phê") || previewProject.name.toLowerCase().includes("coffee") ? (
+                      <Coffee className="w-5 h-5 text-amber-400" />
+                    ) : previewProject.name.toLowerCase().includes("vitalis") || previewProject.name.toLowerCase().includes("y tế") ? (
+                      <HeartHandshake className="w-5 h-5 text-emerald-400" />
+                    ) : previewProject.name.toLowerCase().includes("crop") || previewProject.name.toLowerCase().includes("nông") || previewProject.subCategory === "UI/UX" ? (
+                      <Layers className="w-5 h-5 text-emerald-400" />
+                    ) : previewProject.name.toLowerCase().includes("kính") ? (
+                      <Laptop className="w-5 h-5 text-cyan-400" />
+                    ) : previewProject.name.toLowerCase().includes("đầu tư") || previewProject.name.toLowerCase().includes("tài chính") ? (
+                      <DollarSign className="w-5 h-5 text-amber-400" />
+                    ) : previewProject.name.toLowerCase().includes("portfolio") || previewProject.name.toLowerCase().includes("developer") || previewProject.subCategory === "Website" ? (
+                      <Laptop className="w-5 h-5 text-cyan-400" />
+                    ) : (
+                      <Sparkles className="w-5 h-5 text-cyan-400" />
+                    )}
+                    <h4 className="text-base sm:text-lg font-black text-white uppercase tracking-wider">
+                      {previewProject.subCategory === "UI/UX"
+                        ? `Hồ Sơ Thiết Kế UI/UX & Trải Nghiệm Người Dùng • ${previewProject.name}`
+                        : previewProject.subCategory === "Website"
+                        ? `Hồ Sơ Dự Án & Thiết Kế Chi Tiết • ${previewProject.name}`
+                        : `Hồ Sơ Thiết Kế Chi Tiết • ${previewProject.name}`}
+                    </h4>
+                  </div>
+
+                  {brand.visualAnalysis || brand.layout ? (
+                    /* Detailed Case Study for Poster/Banner/Website/UIUX */
+                    <div className="space-y-4">
+                      {/* 1. Ý tưởng chủ đạo & 2. Phân tích hình ảnh trung tâm */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-blue-500/20 space-y-2">
+                          <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                            <Sparkles className="w-4 h-4 text-cyan-400" />
+                            <span>1. Ý tưởng chủ đạo</span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-line">
+                            {brand.overview}
+                          </p>
+                        </div>
+
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-amber-500/20 space-y-2">
+                          <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+                            <Eye className="w-4 h-4 text-amber-400" />
+                            <span>
+                              {previewProject.subCategory === "UI/UX"
+                                ? "2. Trải nghiệm UX & Luồng nghiệp vụ mùa vụ"
+                                : previewProject.subCategory === "Website"
+                                ? "2. Trải nghiệm UX & Điểm nhấn thị giác"
+                                : "2. Phân tích hình ảnh trung tâm"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-line">
+                            {brand.visualAnalysis}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 3. Bố cục */}
+                      {brand.layout && (
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-blue-500/20 space-y-2">
+                          <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                            <Layers className="w-4 h-4 text-cyan-400" />
+                            <span>
+                              {previewProject.subCategory === "UI/UX"
+                                ? "3. Bố cục giao diện & Hệ thống màn hình App"
+                                : previewProject.subCategory === "Website"
+                                ? "3. Bố cục giao diện & Trải nghiệm tương tác"
+                                : "3. Bố cục không gian & ánh sáng"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-line">
+                            {brand.layout}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 4. Màu sắc */}
+                      {brand.colors && brand.colors.length > 0 && (
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-blue-500/20 space-y-3">
+                          <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                            <Palette className="w-4 h-4 text-cyan-400" />
+                            <span>
+                              {previewProject.subCategory === "UI/UX"
+                                ? "4. Bảng màu sắc nhận diện & AgriTech Theme"
+                                : previewProject.subCategory === "Website"
+                                ? "4. Bảng màu sắc nhận diện & Theme hệ thống"
+                                : "4. Phân tích màu sắc & tương phản"}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                            {brand.colors.map((c, cIdx) => (
+                              <div
+                                key={cIdx}
+                                className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2"
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <span
+                                    className="w-6 h-6 rounded-lg shadow-md border border-white/20 shrink-0"
+                                    style={{ backgroundColor: c.hex }}
+                                  />
+                                  <div>
+                                    <div className="text-xs font-bold text-white">{c.name}</div>
+                                    <div className="text-[10px] text-cyan-400 font-mono font-bold">{c.role}</div>
+                                  </div>
+                                </div>
+                                <p className="text-[11px] text-slate-300 leading-relaxed">
+                                  {c.desc}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 5. Typography & thông điệp chữ */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-blue-500/20 space-y-3">
+                        <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                          <Type className="w-4 h-4 text-cyan-400" />
+                          <span>
+                            {previewProject.subCategory === "UI/UX"
+                              ? "5. Typography & Ngôn ngữ thiết kế UI"
+                              : previewProject.subCategory === "Website"
+                              ? "5. Typography & Ngôn ngữ thiết kế"
+                              : "5. Typography & thông điệp chữ"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 leading-relaxed font-normal">
+                          {brand.typography}
+                        </p>
+                        {brand.tagline && (
+                          <div className="p-3.5 rounded-xl bg-cyan-950/50 border border-cyan-500/30 space-y-1 mt-2">
+                            <div className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider">
+                              Tagline Kêu Gọi Hành Động (Call To Action)
+                            </div>
+                            <div className="text-xs sm:text-sm font-medium text-cyan-100 italic whitespace-pre-line leading-relaxed">
+                              {brand.tagline}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Standard Brand Case Study for Logos */
+                    <>
+                      {/* 1. Giới thiệu chung & 2. Ý tưởng thiết kế */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-blue-500/20 space-y-2">
+                          <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                            <Sparkles className="w-4 h-4 text-cyan-400" />
+                            <span>1. Giới thiệu chung</span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-line">
+                            {brand.overview}
+                          </p>
+                        </div>
+
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-amber-500/20 space-y-2">
+                          <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+                            {previewProject.name.toLowerCase().includes("cà phê") || previewProject.name.toLowerCase().includes("coffee") ? (
+                              <Coffee className="w-4 h-4 text-amber-400" />
+                            ) : (
+                              <Sparkles className="w-4 h-4 text-amber-400" />
+                            )}
+                            <span>2. Ý tưởng thiết kế</span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-line">
+                            {brand.idea}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 3. Ý nghĩa màu sắc */}
+                      {brand.colors && brand.colors.length > 0 && (
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-blue-500/20 space-y-3">
+                          <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                            <Palette className="w-4 h-4 text-cyan-400" />
+                            <span>3. Ý nghĩa màu sắc</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                            {brand.colors.map((c, cIdx) => (
+                              <div
+                                key={cIdx}
+                                className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2"
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <span
+                                    className="w-6 h-6 rounded-lg shadow-md border border-white/20 shrink-0"
+                                    style={{ backgroundColor: c.hex }}
+                                  />
+                                  <div>
+                                    <div className="text-xs font-bold text-white">{c.name}</div>
+                                    <div className="text-[10px] text-cyan-400 font-mono font-bold">{c.role}</div>
+                                  </div>
+                                </div>
+                                <p className="text-[11px] text-slate-300 leading-relaxed">
+                                  {c.desc}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+
+                          <p className="text-xs text-slate-400 leading-relaxed pt-1 italic">
+                            Sự kết hợp giữa các màu sắc tạo nên tổng thể hài hòa, nổi bật và phù hợp với hình ảnh nhận diện của thương hiệu.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 4. Bố cục và kiểu chữ */}
+                      {brand.typography && (
+                        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-blue-500/20 space-y-2">
+                          <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                            <Type className="w-4 h-4 text-cyan-400" />
+                            <span>4. Hình tượng, bố cục &amp; kiểu chữ</span>
+                          </div>
+                          <p className="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-line">
+                            {brand.typography}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 5. Các màu sáng tối (3 Phiên bản màu) */}
+                      {brand.colorVariants && brand.colorVariants.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                            <Contrast className="w-4 h-4 text-cyan-400" />
+                            <span>5. Các màu sáng tối ({brand.colorVariants.length} Phiên bản ứng dụng)</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                            {brand.colorVariants.map((variant, vIdx) => {
+                              const isSelected = safeIdx === vIdx;
+                              return (
+                                <div
+                                  key={vIdx}
+                                  className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3 cursor-pointer ${
+                                    isSelected
+                                      ? "bg-cyan-950/30 border-cyan-400 ring-1 ring-cyan-400 shadow-lg"
+                                      : "bg-slate-900/70 border-slate-800 hover:border-slate-700"
+                                  }`}
+                                  onClick={() => setPreviewImageIndex(vIdx)}
+                                >
+                                  <div className="space-y-2.5">
+                                    <div className="h-32 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center p-2">
+                                      <img
+                                        src={variant.image}
+                                        alt={variant.name}
+                                        className="max-h-full max-w-full object-contain rounded-lg"
+                                      />
+                                    </div>
+                                    <div>
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-800 text-amber-300 border border-amber-500/30">
+                                        {variant.bgDesc}
+                                      </span>
+                                      <h5 className="font-bold text-white text-xs mt-1.5 leading-snug">
+                                        {variant.name}
+                                      </h5>
+                                    </div>
+                                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                                      {variant.description}
+                                    </p>
+                                  </div>
+
+                                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                                    <span className="text-[10px] text-amber-400 font-bold">
+                                      ⭐ {variant.characteristics}
+                                    </span>
+                                    <span className={`text-[10px] font-bold ${isSelected ? "text-cyan-400" : "text-slate-500"}`}>
+                                      {isSelected ? "✓ Đang xem" : "Xem bản này →"}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* 6. Tổng kết */}
+                  {brand.summary && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-950/70 via-cyan-950/40 to-slate-900/70 border border-cyan-500/30 space-y-2">
+                      <div className="text-xs font-bold text-cyan-300 flex items-center gap-1.5 uppercase tracking-wider">
+                        <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                        <span>
+                          {previewProject.subCategory === "UI/UX"
+                            ? "Tổng Kết Giá Trị Ứng Dụng & Năng Lực Triển Khai"
+                            : previewProject.subCategory === "Website"
+                            ? "Tổng Kết Giá Trị Dự Án & Năng Lực Triển Khai"
+                            : "Tổng Kết Giá Trị Thiết Kế & Thông Điệp"}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium italic">
+                        "{brand.summary}"
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                    {previewProject.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Footer */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-blue-500/20">
+                <div className="flex flex-wrap items-center gap-2 max-w-full sm:max-w-[65%]">
+                  {previewProject.link && previewProject.link.startsWith("http") && (
+                    <a
+                      href={previewProject.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="max-w-full sm:max-w-[260px] px-3.5 py-2 bg-cyan-950/80 text-cyan-300 hover:bg-cyan-900 border border-cyan-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs overflow-hidden"
+                      title={previewProject.link}
+                    >
+                      <span className="shrink-0">🔗 Demo Link:</span>
+                      <span className="truncate">{formatDisplayUrl(previewProject.link, 22)}</span>
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                  )}
+                  {previewProject.designLink && (
+                    <a
+                      href={previewProject.designLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="max-w-full sm:max-w-[260px] px-3.5 py-2 bg-pink-950/80 text-pink-300 hover:bg-pink-900 border border-pink-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs overflow-hidden"
+                      title={previewProject.designLink}
+                    >
+                      <span className="shrink-0">🎨 UI Design:</span>
+                      <span className="truncate">{formatDisplayUrl(previewProject.designLink, 22)}</span>
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 justify-end">
+                  <button
+                    onClick={() => setPreviewProject(null)}
+                    className="px-4 py-2 border border-slate-700 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    onClick={() => {
+                      const matchedSrv = services.find((s) => s.category === previewProject.category);
+                      setPreviewProject(null);
+                      if (matchedSrv) onSelectServiceToBook(matchedSrv.id);
+                      else onSwitchToWorkspace();
+                    }}
+                    className="px-5 py-2 gradient-btn text-white rounded-xl text-xs font-bold shadow-md hover:scale-105 transition"
+                  >
+                    Đặt Dịch Vụ Thiết Kế Tương Tự
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Service Detail Modal */}
       {activeDetailService && (
