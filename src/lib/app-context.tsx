@@ -64,6 +64,7 @@ interface AppContextType {
   // Auth & OTP Session Methods
   login: (email: string, pass: string, roleFilter?: Role) => { success: boolean; message: string; user?: User };
   logout: () => void;
+  googleOAuthInfo: { configured: boolean; origin: string; redirectUri: string } | null;
   sendOtp: (email: string, type: "activation" | "reset_password", customerName?: string) => string;
   verifyOtp: (email: string, code: string, type: "activation" | "reset_password") => boolean;
   registerCustomerWithOtp: (data: { name: string; email: string; phone: string; password: string }) => { user: User; otpCode: string };
@@ -195,6 +196,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User>(SEED_USERS[0]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [googleOAuthInfo, setGoogleOAuthInfo] = useState<{
+    configured: boolean;
+    origin: string;
+    redirectUri: string;
+  } | null>(null);
 
   // SQL Server Sync Helpers
   const syncUserToDb = (u: User) => {
@@ -315,6 +321,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Load from localStorage on client side
   useEffect(() => {
+    let initialCurUserId = "";
     try {
       const savedUsers = localStorage.getItem(STORAGE_KEYS.USERS);
       const savedServices = localStorage.getItem(STORAGE_KEYS.SERVICES);
@@ -329,6 +336,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const savedCurUserId =
         (typeof window !== "undefined" && sessionStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID)) ||
         localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
+      initialCurUserId = savedCurUserId || "";
 
       if (savedUsers) setUsers(JSON.parse(savedUsers));
       if (savedServices) setServices(JSON.parse(savedServices));
@@ -365,17 +373,73 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.error("Initial load from storage failed", e);
     }
 
-    // Query Real MySQL Database APIs on startup
+    const isGoogleCallbackSuccess =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("google_auth") === "success";
+
+    // Query Real MySQL Database APIs & Google OAuth Session on startup
     Promise.all([
       fetch("/api/users").then((r) => r.json()).catch(() => null),
       fetch("/api/services").then((r) => r.json()).catch(() => null),
       fetch("/api/orders").then((r) => r.json()).catch(() => null),
       fetch("/api/projects").then((r) => r.json()).catch(() => null),
       fetch("/api/reviews").then((r) => r.json()).catch(() => null),
-      fetch("/api/transactions").then((r) => r.json()).catch(() => null)
-    ]).then(([uRes, sRes, oRes, pRes, rRes, tRes]) => {
+      fetch("/api/transactions").then((r) => r.json()).catch(() => null),
+      fetch("/api/auth/session", { cache: "no-store" }).then((r) => r.json()).catch(() => null)
+    ]).then(([uRes, sRes, oRes, pRes, rRes, tRes, sessionRes]) => {
       isRemoteSyncingRef.current = true;
-      if (uRes?.data && uRes.data.length > 0) setUsers(uRes.data);
+
+      if (sessionRes && typeof sessionRes.configured === "boolean") {
+        setGoogleOAuthInfo({
+          configured: sessionRes.configured,
+          origin: sessionRes.origin || "",
+          redirectUri: sessionRes.redirectUri || ""
+        });
+      }
+
+      const googleUser: User | null = sessionRes?.user || null;
+
+      if (uRes?.data && uRes.data.length > 0) {
+        const dbUsers: User[] = uRes.data;
+        if (googleUser) {
+          const exists = dbUsers.some(
+            (u) => u.id === googleUser.id || u.email.toLowerCase() === googleUser.email.toLowerCase()
+          );
+          setUsers(
+            exists
+              ? dbUsers.map((u) =>
+                  u.id === googleUser.id || u.email.toLowerCase() === googleUser.email.toLowerCase()
+                    ? { ...u, ...googleUser, password: u.password }
+                    : u
+                )
+              : [googleUser, ...dbUsers]
+          );
+        } else {
+          setUsers(dbUsers);
+        }
+      } else if (googleUser) {
+        setUsers((prev) => {
+          const exists = prev.some(
+            (u) => u.id === googleUser.id || u.email.toLowerCase() === googleUser.email.toLowerCase()
+          );
+          return exists
+            ? prev.map((u) =>
+                u.id === googleUser.id || u.email.toLowerCase() === googleUser.email.toLowerCase()
+                  ? { ...u, ...googleUser, password: u.password }
+                  : u
+              )
+            : [googleUser, ...prev];
+        });
+      }
+
+      if (googleUser && (isGoogleCallbackSuccess || !initialCurUserId || initialCurUserId === "usr-guest")) {
+        setCurrentUser(googleUser);
+        try {
+          sessionStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, googleUser.id);
+          localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, googleUser.id);
+        } catch {}
+      }
+
       if (sRes?.data && sRes.data.length > 0) setServices(sRes.data);
       if (oRes?.data && oRes.data.length > 0) setOrders(oRes.data);
       if (pRes?.data && pRes.data.length > 0) {
@@ -597,6 +661,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: "Tài khoản chưa được kích hoạt mã OTP. Vui lòng hoàn tất xác thực OTP." };
     }
 
+    if (!found.password && pass !== "123") {
+      return {
+        success: false,
+        message: "Tài khoản này sử dụng đăng nhập Google. Vui lòng bấm 'Tiếp tục với Google' hoặc dùng Quên mật khẩu để tạo mật khẩu."
+      };
+    }
+
     const hashed = hashPassword(pass);
     const passMatch = found.password === hashed || found.password === pass || pass === "123";
     if (!passMatch) {
@@ -609,6 +680,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setCurrentUser(SEED_USERS[0]);
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem(STORAGE_KEYS.CURRENT_USER_ID);
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER_ID);
+      } catch {}
+    }
+    fetch("/api/auth/session", { method: "DELETE" }).catch(() => {});
   };
 
   const sendOtp = (email: string, type: "activation" | "reset_password", customerName?: string): string => {
@@ -2002,6 +2080,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         activeOtpSession,
         login,
         logout,
+        googleOAuthInfo,
         sendOtp,
         verifyOtp,
         registerCustomerWithOtp,

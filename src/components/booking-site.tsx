@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppProvider, useApp } from "@/lib/app-context";
 import { Header } from "@/components/header";
 import { GuestView } from "@/components/guest-view";
@@ -17,6 +17,26 @@ function MainAppContent() {
   const [activeTab, setActiveTab] = useState<"catalog" | "projects" | "about" | "workspace" | "auth">("catalog");
   const [preselectedBookingServiceId, setPreselectedBookingServiceId] = useState<string | string[] | undefined>(undefined);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
+
+  // Handle Google OAuth return parameters (?google_auth=success or ?auth_tab=auth&google_error=...)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const googleAuth = params.get("google_auth");
+    const googleError = params.get("google_error");
+    const authTab = params.get("auth_tab");
+
+    if (authTab === "auth" || googleError) {
+      const t = setTimeout(() => setActiveTab("auth"), 0);
+      return () => clearTimeout(t);
+    }
+
+    if (googleAuth === "success" && currentUser.role !== "guest") {
+      window.history.replaceState({}, "", window.location.pathname);
+      const t = setTimeout(() => setActiveTab("workspace"), 0);
+      return () => clearTimeout(t);
+    }
+  }, [currentUser.role]);
 
   const handleSelectServiceToBook = (serviceId: string | string[]) => {
     setPreselectedBookingServiceId(serviceId);

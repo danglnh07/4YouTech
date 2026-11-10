@@ -12,7 +12,6 @@ const beVietnamPro = Be_Vietnam_Pro({
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
   display: "swap",
   variable: "--font-body",
 });

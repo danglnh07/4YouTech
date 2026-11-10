@@ -95,6 +95,39 @@ export function isValidPhoneFormat(phone: string): boolean {
   return getPhoneValidationError(phone) === null;
 }
 
+function GoogleLogoIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.3 0 6.08-1.09 8.1-2.96l-3.88-3.05c-1.1.74-2.51 1.18-4.22 1.18-3.25 0-6-2.19-6.98-5.14H1.01v3.14C3.05 21.23 7.21 24 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.02 14.03c-.25-.74-.39-1.54-.39-2.36 0-.82.14-1.62.39-2.36V6.17H1.01A11.99 11.99 0 0 0 0 11.67c0 1.94.46 3.77 1.01 5.5l4.01-3.14Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.8 0 3.41.62 4.68 1.84l3.51-3.51C18.07 1.19 15.3 0 12 0 7.21 0 3.05 2.77 1.01 6.83l4.01 3.14C6 6.94 8.75 4.75 12 4.75Z"
+      />
+    </svg>
+  );
+}
+
+const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
+  cancelled: "Bạn đã hủy đăng nhập bằng Google. Vui lòng thử lại hoặc đăng nhập bằng Email.",
+  invalid_state: "Phiên xác thực Google đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.",
+  account_locked: "Tài khoản Google này đã bị tạm khóa bởi Quản trị viên.",
+  email_not_verified: "Địa chỉ Email Google của bạn chưa được xác minh.",
+  token_exchange_failed: "Không thể xác thực mã truy cập với Google (vui lòng kiểm tra Client ID / Client Secret).",
+  userinfo_failed: "Không thể lấy thông tin hồ sơ từ Google.",
+  oauth_failed: "Đăng nhập Google thất bại. Vui lòng thử lại sau."
+};
+
 export function UnifiedAuthPage({
   onAuthSuccess
 }: {
@@ -109,7 +142,8 @@ export function UnifiedAuthPage({
     activateAccountWithOtp,
     sendOtp,
     resetPasswordWithOtp,
-    activeOtpSession
+    activeOtpSession,
+    googleOAuthInfo
   } = useApp();
 
   const [tab, setTab] = useState<"login" | "register">("login");
@@ -161,6 +195,48 @@ export function UnifiedAuthPage({
     if (typeof window !== "undefined") return localStorage.getItem("4youtech_smtp_pass") || "";
     return "";
   });
+
+  // Google OAuth UI state
+  const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false);
+  const [showGoogleSetupModal, setShowGoogleSetupModal] = useState(false);
+  const [copiedGoogleField, setCopiedGoogleField] = useState<"origin" | "redirect" | "env" | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const gErr = params.get("google_error");
+    if (gErr) {
+      if (gErr === "not_configured") {
+        setShowGoogleSetupModal(true);
+        setLoginError("Chưa cấu hình Google OAuth (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET) trong .env.local.");
+      } else {
+        setLoginError(GOOGLE_ERROR_MESSAGES[gErr] || GOOGLE_ERROR_MESSAGES.oauth_failed);
+      }
+      params.delete("google_error");
+      params.delete("auth_tab");
+      const nextSearch = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}`);
+    }
+  }, []);
+
+  const handleGoogleLogin = () => {
+    setLoginError("");
+    setRegError("");
+    if (googleOAuthInfo && !googleOAuthInfo.configured) {
+      setShowGoogleSetupModal(true);
+      return;
+    }
+    setIsGoogleRedirecting(true);
+    window.location.href = "/api/auth/google";
+  };
+
+  const handleCopyGoogleConfig = (field: "origin" | "redirect" | "env", text: string) => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    setCopiedGoogleField(field);
+    setTimeout(() => setCopiedGoogleField(null), 2000);
+  };
 
   // Countdown timer effect for OTP
   useEffect(() => {
@@ -444,6 +520,37 @@ export function UnifiedAuthPage({
             </div>
           )}
 
+          {/* GOOGLE OAUTH QUICK LOGIN / SIGNUP (Placed at top for immediate visibility) */}
+          {!simulatedOtpCode && (
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                disabled={isGoogleRedirecting}
+                onClick={handleGoogleLogin}
+                className="w-full py-3 px-4 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 hover:border-sky-400 active:bg-slate-100 text-slate-800 font-bold text-xs shadow-sm transition flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60"
+              >
+                <GoogleLogoIcon className="w-4 h-4 shrink-0" />
+                <span>
+                  {isGoogleRedirecting
+                    ? "Đang mở chọn tài khoản Google..."
+                    : tab === "login"
+                    ? "Đăng nhập bằng Google"
+                    : "Đăng ký nhanh bằng Google"}
+                </span>
+              </button>
+              <p className="text-[11px] text-center text-slate-400">
+                Chọn nhanh tài khoản Google đã đăng nhập trên trình duyệt / thiết bị của bạn
+              </p>
+              <div className="relative flex items-center pt-1">
+                <div className="flex-grow border-t border-slate-200"></div>
+                <span className="shrink mx-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  {tab === "login" ? "Hoặc dùng Email & Mật khẩu" : "Hoặc đăng ký bằng Email"}
+                </span>
+                <div className="flex-grow border-t border-slate-200"></div>
+              </div>
+            </div>
+          )}
+
           {/* LOGIN FORM */}
           {tab === "login" && !simulatedOtpCode && (
             <form onSubmit={handleUnifiedLogin} className="space-y-4">
@@ -522,7 +629,7 @@ export function UnifiedAuthPage({
                 <LogIn className="w-4 h-4" /> Đăng Nhập Vào Hệ Thống
               </button>
 
-              <div className="text-center pt-2">
+              <div className="text-center pt-1">
                 <button
                   type="button"
                   onClick={() => setShowSmtpModal(true)}
@@ -980,6 +1087,126 @@ export function UnifiedAuthPage({
               className="w-full py-3 rounded-xl gradient-btn font-bold text-xs shadow-md"
             >
               Lưu & Kích Hoạt Gửi Email Thực Tế
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* GOOGLE OAUTH SETUP GUIDE MODAL */}
+      {showGoogleSetupModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-4 relative animate-fade-in text-slate-800">
+            <button
+              onClick={() => setShowGoogleSetupModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+              <GoogleLogoIcon className="w-5 h-5" /> Kích Hoạt Google OAuth 2.0 Thực Tế
+            </h3>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Hệ thống đã cài sẵn luồng <strong>Google OAuth 2.0 (Authorization Code + Account Chooser)</strong> chuẩn các website thực tế. Để trình duyệt hiển thị danh sách tài khoản Google trên máy của bạn, hãy khai báo Client ID &amp; Secret từ Google Cloud Console:
+            </p>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <div className="font-bold text-slate-800">1. Tạo OAuth 2.0 Client ID trên Google Cloud</div>
+                <p className="text-[11px] text-slate-600">
+                  Mở{" "}
+                  <a
+                    href="https://console.cloud.google.com/apis/credentials"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-sky-600 underline"
+                  >
+                    console.cloud.google.com/apis/credentials
+                  </a>{" "}
+                  → <strong>Create Credentials</strong> → <strong>OAuth client ID</strong> → <strong>Web application</strong>.
+                </p>
+              </div>
+
+              <div>
+                <div className="font-bold text-slate-700 mb-1">2. Authorized JavaScript origins</div>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl font-mono text-[11px] text-slate-800 truncate">
+                    {googleOAuthInfo?.origin || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000")}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleCopyGoogleConfig(
+                        "origin",
+                        googleOAuthInfo?.origin || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000")
+                      )
+                    }
+                    className="px-3 py-2 rounded-xl bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1 hover:bg-slate-700"
+                  >
+                    {copiedGoogleField === "origin" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="font-bold text-slate-700 mb-1">3. Authorized redirect URI (Bắt buộc)</div>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl font-mono text-[11px] text-slate-800 truncate">
+                    {googleOAuthInfo?.redirectUri ||
+                      (typeof window !== "undefined"
+                        ? `${window.location.origin}/api/auth/google/callback`
+                        : "http://localhost:3000/api/auth/google/callback")}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleCopyGoogleConfig(
+                        "redirect",
+                        googleOAuthInfo?.redirectUri ||
+                          (typeof window !== "undefined"
+                            ? `${window.location.origin}/api/auth/google/callback`
+                            : "http://localhost:3000/api/auth/google/callback")
+                      )
+                    }
+                    className="px-3 py-2 rounded-xl bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1 hover:bg-slate-700"
+                  >
+                    {copiedGoogleField === "redirect" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-slate-700">4. Dán vào file <code className="text-sky-700">.env.local</code> rồi khởi động lại server</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleCopyGoogleConfig(
+                        "env",
+                        'GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"\nGOOGLE_CLIENT_SECRET="your-client-secret"'
+                      )
+                    }
+                    className="text-[11px] font-bold text-sky-600 hover:underline flex items-center gap-1"
+                  >
+                    {copiedGoogleField === "env" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                    Copy mẫu .env
+                  </button>
+                </div>
+                <pre className="p-3 bg-slate-900 text-cyan-300 rounded-xl font-mono text-[11px] overflow-x-auto">
+{`GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your-client-secret"`}
+                </pre>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowGoogleSetupModal(false)}
+              className="w-full py-3 rounded-xl gradient-btn font-bold text-xs shadow-md"
+            >
+              Đã Hiểu
             </button>
           </div>
         </div>

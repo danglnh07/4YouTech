@@ -597,13 +597,14 @@ function UserProfileModal({
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
     setPassMsg(null);
-    if (!currentPass || !newPass || !confirmPass) {
+    const hasExistingPassword = Boolean(currentUser.password);
+    if ((hasExistingPassword && !currentPass) || !newPass || !confirmPass) {
       setPassMsg({ type: "error", text: "Vui lòng nhập đầy đủ các trường mật khẩu." });
       return;
     }
 
     const isValidPass =
-      !currentUser.password ||
+      !hasExistingPassword ||
       hashPassword(currentPass) === currentUser.password ||
       currentPass === "123" ||
       currentPass === "Customer@123" ||
@@ -840,31 +841,40 @@ function UserProfileModal({
                 </div>
               )}
 
-              <div className="text-[11px] text-slate-400 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Tài khoản demo: Mật khẩu mặc định là <code className="text-cyan-300 font-bold">Customer@123</code> hoặc <code className="text-cyan-300 font-bold">123</code></span>
-              </div>
+              {currentUser.password ? (
+                <>
+                  <div className="text-[11px] text-slate-400 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>Tài khoản demo: Mật khẩu mặc định là <code className="text-cyan-300 font-bold">Customer@123</code> hoặc <code className="text-cyan-300 font-bold">123</code></span>
+                  </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Mật khẩu hiện tại</label>
-                <div className="relative">
-                  <input
-                    type={showCurrent ? "text" : "password"}
-                    value={currentPass}
-                    onChange={(e) => setCurrentPass(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-white focus:outline-none focus:border-cyan-400 font-medium transition"
-                    placeholder="Nhập mật khẩu hiện tại..."
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrent(!showCurrent)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 cursor-pointer"
-                  >
-                    {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Mật khẩu hiện tại</label>
+                    <div className="relative">
+                      <input
+                        type={showCurrent ? "text" : "password"}
+                        value={currentPass}
+                        onChange={(e) => setCurrentPass(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-white focus:outline-none focus:border-cyan-400 font-medium transition"
+                        placeholder="Nhập mật khẩu hiện tại..."
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrent(!showCurrent)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 cursor-pointer"
+                      >
+                        {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-[11px] text-cyan-200 bg-cyan-950/50 p-3 rounded-xl border border-cyan-500/30 flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Tài khoản đang liên kết Google OAuth và chưa có mật khẩu nội bộ. Đặt mật khẩu bên dưới nếu bạn muốn đăng nhập thêm bằng Email/Mật khẩu.</span>
                 </div>
-              </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">Mật khẩu mới</label>

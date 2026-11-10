@@ -14,6 +14,7 @@ export interface User {
   phone?: string;
   skills?: string[]; // For Staff: e.g. ["Next.js", "UI/UX", "Database"]
   status: UserStatus;
+  authProvider?: "local" | "google";
 }
 
 export interface OtpSession {

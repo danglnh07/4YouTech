@@ -111,9 +111,17 @@ CREATE TABLE IF NOT EXISTS ServiceOrders (
     SupportPeriodEndAt      VARCHAR(100) NULL, -- Hạn bảo vệ hỗ trợ kỹ thuật (14-30 ngày sau bàn giao)
     
     -- Hợp đồng Scope of Work SOW & Thanh toán 50-50 (Góp ý 1 - M2)
+    WorkEstimateJson        TEXT NULL, -- Dự toán chi phí/thời gian từ Staff
     QuotationJson           TEXT NULL, -- Chứa amount, deadline, deliverables, exclusions, criteria, remedyTerms
     PaymentInfoJson         TEXT NULL, -- Chứa amountPaid, paymentMethod, status, note
     
+    -- Dữ liệu JSON đồng bộ với Next.js API Route (/api/orders)
+    MilestonesJson          TEXT NULL,
+    DeliverablesJson        TEXT NULL,
+    RevisionsJson           TEXT NULL,
+    SupportTicketsJson      TEXT NULL,
+    CancellationJson        TEXT NULL,
+
     -- Biên bản UAT & Transfer Session (Góp ý 1 - M3 & Giai đoạn 11)
     UatSubmissionJson       TEXT NULL, -- Checklist 4 nhóm kiểm thử + chữ ký nghiệm thu
     TransferSessionJson     TEXT NULL, -- Thông tin buổi chuyển giao kỹ thuật (link, ngày, video, docs)
@@ -277,7 +285,7 @@ CREATE TABLE IF NOT EXISTS PaymentTransactions (
 -- 3. NẠP DỮ LIỆU MẪU ĐẦY ĐỦ (FULL SEED DATA)
 -- ============================================================================
 
--- 3.1. Seed 13 Người Dùng (Users: Guest, 10 Pilot Customers, 2 Staffs, 1 Admin)
+-- 3.1. Seed 14 Người Dùng (Users: 1 Guest, 10 Pilot Customers, 2 Staffs, 1 Admin)
 INSERT INTO Users (UserId, Name, Email, PasswordHash, Role, Phone, SkillsJson, AvatarUrl, Status) VALUES
 ('usr-guest', 'Khách xem', 'guest@4youtech.com', NULL, 'guest', NULL, NULL, NULL, 'active'),
 ('usr-cust-1', 'Nguyễn Văn An', 'an.nguyen@student.edu.vn', 'hash_1b932c0', 'customer', '0912345678', NULL, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 'active'),
@@ -305,7 +313,7 @@ INSERT INTO Services (ServiceId, Name, Description, Category, EstimatedDays, Max
 ('design-banner', 'Banner', 'Thiết kế Banner quảng cáo, banner website, mạng xã hội (Facebook/Zalo/Instagram) bắt mắt, chuẩn tỷ lệ.', 'Design', 1, 2, 300000.00, 800000.00, 2, 'File thiết kế Vector/PSD, File ảnh xuất chất lượng cao (PNG/JPG/WebP), Banner kích thước chuẩn.', 'Online', '["/images/banner-y-te.png","/images/banner-mat-kinh.png","/images/banner-dau-tu.png"]', 0),
 ('design-poster', 'Poster', 'Thiết kế Poster sự kiện, poster truyền thông, nghệ thuật độ phân giải cao dành cho in ấn & đăng tải truyền thông.', 'Design', 2, 3, 400000.00, 1000000.00, 3, 'File in ấn PDF/TIFF chất lượng cao, File ảnh PNG/JPG truyền thông, Mockup poster thực tế.', 'Online', '["/images/poster-avocado.png","/images/poster-longan.png","/images/poster-ocean.jpg"]', 0);
 
--- 3.3. Seed 14 Dự Án Mẫu (SampleProjects)
+-- 3.3. Seed 16 Dự Án Mẫu (SampleProjects)
 INSERT INTO SampleProjects (ProjectId, Name, Category, SubCategory, Description, ImageUrl, DemoLink, IsFeatured) VALUES
 ('proj-mcropdiary', 'MyCropDiary - App & Giao Diện UI/UX Quản Lý Mùa Vụ Nông Nghiệp Tiêu Chuẩn VietGAP', 'Design', 'UI/UX', 'Nền tảng ứng dụng di động & Giao diện UI/UX chuyên sâu MyCropDiary hỗ trợ số hóa quy trình quản lý mùa vụ canh tác nông nghiệp theo tiêu chuẩn VietGAP. Cung cấp giải pháp ghi chép nhật ký nông vụ điện tử tự động, giám sát thời tiết vi khí hậu thời gian thực, quản lý kho vật tư - phân bón - thuốc bảo vệ thực vật, cảnh báo thời gian cách ly thu hoạch và trích xuất mã QR truy xuất nguồn gốc nông sản minh bạch.', '/images/mcropdiary-ui.jpg', 'https://www.figma.com/proto/u1rr5WNOTvbwGZ5Whto51z/Untitled?node-id=0-1&p=f&t=RPGQ7V25bEgJuevk-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=91%3A6&show-proto-sidebar=1', 1),
 ('proj-portfolio-trunghieu', 'Website Portfolio Cá Nhân Developer Pro - Nguyễn Trung Hiếu', 'IT', 'Website', 'Website Personal Portfolio Backend Developer & Web/UI Design chuyên nghiệp xuất bản trực tiếp trên Netlify. Tích hợp Dark Mode phong cách công nghệ cao với font Manrope & DM Mono, trình bày triết lý Từ logic đến trải nghiệm, dự án nền tảng 4YouTech (Fullstack + Figma Design/Prototype) và bộ 3 chứng chỉ quốc tế uy tín từ Coursera (Minnesota, Michigan, CertNexus).', '/images/portfolio-trunghieu.jpg', 'https://nguyen-trung-hieu.netlify.app/', 1),
@@ -610,7 +618,7 @@ SELECT '========================================================================
 SELECT '  CƠ SỞ DỮ LIỆU MYSQL [4youtechdb] ĐÃ NẠP ĐẦY ĐỦ 10 ĐƠN HÀNG VÀ BẢO VỆ KHÁCH HÀNG! ' AS Message;
 SELECT '============================================================================' AS ReportStatus;
 
--- Báo cáo số lượng bản ghi đã nạp qua 12 bảng
+-- Báo cáo số lượng bản ghi đã nạp qua 13 bảng
 SELECT 
     (SELECT COUNT(*) FROM Users) AS TotalUsers,
     (SELECT COUNT(*) FROM Services) AS TotalServices,
