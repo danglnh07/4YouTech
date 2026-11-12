@@ -669,6 +669,26 @@ export const SEED_USERS: User[] = [
     status: "active"
   },
   {
+    id: "usr-cust-phuc",
+    name: "Trần Hoàng Phúc",
+    email: "tranhoangphuc.dev@gmail.com",
+    password: hashPassword("090504@Th"),
+    role: "customer",
+    phone: "0987908471",
+    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+    status: "active"
+  },
+  {
+    id: "usr-cust-nha",
+    name: "Nguyễn Thanh Nhã",
+    email: "NhaNTCE181298@fpt.edu.vn",
+    password: hashPassword("090504@Th"),
+    role: "customer",
+    phone: "0815479963",
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+    status: "active"
+  },
+  {
     id: "usr-staff-it",
     name: "Trần Bảo IT",
     email: "bao.it@4youtech.com",
@@ -732,6 +752,38 @@ export const SEED_TRANSACTIONS: PaymentTransaction[] = [
     note: "Thanh toán 100% full đơn Hackathon qua VietQR MBBank",
     status: "verified",
     createdAt: "2026-09-18 11:15"
+  },
+  {
+    id: "TXN-8831",
+    orderId: "REQ-2026-011",
+    customerId: "usr-cust-phuc",
+    customerName: "Trần Hoàng Phúc",
+    amount: 1500000,
+    paymentType: "full",
+    paymentMethod: "VietQR",
+    vnpTxnRef: "QR2026112501",
+    vnpBankCode: "MBBANK",
+    vnpResponseCode: "00",
+    receiptImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
+    note: "Thanh toán 100% full đơn Lập trình Portfolio - Trần Hoàng Phúc ngày 25/11/2026",
+    status: "verified",
+    createdAt: "2026-11-25 10:15"
+  },
+  {
+    id: "TXN-8832",
+    orderId: "REQ-2026-012",
+    customerId: "usr-cust-nha",
+    customerName: "Nguyễn Thanh Nhã",
+    amount: 1400000,
+    paymentType: "full",
+    paymentMethod: "VietQR",
+    vnpTxnRef: "QR2026112502",
+    vnpBankCode: "VIETCOMBANK",
+    vnpResponseCode: "00",
+    receiptImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80",
+    note: "Thanh toán 100% full đơn Lập trình Portfolio - Nguyễn Thanh Nhã ngày 25/11/2026",
+    status: "verified",
+    createdAt: "2026-11-25 10:45"
   }
 ];
 
@@ -2601,11 +2653,257 @@ export const SEED_ORDERS: ServiceOrder[] = [
     supportTickets: [],
     createdAt: "2026-09-28 09:00",
     updatedAt: "2026-09-28 09:18"
+  },
+  {
+    id: "REQ-2026-011",
+    serviceId: "it-lap-trinh-portfolio",
+    serviceName: "Lập trình Portfolio",
+    category: "IT",
+    customerId: "usr-cust-phuc",
+    customerName: "Trần Hoàng Phúc",
+    customerEmail: "tranhoangphuc.dev@gmail.com",
+    customerPhone: "0987908471",
+    requirements: "Cần thiết kế và lập trình website portfolio cá nhân cho lập trình viên full-stack, tích hợp showcase dự án, blog kỹ thuật và form liên hệ. Host chạy trên Netlify: https://portfolio-hoangphuc.netlify.app",
+    attachments: ["https://portfolio-hoangphuc.netlify.app"],
+    desiredDeadline: "2026-11-25",
+    status: "completed",
+    progressPercent: 100,
+    assignedStaffId: "usr-staff-it",
+    assignedStaffName: "Trần Bảo IT",
+    collaborators: ["Phạm Hà Design"],
+    firstResponseAt: "2026-11-18 09:15",
+    deliverableSentAt: "2026-11-24 16:30",
+    acceptedAt: "2026-11-25 10:00",
+    completedAt: "2026-11-25 14:00",
+    isOnTime: true,
+    isFirstPassAcceptance: true,
+    supportPeriodEndAt: "2026-12-25",
+    quotation: {
+      amount: 1500000,
+      finalDeadline: "2026-11-25",
+      maxRevisions: 3,
+      scopeDetails: "Lập trình hoàn thiện website portfolio cá nhân từ giao diện tùy chỉnh, responsive hoàn hảo trên di động, deploy trực tiếp lên Netlify domain portfolio-hoangphuc.netlify.app.",
+      issuedAt: "2026-11-18 09:30",
+      deliverables: ["Full Source Code Next.js/React", "Deploy Netlify Production (portfolio-hoangphuc.netlify.app)", "Tài liệu bàn giao & Hướng dẫn cập nhật CV"],
+      exclusions: ["Không bao gồm mua tên miền .com riêng"],
+      acceptanceCriteria: ["Load dưới 1s", "Chuẩn SEO & Lighthouse 95+", "Đầy đủ 5 mục chính"],
+      assignedLead: "Trần Bảo IT",
+      supportPeriodDays: 30,
+      remedyTerms: "Bảo hành code 30 ngày, fix bug kỹ thuật trong 24h."
+    },
+    paymentInfo: {
+      amountPaid: 1500000,
+      paymentMethod: "VietQR",
+      paymentStatus: "verified",
+      note: "Đã thanh toán 100% chi phí lập trình Portfolio (50% cọc + 50% nghiệm thu ngày 25/11/2026)"
+    },
+    milestones: [
+      { id: "m1", title: "Khảo sát yêu cầu & Lên Wireframe", completed: true, targetDate: "2026-11-19", updatedBy: "Trần Bảo IT" },
+      { id: "m2", title: "Lập trình Front-end & Tích hợp Showcase", completed: true, targetDate: "2026-11-23", updatedBy: "Trần Bảo IT" },
+      { id: "m3", title: "Nghiệm thu UAT & Deploy Netlify", completed: true, targetDate: "2026-11-25", updatedBy: "Quản trị viên 4YouTech" }
+    ],
+    deliverables: [
+      {
+        id: "del-11",
+        version: 1,
+        title: "Sản phẩm Portfolio hoàn thiện & Link Production Netlify",
+        fileLink: "https://portfolio-hoangphuc.netlify.app",
+        previewUrl: "/images/portfolio-trunghieu.jpg",
+        notes: "Website đã deploy hoàn tất trên Netlify với link chính thức: https://portfolio-hoangphuc.netlify.app. Tối ưu SEO, tốc độ load siêu nhanh.",
+        timestamp: "2026-11-24 16:30",
+        status: "accepted"
+      }
+    ],
+    uatSubmission: {
+      status: "passed",
+      items: [
+        { id: "u1", category: "functional", criteria: "Các hiệu ứng cuộn và showcase dự án mượt mà", passed: true },
+        { id: "u2", category: "visual", criteria: "Màu sắc Dark Tech chuẩn theo yêu cầu cá nhân", passed: true },
+        { id: "u3", category: "compatibility", criteria: "Tương thích tốt trên Chrome, Safari, mobile", passed: true },
+        { id: "u4", category: "documentation", criteria: "Bàn giao mã nguồn sạch và link live Netlify", passed: true }
+      ],
+      testerName: "Trần Hoàng Phúc",
+      submittedAt: "2026-11-25 10:00",
+      feedbackNotes: "Sản phẩm quá đẹp, mượt mà và chuẩn theo đúng phong cách mình mong muốn! Link Netlify https://portfolio-hoangphuc.netlify.app chạy rất ổn định.",
+      acceptanceSignoff: {
+        confirmed: true,
+        signedName: "Trần Hoàng Phúc",
+        signedAt: "2026-11-25 10:00",
+        ratingSatisfaction: 5,
+        comment: "Biên bản nghiệm thu chính thức đã được ký xác nhận."
+      }
+    },
+    transferSession: {
+      isCompleted: true,
+      sessionDate: "2026-11-25 14:00",
+      meetLink: "https://meet.google.com/phuc-4youtech-transfer",
+      videoRecordingUrl: "https://drive.google.com/transfer-recording-hoangphuc",
+      docsUrl: "https://docs.4youtech.com/portfolio-handover",
+      completedAt: "2026-11-25 15:00",
+      customerConfirmed: true
+    },
+    postServiceSurvey: {
+      id: "srv-11",
+      orderId: "REQ-2026-011",
+      customerName: "Trần Hoàng Phúc",
+      submittedAt: "2026-11-25 14:15",
+      q1_scopeClarity: 5,
+      q2_progressUpdate: 5,
+      q3_deliverableQuality: 5,
+      q4_revisionHandling: 5,
+      q5_transferSession: 5,
+      q6_overallSatisfaction: 5,
+      recommendIntent: true,
+      bestPoint: "Nhóm 4YouTech hỗ trợ rất nhiệt tình, code sạch, bàn giao link Netlify https://portfolio-hoangphuc.netlify.app chạy rất mượt và nhanh!",
+      improvePoint: "Dịch vụ quá tốt, không có gì để chê!",
+      susScore: 98.0
+    },
+    revisions: [],
+    messages: [],
+    supportTickets: [],
+    createdAt: "2026-11-18 09:00",
+    updatedAt: "2026-11-25 14:00"
+  },
+  {
+    id: "REQ-2026-012",
+    serviceId: "it-lap-trinh-portfolio",
+    serviceName: "Lập trình Portfolio",
+    category: "IT",
+    customerId: "usr-cust-nha",
+    customerName: "Nguyễn Thanh Nhã",
+    customerEmail: "NhaNTCE181298@fpt.edu.vn",
+    customerPhone: "0815479963",
+    requirements: "Xây dựng website portfolio cá nhân phục vụ ứng tuyển thực tập sinh ngành Kỹ thuật Phần mềm (Software Engineering). Thiết kế phong cách Modern Tech, trình bày các đồ án môn học và chứng chỉ. Link bàn giao: https://portfolio-thanhnha.netlify.app",
+    attachments: ["https://portfolio-thanhnha.netlify.app"],
+    desiredDeadline: "2026-11-25",
+    status: "completed",
+    progressPercent: 100,
+    assignedStaffId: "usr-staff-it",
+    assignedStaffName: "Trần Bảo IT",
+    firstResponseAt: "2026-11-19 10:10",
+    deliverableSentAt: "2026-11-24 17:00",
+    acceptedAt: "2026-11-25 10:30",
+    completedAt: "2026-11-25 15:30",
+    isOnTime: true,
+    isFirstPassAcceptance: true,
+    supportPeriodEndAt: "2026-12-25",
+    quotation: {
+      amount: 1400000,
+      finalDeadline: "2026-11-25",
+      maxRevisions: 3,
+      scopeDetails: "Lập trình website portfolio cá nhân chuẩn responsive, tối ưu điểm tuyển dụng CV, deploy hoàn thiện trên Netlify (https://portfolio-thanhnha.netlify.app).",
+      issuedAt: "2026-11-19 10:30",
+      deliverables: ["Full Source Code Next.js & Tailwind CSS", "Link website hoàn chỉnh (https://portfolio-thanhnha.netlify.app)", "Tài liệu HDSD & File nén Source code"],
+      exclusions: ["Không mua domain riêng"],
+      acceptanceCriteria: ["Responsive 100%", "Chuẩn CV tuyển dụng IT", "Tốc độ tải trang cao"],
+      assignedLead: "Trần Bảo IT",
+      supportPeriodDays: 30,
+      remedyTerms: "Bảo hành mã nguồn 30 ngày."
+    },
+    paymentInfo: {
+      amountPaid: 1400000,
+      paymentMethod: "VietQR",
+      paymentStatus: "verified",
+      note: "Đã thanh toán 100% chi phí nghiệm thu ngày 25/11/2026"
+    },
+    milestones: [
+      { id: "m1", title: "Phân tích yêu cầu & Cấu trúc CV", completed: true, targetDate: "2026-11-20", updatedBy: "Trần Bảo IT" },
+      { id: "m2", title: "Lập trình giao diện Modern Tech", completed: true, targetDate: "2026-11-23", updatedBy: "Trần Bảo IT" },
+      { id: "m3", title: "Nghiệm thu UAT & Bàn giao Netlify", completed: true, targetDate: "2026-11-25", updatedBy: "Quản trị viên 4YouTech" }
+    ],
+    deliverables: [
+      {
+        id: "del-12",
+        version: 1,
+        title: "Bàn giao Website Portfolio SV & Link Production",
+        fileLink: "https://portfolio-thanhnha.netlify.app",
+        previewUrl: "/images/portfolio-camly.png",
+        notes: "Đã hoàn thành toàn bộ website portfolio cá nhân cho bạn Nhã. Link live chính thức: https://portfolio-thanhnha.netlify.app.",
+        timestamp: "2026-11-24 17:00",
+        status: "accepted"
+      }
+    ],
+    uatSubmission: {
+      status: "passed",
+      items: [
+        { id: "u1", category: "functional", criteria: "Các liên kết Github và Demo dự án hoạt động chính xác", passed: true },
+        { id: "u2", category: "visual", criteria: "Giao diện hiện đại, bố cục CV ấn tượng", passed: true },
+        { id: "u3", category: "compatibility", criteria: "Hiển thị tốt trên laptop và điện thoại", passed: true }
+      ],
+      testerName: "Nguyễn Thanh Nhã",
+      submittedAt: "2026-11-25 10:30",
+      feedbackNotes: "Web xịn xò, các hiệu ứng animation rất ấn tượng. Nhà tuyển dụng xem qua đều khen chuyên nghiệp!",
+      acceptanceSignoff: {
+        confirmed: true,
+        signedName: "Nguyễn Thanh Nhã",
+        signedAt: "2026-11-25 10:30",
+        ratingSatisfaction: 5,
+        comment: "Đã kiểm tra kỹ trên điện thoại và laptop, nghiệm thu xuất sắc."
+      }
+    },
+    transferSession: {
+      isCompleted: true,
+      sessionDate: "2026-11-25 15:30",
+      meetLink: "https://meet.google.com/nha-4youtech-transfer",
+      videoRecordingUrl: "https://drive.google.com/transfer-recording-thanhnha",
+      docsUrl: "https://docs.4youtech.com/portfolio-guide-nha",
+      completedAt: "2026-11-25 16:30",
+      customerConfirmed: true
+    },
+    postServiceSurvey: {
+      id: "srv-12",
+      orderId: "REQ-2026-012",
+      customerName: "Nguyễn Thanh Nhã",
+      submittedAt: "2026-11-25 15:45",
+      q1_scopeClarity: 5,
+      q2_progressUpdate: 5,
+      q3_deliverableQuality: 5,
+      q4_revisionHandling: 5,
+      q5_transferSession: 5,
+      q6_overallSatisfaction: 5,
+      recommendIntent: true,
+      bestPoint: "Tiến độ bàn giao đúng ngày 25/11, hỗ trợ kết nối domain Netlify https://portfolio-thanhnha.netlify.app cực kỳ nhanh gọn!",
+      improvePoint: "Tiếp tục phát huy chất lượng!",
+      susScore: 97.5
+    },
+    revisions: [],
+    messages: [],
+    supportTickets: [],
+    createdAt: "2026-11-19 09:45",
+    updatedAt: "2026-11-25 15:30"
   }
 ];
 
 // Seed Reviews
 export const SEED_REVIEWS: ServiceReview[] = [
+  {
+    id: "rev-11",
+    orderId: "REQ-2026-011",
+    serviceId: "it-lap-trinh-portfolio",
+    serviceName: "Lập trình Portfolio",
+    customerName: "Trần Hoàng Phúc",
+    rating: 5,
+    comment: "Team 4YouTech làm việc chuyên nghiệp, trang portfolio https://portfolio-hoangphuc.netlify.app của mình load cực nhanh và chuẩn responsive. Bàn giao đúng hẹn 25/11, nghiệm thu đạt 100% đánh giá 5 sao!",
+    createdAt: "2026-11-25 14:30",
+    moderated: true,
+    replyText: "Cảm ơn bạn Hoàng Phúc đã tin tưởng ủng hộ 4YouTech! Chúc website portfolio mang lại nhiều cơ hội nghề nghiệp lớn cho bạn nhé.",
+    repliedBy: "Quản trị viên 4YouTech",
+    repliedAt: "2026-11-25 15:00"
+  },
+  {
+    id: "rev-12",
+    orderId: "REQ-2026-012",
+    serviceId: "it-lap-trinh-portfolio",
+    serviceName: "Lập trình Portfolio",
+    customerName: "Nguyễn Thanh Nhã",
+    rating: 5,
+    comment: "Website portfolio https://portfolio-thanhnha.netlify.app được các anh chị làm rất chỉn chu, giao diện hiện đại, nghiệm thu nhanh gọn trong ngày 25/11. Rất hài lòng!",
+    createdAt: "2026-11-25 16:00",
+    moderated: true,
+    replyText: "Cảm ơn Thanh Nhã nhiều nhé! Chúc bạn pass kỳ thực tập và đạt kết quả xuất sắc!",
+    repliedBy: "Quản trị viên 4YouTech",
+    repliedAt: "2026-11-25 16:30"
+  },
   {
     id: "rev-1",
     orderId: "REQ-PREV-099",

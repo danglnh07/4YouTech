@@ -298,6 +298,8 @@ INSERT INTO Users (UserId, Name, Email, PasswordHash, Role, Phone, SkillsJson, A
 ('usr-cust-8', 'Bùi Hoàng Nam (Freelancer)', 'nam.bui@designfreelance.com', NULL, 'customer', '0989012345', NULL, 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80', 'active'),
 ('usr-cust-9', 'Phạm Quỳnh Chi', 'quynhchi.fashion@gmail.com', NULL, 'customer', '0990123456', NULL, 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80', 'active'),
 ('usr-cust-10', 'Nguyễn Đăng Quang', 'quang.dang@gmail.com', NULL, 'customer', '0911223344', NULL, 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-phuc', 'Trần Hoàng Phúc', 'tranhoangphuc.dev@gmail.com', 'hash_3650c942', 'customer', '0987908471', NULL, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-nha', 'Nguyễn Thanh Nhã', 'NhaNTCE181298@fpt.edu.vn', 'hash_3650c942', 'customer', '0815479963', NULL, 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80', 'active'),
 ('usr-staff-it', 'Trần Bảo IT', 'bao.it@4youtech.com', 'hash_3650c942', 'staff', '0901112233', '["React/Next.js", "Node.js", "Database", "System Architecture"]', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', 'active'),
 ('usr-staff-des', 'Phạm Hà Design', 'ha.design@4youtech.com', 'hash_3650c942', 'staff', '0904445566', '["Figma UI/UX", "Branding", "Banner/Poster", "Motion Graphic"]', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', 'active'),
 ('usr-admin', 'Quản trị viên 4YouTech', 'admin@4youtech.com', 'hash_3650c942', 'admin', '0999888777', NULL, 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80', 'active');
@@ -439,6 +441,26 @@ INSERT INTO ServiceOrders (
     '{"amount":1500000,"finalDeadline":"2026-10-07","maxRevisions":3,"deliverables":["Landing page Next.js chuẩn SEO","Tích hợp form đăng ký tư vấn"],"exclusions":["Không bao gồm chi phí quảng cáo Facebook/Google Ads"],"acceptanceCriteria":["Điểm PageSpeed Insights > 85","Hiệu ứng chuyển động mượt mà"],"assignedLead":"Trần Bảo IT","supportPeriodDays":30,"remedyTerms":"Bảo hành mã nguồn và xử lý form email miễn phí trong 30 ngày."}',
     '{"amountPaid":750000,"paymentMethod":"VietQR","paymentStatus":"verified","note":"Đã cọc 50% qua VietQR"}',
     NULL
+),
+(
+    'REQ-2026-011', 'it-lap-trinh-portfolio', 'Lập trình Portfolio', 'IT',
+    'usr-cust-phuc', 'Trần Hoàng Phúc', 'tranhoangphuc.dev@gmail.com', '0987908471',
+    'Cần thiết kế và lập trình website portfolio cá nhân cho lập trình viên full-stack, tích hợp showcase dự án, blog kỹ thuật và form liên hệ. Host chạy trên Netlify: https://portfolio-hoangphuc.netlify.app',
+    '2026-11-25', 'completed', 100, 'usr-staff-it', 'Trần Bảo IT', '["Phạm Hà Design"]',
+    '2026-11-18 09:15', '2026-11-24 16:30', '2026-11-25 10:00', '2026-11-25 14:00', 1, 1, '2026-12-25',
+    '{"amount":1500000,"finalDeadline":"2026-11-25","maxRevisions":3,"scopeDetails":"Lập trình hoàn thiện website portfolio cá nhân từ giao diện tùy chỉnh, responsive hoàn hảo trên di động, deploy trực tiếp lên Netlify domain portfolio-hoangphuc.netlify.app.","deliverables":["Full Source Code Next.js/React","Deploy Netlify Production (portfolio-hoangphuc.netlify.app)","Tài liệu bàn giao & Hướng dẫn cập nhật CV"],"exclusions":["Không bao gồm mua tên miền .com riêng"],"acceptanceCriteria":["Load dưới 1s","Chuẩn SEO & Lighthouse 95+","Đầy đủ 5 mục chính"],"assignedLead":"Trần Bảo IT","supportPeriodDays":30,"remedyTerms":"Bảo hành code 30 ngày, fix bug kỹ thuật trong 24h."}',
+    '{"amountPaid":1500000,"paymentMethod":"VietQR","paymentStatus":"verified","note":"Đã thanh toán 100% chi phí lập trình Portfolio (50% cọc + 50% nghiệm thu ngày 25/11/2026)"}',
+    '{"isCompleted":true,"sessionDate":"2026-11-25 14:00","meetLink":"https://meet.google.com/phuc-4youtech-transfer","customerConfirmed":true}'
+),
+(
+    'REQ-2026-012', 'it-lap-trinh-portfolio', 'Lập trình Portfolio', 'IT',
+    'usr-cust-nha', 'Nguyễn Thanh Nhã', 'NhaNTCE181298@fpt.edu.vn', '0815479963',
+    'Xây dựng website portfolio cá nhân phục vụ ứng tuyển thực tập sinh ngành Kỹ thuật Phần mềm (Software Engineering). Thiết kế phong cách Modern Tech, trình bày các đồ án môn học và chứng chỉ. Link bàn giao: https://portfolio-thanhnha.netlify.app',
+    '2026-11-25', 'completed', 100, 'usr-staff-it', 'Trần Bảo IT', NULL,
+    '2026-11-19 10:10', '2026-11-24 17:00', '2026-11-25 10:30', '2026-11-25 15:30', 1, 1, '2026-12-25',
+    '{"amount":1400000,"finalDeadline":"2026-11-25","maxRevisions":3,"scopeDetails":"Lập trình website portfolio cá nhân chuẩn responsive, tối ưu điểm tuyển dụng CV, deploy hoàn thiện trên Netlify (https://portfolio-thanhnha.netlify.app).","deliverables":["Full Source Code Next.js & Tailwind CSS","Link website hoàn chỉnh (https://portfolio-thanhnha.netlify.app)","Tài liệu HDSD & File nén Source code"],"exclusions":["Không mua domain riêng"],"acceptanceCriteria":["Responsive 100%","Chuẩn CV tuyển dụng IT","Tốc độ tải trang cao"],"assignedLead":"Trần Bảo IT","supportPeriodDays":30,"remedyTerms":"Bảo hành mã nguồn 30 ngày."}',
+    '{"amountPaid":1400000,"paymentMethod":"VietQR","paymentStatus":"verified","note":"Đã thanh toán 100% chi phí nghiệm thu ngày 25/11/2026"}',
+    '{"isCompleted":true,"sessionDate":"2026-11-25 15:30","meetLink":"https://meet.google.com/nha-4youtech-transfer","customerConfirmed":true}'
 );
 
 -- 3.5. Seed Khảo Sát Hài Lòng Khách Hàng (PostServiceSurveys - ISO 10004 & SUS Brooke 1996)
@@ -452,7 +474,9 @@ INSERT INTO PostServiceSurveys (
 ('srv-005', 'REQ-2026-005', 'Trần Mai Linh (CLB TT)', 5, 5, 5, 5, 5, 5, 1, 'File in ấn chuẩn sắc nét, giao trước hạn 1 ngày', 'Rất hài lòng, không có gì phàn nàn', 95.00, '2026-09-17 14:00:00'),
 ('srv-006', 'REQ-2026-006', 'Vũ Đình Khoa', 5, 5, 4, 4, 5, 4, 1, 'Bộ test case rất chi tiết và bài bản, giúp nhóm dev sửa bug dễ dàng', 'Nên hỗ trợ thêm automation test script', 82.50, '2026-09-21 17:00:00'),
 ('srv-007', 'REQ-2026-007', 'Ngô Thùy Trang (V+ Health)', 5, 4, 5, 5, 5, 5, 1, 'Ý tưởng logo chạm đến cảm xúc, nhóm hỗ trợ đổi màu rất nhanh', 'Thời gian phản hồi ticket bảo hành rất đúng cam kết', 90.00, '2026-09-25 15:30:00'),
-('srv-008', 'REQ-2026-008', 'Bùi Hoàng Nam (Freelancer)', 5, 5, 5, 4, 5, 5, 1, 'Thiết kế đúng chất hi-tech Apple, bố cục thoáng', 'Nên có thêm template ảnh vuông để đăng Instagram', 88.00, '2026-09-27 16:00:00');
+('srv-008', 'REQ-2026-008', 'Bùi Hoàng Nam (Freelancer)', 5, 5, 5, 4, 5, 5, 1, 'Thiết kế đúng chất hi-tech Apple, bố cục thoáng', 'Nên có thêm template ảnh vuông để đăng Instagram', 88.00, '2026-09-27 16:00:00'),
+('srv-011', 'REQ-2026-011', 'Trần Hoàng Phúc', 5, 5, 5, 5, 5, 5, 1, 'Nhóm 4YouTech hỗ trợ rất nhiệt tình, code sạch, bàn giao link Netlify https://portfolio-hoangphuc.netlify.app chạy rất mượt và nhanh!', 'Dịch vụ quá tốt, không có gì để chê!', 98.00, '2026-11-25 14:15:00'),
+('srv-012', 'REQ-2026-012', 'Nguyễn Thanh Nhã', 5, 5, 5, 5, 5, 5, 1, 'Tiến độ bàn giao đúng ngày 25/11, hỗ trợ kết nối domain Netlify https://portfolio-thanhnha.netlify.app cực kỳ nhanh gọn!', 'Tiếp tục phát huy chất lượng!', 97.50, '2026-11-25 15:45:00');
 
 -- 3.6. Seed Ticket Hỗ Trợ & Khiếu Nại (SupportTickets - Minh chứng M4, SLA 3 ngày & Remedy Điều 36)
 INSERT INTO SupportTickets (
@@ -501,7 +525,9 @@ INSERT INTO OrderDeliverables (DeliverableId, OrderId, Version, Title, FileLink,
 ('del-1', 'REQ-2026-001', 1, 'Bản thiết kế UI Figma v1', 'https://figma.com/file/demo-v1', 'https://images.unsplash.com/photo-1542744094-3a31b272c490?w=800&auto=format&fit=crop&q=80', 'Đã thiết kế xong 5 màn hình cơ bản theo đúng yêu cầu màu tối.', 'accepted'),
 ('del-2', 'REQ-2026-002', 1, 'Bộ Poster & Banner Hackathon v1', 'https://drive.google.com/demo-poster-v1', 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=80', 'Gửi bản thử hình ảnh độ phân giải cao. Khách kiểm thử UAT giúp nhóm nhé.', 'pending'),
 ('del-3', 'REQ-2026-003', 1, 'Website Portfolio Nhiếp Ảnh Hoàn Chỉnh', 'https://github.com/4youtech/portfolio-ngan', 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80', 'Mã nguồn Next.js đã deploy thành công trên Vercel.', 'accepted'),
-('del-4', 'REQ-2026-004', 2, 'Logo Master Vector PHIN COFFEE v2', '/images/logo-phin-coffee.png', '/images/logo-phin-coffee.png', 'Đã tinh chỉnh đường viền chiếc mũ và tỷ lệ chữ PHIN COFFEE sắc sảo theo UAT.', 'accepted');
+('del-4', 'REQ-2026-004', 2, 'Logo Master Vector PHIN COFFEE v2', '/images/logo-phin-coffee.png', '/images/logo-phin-coffee.png', 'Đã tinh chỉnh đường viền chiếc mũ và tỷ lệ chữ PHIN COFFEE sắc sảo theo UAT.', 'accepted'),
+('del-11', 'REQ-2026-011', 1, 'Sản phẩm Portfolio hoàn thiện & Link Production Netlify', 'https://portfolio-hoangphuc.netlify.app', '/images/portfolio-trunghieu.jpg', 'Website đã deploy hoàn tất trên Netlify với link chính thức: https://portfolio-hoangphuc.netlify.app. Tối ưu SEO, tốc độ load siêu nhanh.', 'accepted'),
+('del-12', 'REQ-2026-012', 1, 'Bàn giao Website Portfolio SV & Link Production', 'https://portfolio-thanhnha.netlify.app', '/images/portfolio-camly.png', 'Đã hoàn thành toàn bộ website portfolio cá nhân cho bạn Nhã. Link live: https://portfolio-thanhnha.netlify.app.', 'accepted');
 
 -- 3.9. Seed Lịch Sử Chỉnh Sửa Trong Scope (OrderRevisions)
 INSERT INTO OrderRevisions (RevisionId, OrderId, Version, Feedback, Status, RequestedAt) VALUES
@@ -527,7 +553,9 @@ INSERT INTO ServiceReviews (ReviewId, OrderId, ServiceId, ServiceName, CustomerN
 ('rev-1', 'REQ-2026-003', 'it-lap-trinh-portfolio', 'Lập trình Portfolio', 'Hoàng Kim Ngân', 5, 'Nhóm làm việc rất nhiệt tình, code đẹp đúng thiết kế Figma của mình, giao đúng hạn trước 1 ngày!', 1, 'Cảm ơn Ngân đã tin tưởng và đồng hành cùng 4YouTech!', 'Trần Bảo IT', '2026-09-09 16:30'),
 ('rev-2', 'REQ-2026-004', 'design-logo', 'Logo', 'Đỗ Quốc Việt (Phin Coffee)', 5, 'Giao diện logo ấn tượng, phối màu sang trọng và phong cách quý ông rất rõ nét!', 1, 'Cảm ơn anh Việt, chúc Phin Coffee khai trương hồng phát!', 'Phạm Hà Design', '2026-09-13 17:00'),
 ('rev-3', 'REQ-2026-005', 'design-poster', 'Poster', 'Trần Mai Linh (CLB TT)', 5, 'Poster bơ nông sản hữu cơ rất bắt mắt, độ phân giải in sắc sảo. CLB mình rất ưng!', 1, NULL, NULL, NULL),
-('rev-4', 'REQ-2026-006', 'it-test-loi-phan-mem', 'Test lỗi phần mềm', 'Vũ Đình Khoa', 4, 'Báo cáo lỗi chi tiết, có video quay lại bug đầy đủ giúp team dev fix nhanh chóng.', 1, 'Cảm ơn Khoa, chúc đồ án nhóm đạt điểm tối đa!', 'Trần Bảo IT', '2026-09-21 17:30');
+('rev-4', 'REQ-2026-006', 'it-test-loi-phan-mem', 'Test lỗi phần mềm', 'Vũ Đình Khoa', 4, 'Báo cáo lỗi chi tiết, có video quay lại bug đầy đủ giúp team dev fix nhanh chóng.', 1, 'Cảm ơn Khoa, chúc đồ án nhóm đạt điểm tối đa!', 'Trần Bảo IT', '2026-09-21 17:30'),
+('rev-11', 'REQ-2026-011', 'it-lap-trinh-portfolio', 'Lập trình Portfolio', 'Trần Hoàng Phúc', 5, 'Team 4YouTech làm việc chuyên nghiệp, trang portfolio https://portfolio-hoangphuc.netlify.app của mình load cực nhanh và chuẩn responsive. Bàn giao đúng hẹn 25/11, nghiệm thu đạt 100% đánh giá 5 sao!', 1, 'Cảm ơn bạn Hoàng Phúc đã tin tưởng ủng hộ 4YouTech! Chúc website portfolio mang lại nhiều cơ hội nghề nghiệp lớn cho bạn nhé.', 'Quản trị viên 4YouTech', '2026-11-25 15:00'),
+('rev-12', 'REQ-2026-012', 'it-lap-trinh-portfolio', 'Lập trình Portfolio', 'Nguyễn Thanh Nhã', 5, 'Website portfolio https://portfolio-thanhnha.netlify.app được các anh chị làm rất chỉn chu, giao diện hiện đại, nghiệm thu nhanh gọn trong ngày 25/11. Rất hài lòng!', 1, 'Cảm ơn Thanh Nhã nhiều nhé! Chúc bạn pass kỳ thực tập và đạt kết quả xuất sắc!', 'Quản trị viên 4YouTech', '2026-11-25 16:30');
 
 -- 3.13. Seed Giao Dịch Thanh Toán (PaymentTransactions)
 INSERT INTO PaymentTransactions (TransactionId, OrderId, CustomerId, CustomerName, Amount, PaymentType, PaymentMethod, VnpTxnRef, VnpBankCode, VnpResponseCode, ReceiptImage, Note, Status) VALUES
@@ -540,7 +568,9 @@ INSERT INTO PaymentTransactions (TransactionId, OrderId, CustomerId, CustomerNam
 ('TXN-8827', 'REQ-2026-007', 'usr-cust-7', 'Ngô Thùy Trang (V+ Health)', 700000.00, 'full', 'VietQR', NULL, NULL, NULL, 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80', 'Thanh toán 100% Logo V+ qua VietQR', 'verified'),
 ('TXN-8828', 'REQ-2026-008', 'usr-cust-8', 'Bùi Hoàng Nam (Freelancer)', 300000.00, 'full', 'VietQR', NULL, NULL, NULL, 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80', 'Thanh toán 100% Banner Kính AR qua VietQR', 'verified'),
 ('TXN-8829', 'REQ-2026-009', 'usr-cust-9', 'Phạm Quỳnh Chi', 700000.00, 'deposit', 'VietQR', NULL, NULL, NULL, 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80', 'Đặt cọc 50% UI App Fashion qua VietQR', 'verified'),
-('TXN-8830', 'REQ-2026-010', 'usr-cust-10', 'Nguyễn Đăng Quang', 750000.00, 'deposit', 'VietQR', NULL, NULL, NULL, 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80', 'Đặt cọc 50% Landing Page Bất Động Sản qua VietQR', 'verified');
+('TXN-8830', 'REQ-2026-010', 'usr-cust-10', 'Nguyễn Đăng Quang', 750000.00, 'deposit', 'VietQR', NULL, NULL, NULL, 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80', 'Đặt cọc 50% Landing Page Bất Động Sản qua VietQR', 'verified'),
+('TXN-8831', 'REQ-2026-011', 'usr-cust-phuc', 'Trần Hoàng Phúc', 1500000.00, 'full', 'VietQR', 'QR2026112501', 'MBBANK', '00', 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80', 'Thanh toán 100% full đơn Lập trình Portfolio - Trần Hoàng Phúc ngày 25/11/2026', 'verified'),
+('TXN-8832', 'REQ-2026-012', 'usr-cust-nha', 'Nguyễn Thanh Nhã', 1400000.00, 'full', 'VietQR', 'QR2026112502', 'VIETCOMBANK', '00', 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80', 'Thanh toán 100% full đơn Lập trình Portfolio - Nguyễn Thanh Nhã ngày 25/11/2026', 'verified');
 
 -- ============================================================================
 -- 4. TẠO CÁC VIEWS THỐNG KÊ & BÁO CÁO KPI (ANALYTICS & KPI VIEWS)

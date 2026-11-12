@@ -339,6 +339,8 @@ INSERT INTO dbo.Users (UserId, Name, Email, PasswordHash, Role, Phone, SkillsJso
 (N'usr-cust-8', N'Bùi Hoàng Nam (Freelancer)', N'nam.bui@designfreelance.com', NULL, N'customer', N'0989012345', NULL, N'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80', N'active'),
 (N'usr-cust-9', N'Phạm Quỳnh Chi', N'quynhchi.fashion@gmail.com', NULL, N'customer', N'0990123456', NULL, N'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80', N'active'),
 (N'usr-cust-10', N'Nguyễn Đăng Quang', N'quang.dang@gmail.com', NULL, N'customer', N'0911223344', NULL, N'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-phuc', N'Trần Hoàng Phúc', N'tranhoangphuc.dev@gmail.com', N'hash_3650c942', N'customer', N'0987908471', NULL, N'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-nha', N'Nguyễn Thanh Nhã', N'NhaNTCE181298@fpt.edu.vn', N'hash_3650c942', N'customer', N'0815479963', NULL, N'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80', N'active'),
 (N'usr-staff-it', N'Trần Bảo IT', N'bao.it@4youtech.com', N'hash_3650c942', N'staff', N'0901112233', N'["React/Next.js", "Node.js", "Database", "System Architecture"]', N'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', N'active'),
 (N'usr-staff-des', N'Phạm Hà Design', N'ha.design@4youtech.com', N'hash_3650c942', N'staff', N'0904445566', N'["Figma UI/UX", "Branding", "Banner/Poster", "Motion Graphic"]', N'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', N'active'),
 (N'usr-admin', N'Quản trị viên 4YouTech', N'admin@4youtech.com', N'hash_3650c942', N'admin', N'0999888777', NULL, N'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80', N'active');
@@ -483,6 +485,26 @@ INSERT INTO dbo.ServiceOrders (
     N'{"amount":1500000,"finalDeadline":"2026-10-07","maxRevisions":3,"deliverables":["Landing page Next.js chuẩn SEO","Tích hợp form đăng ký tư vấn"],"exclusions":["Không bao gồm chi phí quảng cáo Facebook/Google Ads"],"acceptanceCriteria":["Điểm PageSpeed Insights > 85","Hiệu ứng chuyển động mượt mà"],"assignedLead":"Trần Bảo IT","supportPeriodDays":30,"remedyTerms":"Bảo hành mã nguồn và xử lý form email miễn phí trong 30 ngày."}',
     N'{"amountPaid":750000,"paymentMethod":"VietQR","paymentStatus":"verified","note":"Đã cọc 50% qua VietQR"}',
     NULL
+),
+(
+    N'REQ-2026-011', N'it-lap-trinh-portfolio', N'Lập trình Portfolio', N'IT',
+    N'usr-cust-phuc', N'Trần Hoàng Phúc', N'tranhoangphuc.dev@gmail.com', N'0987908471',
+    N'Cần thiết kế và lập trình website portfolio cá nhân cho lập trình viên full-stack, tích hợp showcase dự án, blog kỹ thuật và form liên hệ. Host chạy trên Netlify: https://portfolio-hoangphuc.netlify.app',
+    '2026-11-25', N'completed', 100, N'usr-staff-it', N'Trần Bảo IT', N'["Phạm Hà Design"]',
+    '2026-11-18 09:15', '2026-11-24 16:30', '2026-11-25 10:00', '2026-11-25 14:00', 1, 1, '2026-12-25',
+    N'{"amount":1500000,"finalDeadline":"2026-11-25","maxRevisions":3,"scopeDetails":"Lập trình hoàn thiện website portfolio cá nhân từ giao diện tùy chỉnh, responsive hoàn hảo trên di động, deploy trực tiếp lên Netlify domain portfolio-hoangphuc.netlify.app.","deliverables":["Full Source Code Next.js/React","Deploy Netlify Production (portfolio-hoangphuc.netlify.app)","Tài liệu bàn giao & Hướng dẫn cập nhật CV"],"exclusions":["Không bao gồm mua tên miền .com riêng"],"acceptanceCriteria":["Load dưới 1s","Chuẩn SEO & Lighthouse 95+","Đầy đủ 5 mục chính"],"assignedLead":"Trần Bảo IT","supportPeriodDays":30,"remedyTerms":"Bảo hành code 30 ngày, fix bug kỹ thuật trong 24h."}',
+    N'{"amountPaid":1500000,"paymentMethod":"VietQR","paymentStatus":"verified","note":"Đã thanh toán 100% chi phí lập trình Portfolio (50% cọc + 50% nghiệm thu ngày 25/11/2026)"}',
+    N'{"isCompleted":true,"sessionDate":"2026-11-25 14:00","meetLink":"https://meet.google.com/phuc-4youtech-transfer","customerConfirmed":true}'
+),
+(
+    N'REQ-2026-012', N'it-lap-trinh-portfolio', N'Lập trình Portfolio', N'IT',
+    N'usr-cust-nha', N'Nguyễn Thanh Nhã', N'NhaNTCE181298@fpt.edu.vn', N'0815479963',
+    N'Xây dựng website portfolio cá nhân phục vụ ứng tuyển thực tập sinh ngành Kỹ thuật Phần mềm (Software Engineering). Thiết kế phong cách Modern Tech, trình bày các đồ án môn học và chứng chỉ. Link bàn giao: https://portfolio-thanhnha.netlify.app',
+    '2026-11-25', N'completed', 100, N'usr-staff-it', N'Trần Bảo IT', NULL,
+    '2026-11-19 10:10', '2026-11-24 17:00', '2026-11-25 10:30', '2026-11-25 15:30', 1, 1, '2026-12-25',
+    N'{"amount":1400000,"finalDeadline":"2026-11-25","maxRevisions":3,"scopeDetails":"Lập trình website portfolio cá nhân chuẩn responsive, tối ưu điểm tuyển dụng CV, deploy hoàn thiện trên Netlify (https://portfolio-thanhnha.netlify.app).","deliverables":["Full Source Code Next.js & Tailwind CSS","Link website hoàn chỉnh (https://portfolio-thanhnha.netlify.app)","Tài liệu HDSD & File nén Source code"],"exclusions":["Không mua domain riêng"],"acceptanceCriteria":["Responsive 100%","Chuẩn CV tuyển dụng IT","Tốc độ tải trang cao"],"assignedLead":"Trần Bảo IT","supportPeriodDays":30,"remedyTerms":"Bảo hành mã nguồn 30 ngày."}',
+    N'{"amountPaid":1400000,"paymentMethod":"VietQR","paymentStatus":"verified","note":"Đã thanh toán 100% chi phí nghiệm thu ngày 25/11/2026"}',
+    N'{"isCompleted":true,"sessionDate":"2026-11-25 15:30","meetLink":"https://meet.google.com/nha-4youtech-transfer","customerConfirmed":true}'
 );
 GO
 
