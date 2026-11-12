@@ -32,3 +32,4 @@ main().catch((err) => {
   console.error("Error updating passwords:", err);
   process.exit(1);
 });
+
