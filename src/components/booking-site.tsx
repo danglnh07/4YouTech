@@ -41,7 +41,8 @@ function MainAppContent() {
   const handleSelectServiceToBook = (serviceId: string | string[]) => {
     setPreselectedBookingServiceId(serviceId);
     if (currentUser.role === "guest") {
-      switchRole("customer");
+      setActiveTab("auth");
+      return;
     }
     setActiveTab("workspace");
   };

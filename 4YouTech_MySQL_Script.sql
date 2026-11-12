@@ -285,22 +285,22 @@ CREATE TABLE IF NOT EXISTS PaymentTransactions (
 -- 3. NẠP DỮ LIỆU MẪU ĐẦY ĐỦ (FULL SEED DATA)
 -- ============================================================================
 
--- 3.1. Seed 14 Người Dùng (Users: 1 Guest, 10 Pilot Customers, 2 Staffs, 1 Admin)
+-- 3.1. Seed 14 Người Dùng (Users: 1 Guest, 10 Pilot Customers [không có mật khẩu demo, khách hàng bắt buộc phải tạo tài khoản], 2 Staffs, 1 Admin [Mật khẩu: 090504@Th])
 INSERT INTO Users (UserId, Name, Email, PasswordHash, Role, Phone, SkillsJson, AvatarUrl, Status) VALUES
 ('usr-guest', 'Khách xem', 'guest@4youtech.com', NULL, 'guest', NULL, NULL, NULL, 'active'),
-('usr-cust-1', 'Nguyễn Văn An', 'an.nguyen@student.edu.vn', 'hash_1b932c0', 'customer', '0912345678', NULL, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-2', 'Lê Minh Tuấn (CLB IT)', 'tuan.le@clbit.org', 'hash_1b932c0', 'customer', '0987654321', NULL, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-3', 'Hoàng Kim Ngân', 'kimngan.hoang@student.edu.vn', 'hash_1b932c0', 'customer', '0934567890', NULL, 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-4', 'Đỗ Quốc Việt (Phin Coffee)', 'viet.do@fnbstartup.vn', 'hash_1b932c0', 'customer', '0945678901', NULL, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-5', 'Trần Mai Linh (CLB TT)', 'mailinh.clbtt@gmail.com', 'hash_1b932c0', 'customer', '0956789012', NULL, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-6', 'Vũ Đình Khoa', 'khoa.vu@fpt.edu.vn', 'hash_1b932c0', 'customer', '0967890123', NULL, 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-7', 'Ngô Thùy Trang (V+ Health)', 'trang.ngo@charity.vn', 'hash_1b932c0', 'customer', '0978901234', NULL, 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-8', 'Bùi Hoàng Nam (Freelancer)', 'nam.bui@designfreelance.com', 'hash_1b932c0', 'customer', '0989012345', NULL, 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-9', 'Phạm Quỳnh Chi', 'quynhchi.fashion@gmail.com', 'hash_1b932c0', 'customer', '0990123456', NULL, 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-cust-10', 'Nguyễn Đăng Quang', 'quang.dang@gmail.com', 'hash_1b932c0', 'customer', '0911223344', NULL, 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-staff-it', 'Trần Bảo IT', 'bao.it@4youtech.com', 'hash_2c810d1', 'staff', '0901112233', '["React/Next.js", "Node.js", "Database", "System Architecture"]', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-staff-des', 'Phạm Hà Design', 'ha.design@4youtech.com', 'hash_2c810d1', 'staff', '0904445566', '["Figma UI/UX", "Branding", "Banner/Poster", "Motion Graphic"]', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', 'active'),
-('usr-admin', 'Quản trị viên 4YouTech', 'admin@4youtech.com', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin', '0999888777', NULL, 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80', 'active');
+('usr-cust-1', 'Nguyễn Văn An', 'an.nguyen@student.edu.vn', NULL, 'customer', '0912345678', NULL, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-2', 'Lê Minh Tuấn (CLB IT)', 'tuan.le@clbit.org', NULL, 'customer', '0987654321', NULL, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-3', 'Hoàng Kim Ngân', 'kimngan.hoang@student.edu.vn', NULL, 'customer', '0934567890', NULL, 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-4', 'Đỗ Quốc Việt (Phin Coffee)', 'viet.do@fnbstartup.vn', NULL, 'customer', '0945678901', NULL, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-5', 'Trần Mai Linh (CLB TT)', 'mailinh.clbtt@gmail.com', NULL, 'customer', '0956789012', NULL, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-6', 'Vũ Đình Khoa', 'khoa.vu@fpt.edu.vn', NULL, 'customer', '0967890123', NULL, 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-7', 'Ngô Thùy Trang (V+ Health)', 'trang.ngo@charity.vn', NULL, 'customer', '0978901234', NULL, 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-8', 'Bùi Hoàng Nam (Freelancer)', 'nam.bui@designfreelance.com', NULL, 'customer', '0989012345', NULL, 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-9', 'Phạm Quỳnh Chi', 'quynhchi.fashion@gmail.com', NULL, 'customer', '0990123456', NULL, 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-cust-10', 'Nguyễn Đăng Quang', 'quang.dang@gmail.com', NULL, 'customer', '0911223344', NULL, 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-staff-it', 'Trần Bảo IT', 'bao.it@4youtech.com', 'hash_3650c942', 'staff', '0901112233', '["React/Next.js", "Node.js", "Database", "System Architecture"]', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-staff-des', 'Phạm Hà Design', 'ha.design@4youtech.com', 'hash_3650c942', 'staff', '0904445566', '["Figma UI/UX", "Branding", "Banner/Poster", "Motion Graphic"]', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', 'active'),
+('usr-admin', 'Quản trị viên 4YouTech', 'admin@4youtech.com', 'hash_3650c942', 'admin', '0999888777', NULL, 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80', 'active');
 
 -- 3.2. Seed 8 Dịch Vụ Chuẩn (Services)
 INSERT INTO Services (ServiceId, Name, Description, Category, EstimatedDays, MaxDays, EstimatedPrice, MaxPrice, MaxRevisions, ScopeOutput, SupportType, DemoImagesJson, IsHidden) VALUES

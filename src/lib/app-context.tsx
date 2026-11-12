@@ -174,14 +174,14 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 const STORAGE_KEYS = {
-  USERS: "4youtech_users_v5",
+  USERS: "4youtech_users_v6",
   SERVICES: "4youtech_services_v6",
   PROJECTS: "4youtech_projects_v15",
   ORDERS: "4youtech_orders_v5",
   REVIEWS: "4youtech_reviews_v4",
   TRANSACTIONS: "4youtech_transactions_v4",
   OTP_SESSION: "4youtech_otp_session_v4",
-  CURRENT_USER_ID: "4youtech_current_user_v5",
+  CURRENT_USER_ID: "4youtech_current_user_v6",
   CART: "4youtech_cart_v4"
 };
 
@@ -661,15 +661,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: "Tài khoản chưa được kích hoạt mã OTP. Vui lòng hoàn tất xác thực OTP." };
     }
 
-    if (!found.password && pass !== "123") {
+    if (!found.password) {
       return {
         success: false,
-        message: "Tài khoản này sử dụng đăng nhập Google. Vui lòng bấm 'Tiếp tục với Google' hoặc dùng Quên mật khẩu để tạo mật khẩu."
+        message: "Tài khoản này chưa có mật khẩu hoặc sử dụng đăng nhập Google. Vui lòng bấm 'Tiếp tục với Google' hoặc tạo tài khoản mới."
       };
     }
 
     const hashed = hashPassword(pass);
-    const passMatch = found.password === hashed || found.password === pass || pass === "123";
+    const passMatch = found.password === hashed || found.password === pass;
     if (!passMatch) {
       return { success: false, message: "Mật khẩu không chính xác." };
     }
@@ -832,14 +832,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchRole = (role: Role) => {
-    const defaultUserForRole = users.find((u) => u.role === role) || {
-      id: `usr-temp-${role}`,
-      name: `User ${role.toUpperCase()}`,
-      email: `${role}@4youtech.com`,
-      role,
-      status: "active"
-    };
-    setCurrentUser(defaultUserForRole);
+    if (role === "guest") {
+      const guestUser = users.find((u) => u.role === "guest") || SEED_USERS[0];
+      setCurrentUser(guestUser);
+      return;
+    }
+    // Only allow switching to a role if user already has an active account
+    const targetUser = users.find((u) => u.role === role);
+    if (targetUser && currentUser.role === role) {
+      setCurrentUser(targetUser);
+    }
   };
 
   const updateUserProfile = (userId: string, data: Partial<User>) => {

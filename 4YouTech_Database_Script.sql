@@ -326,22 +326,22 @@ GO
 -- 5. NẠP DỮ LIỆU MẪU ĐẦY ĐỦ (FULL SEED DATA - ĐỒNG NHẤT VỚI MYSQL)
 -- ============================================================================
 
--- 5.1. Seed 14 Người Dùng (Users: 1 Guest, 10 Pilot Customers, 2 Staffs, 1 Admin)
+-- 5.1. Seed 14 Người Dùng (Users: 1 Guest, 10 Pilot Customers [không có mật khẩu demo, khách hàng bắt buộc phải tạo tài khoản], 2 Staffs, 1 Admin [Mật khẩu: 090504@Th])
 INSERT INTO dbo.Users (UserId, Name, Email, PasswordHash, Role, Phone, SkillsJson, AvatarUrl, Status) VALUES
 (N'usr-guest', N'Khách xem', N'guest@4youtech.com', NULL, N'guest', NULL, NULL, NULL, N'active'),
-(N'usr-cust-1', N'Nguyễn Văn An', N'an.nguyen@student.edu.vn', N'hash_1b932c0', N'customer', N'0912345678', NULL, N'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-2', N'Lê Minh Tuấn (CLB IT)', N'tuan.le@clbit.org', N'hash_1b932c0', N'customer', N'0987654321', NULL, N'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-3', N'Hoàng Kim Ngân', N'kimngan.hoang@student.edu.vn', N'hash_1b932c0', N'customer', N'0934567890', NULL, N'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-4', N'Đỗ Quốc Việt (Phin Coffee)', N'viet.do@fnbstartup.vn', N'hash_1b932c0', N'customer', N'0945678901', NULL, N'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-5', N'Trần Mai Linh (CLB TT)', N'mailinh.clbtt@gmail.com', N'hash_1b932c0', N'customer', N'0956789012', NULL, N'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-6', N'Vũ Đình Khoa', N'khoa.vu@fpt.edu.vn', N'hash_1b932c0', N'customer', N'0967890123', NULL, N'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-7', N'Ngô Thùy Trang (V+ Health)', N'trang.ngo@charity.vn', N'hash_1b932c0', N'customer', N'0978901234', NULL, N'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-8', N'Bùi Hoàng Nam (Freelancer)', N'nam.bui@designfreelance.com', N'hash_1b932c0', N'customer', N'0989012345', NULL, N'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-9', N'Phạm Quỳnh Chi', N'quynhchi.fashion@gmail.com', N'hash_1b932c0', N'customer', N'0990123456', NULL, N'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-cust-10', N'Nguyễn Đăng Quang', N'quang.dang@gmail.com', N'hash_1b932c0', N'customer', N'0911223344', NULL, N'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-staff-it', N'Trần Bảo IT', N'bao.it@4youtech.com', N'hash_2c810d1', N'staff', N'0901112233', N'["React/Next.js", "Node.js", "Database", "System Architecture"]', N'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-staff-des', N'Phạm Hà Design', N'ha.design@4youtech.com', N'hash_2c810d1', N'staff', N'0904445566', N'["Figma UI/UX", "Branding", "Banner/Poster", "Motion Graphic"]', N'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', N'active'),
-(N'usr-admin', N'Quản trị viên 4YouTech', N'admin@4youtech.com', N'240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', N'admin', N'0999888777', NULL, N'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80', N'active');
+(N'usr-cust-1', N'Nguyễn Văn An', N'an.nguyen@student.edu.vn', NULL, N'customer', N'0912345678', NULL, N'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-2', N'Lê Minh Tuấn (CLB IT)', N'tuan.le@clbit.org', NULL, N'customer', N'0987654321', NULL, N'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-3', N'Hoàng Kim Ngân', N'kimngan.hoang@student.edu.vn', NULL, N'customer', N'0934567890', NULL, N'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-4', N'Đỗ Quốc Việt (Phin Coffee)', N'viet.do@fnbstartup.vn', NULL, N'customer', N'0945678901', NULL, N'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-5', N'Trần Mai Linh (CLB TT)', N'mailinh.clbtt@gmail.com', NULL, N'customer', N'0956789012', NULL, N'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-6', N'Vũ Đình Khoa', N'khoa.vu@fpt.edu.vn', NULL, N'customer', N'0967890123', NULL, N'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-7', N'Ngô Thùy Trang (V+ Health)', N'trang.ngo@charity.vn', NULL, N'customer', N'0978901234', NULL, N'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-8', N'Bùi Hoàng Nam (Freelancer)', N'nam.bui@designfreelance.com', NULL, N'customer', N'0989012345', NULL, N'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-9', N'Phạm Quỳnh Chi', N'quynhchi.fashion@gmail.com', NULL, N'customer', N'0990123456', NULL, N'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-cust-10', N'Nguyễn Đăng Quang', N'quang.dang@gmail.com', NULL, N'customer', N'0911223344', NULL, N'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-staff-it', N'Trần Bảo IT', N'bao.it@4youtech.com', N'hash_3650c942', N'staff', N'0901112233', N'["React/Next.js", "Node.js", "Database", "System Architecture"]', N'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-staff-des', N'Phạm Hà Design', N'ha.design@4youtech.com', N'hash_3650c942', N'staff', N'0904445566', N'["Figma UI/UX", "Branding", "Banner/Poster", "Motion Graphic"]', N'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', N'active'),
+(N'usr-admin', N'Quản trị viên 4YouTech', N'admin@4youtech.com', N'hash_3650c942', N'admin', N'0999888777', NULL, N'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80', N'active');
 GO
 
 -- 5.2. Seed 8 Dịch Vụ Chuẩn (Services)

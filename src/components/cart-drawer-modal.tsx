@@ -23,7 +23,7 @@ export function CartDrawerModal({
   onClose: () => void;
   onOpenWorkspace: (serviceId?: string | string[]) => void;
 }) {
-  const { cart, removeFromCart, clearCart, currentUser, switchRole } = useApp();
+  const { cart, removeFromCart, clearCart, currentUser } = useApp();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -70,10 +70,6 @@ export function CartDrawerModal({
     if (selectedItems.length === 0) {
       alert("Vui lòng tích chọn ít nhất 1 dịch vụ trong giỏ hàng để tiến hành đặt đơn.");
       return;
-    }
-
-    if (currentUser.role === "guest") {
-      switchRole("customer");
     }
 
     const selectedServiceIds = selectedItems.map((item) => item.serviceId);

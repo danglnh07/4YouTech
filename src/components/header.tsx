@@ -606,10 +606,7 @@ function UserProfileModal({
     const isValidPass =
       !hasExistingPassword ||
       hashPassword(currentPass) === currentUser.password ||
-      currentPass === "123" ||
-      currentPass === "Customer@123" ||
-      currentPass === "Staff@123456" ||
-      currentPass === "Admin@123456";
+      currentPass === currentUser.password;
 
     if (!isValidPass) {
       setPassMsg({ type: "error", text: "Mật khẩu hiện tại không chính xác!" });
@@ -843,11 +840,6 @@ function UserProfileModal({
 
               {currentUser.password ? (
                 <>
-                  <div className="text-[11px] text-slate-400 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                    <span>Tài khoản demo: Mật khẩu mặc định là <code className="text-cyan-300 font-bold">Customer@123</code> hoặc <code className="text-cyan-300 font-bold">123</code></span>
-                  </div>
-
                   <div>
                     <label className="block text-xs font-bold text-slate-300 mb-1">Mật khẩu hiện tại</label>
                     <div className="relative">

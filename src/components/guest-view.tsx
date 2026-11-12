@@ -453,7 +453,6 @@ export function GuestView({
     projects,
     users,
     currentUser,
-    switchRole,
     login,
     registerCustomerWithOtp,
     activateAccountWithOtp,
@@ -2236,45 +2235,20 @@ export function GuestView({
                   </button>
                 </form>
 
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <div className="text-[11px] font-bold text-slate-500">Hoặc đăng nhập nhanh tài khoản mẫu:</div>
-                  <div className="space-y-1.5">
+                <div className="pt-3 border-t border-slate-100 text-center">
+                  <p className="text-xs text-slate-500">
+                    Chưa có tài khoản?{" "}
                     <button
+                      type="button"
                       onClick={() => {
-                        switchRole("customer");
-                        setAuthModalOpen(false);
-                        onSwitchToWorkspace();
+                        setAuthTab("register");
+                        setAuthMessage("");
                       }}
-                      className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-100/80 text-blue-900 font-bold text-xs flex items-center justify-between transition"
+                      className="font-bold text-sky-600 hover:underline"
                     >
-                      <span>🎓 Khách hàng Demo (Nguyễn Văn An)</span>
-                      <ChevronRight className="w-4 h-4 text-blue-600" />
+                      Đăng ký tài khoản ngay
                     </button>
-
-                    <button
-                      onClick={() => {
-                        switchRole("staff");
-                        setAuthModalOpen(false);
-                        onSwitchToWorkspace();
-                      }}
-                      className="w-full p-2.5 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/80 text-purple-900 font-bold text-xs flex items-center justify-between transition"
-                    >
-                      <span>🛠️ Nhân viên Demo (Trần Bảo IT)</span>
-                      <ChevronRight className="w-4 h-4 text-purple-600" />
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        switchRole("admin");
-                        setAuthModalOpen(false);
-                        onSwitchToWorkspace();
-                      }}
-                      className="w-full p-2.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-100/80 text-amber-900 font-bold text-xs flex items-center justify-between transition"
-                    >
-                      <span>👑 Admin Demo (Quản trị viên)</span>
-                      <ChevronRight className="w-4 h-4 text-amber-600" />
-                    </button>
-                  </div>
+                  </p>
                 </div>
               </div>
             )}
